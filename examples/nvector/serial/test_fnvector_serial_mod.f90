@@ -2,7 +2,7 @@
 ! Programmer(s): Cody J. Balos @ LLNL
 ! -----------------------------------------------------------------
 ! SUNDIALS Copyright Start
-! Copyright (c) 2002-2023, Lawrence Livermore National Security
+! Copyright (c) 2002-2024, Lawrence Livermore National Security
 ! and Southern Methodist University.
 ! All rights reserved.
 !
@@ -17,28 +17,27 @@
 
 module test_nvector_serial
   use, intrinsic :: iso_c_binding
-  use fsundials_nvector_mod
+
   use fnvector_serial_mod
   use test_utilities
   implicit none
 
-  integer(c_long), parameter :: N = 100 ! vector length
-  integer(c_int),  parameter :: nv = 3  ! length of vector arrays
+  integer(kind=myindextype), parameter :: N = 100 ! vector length
+  integer(c_int), parameter :: nv = 3 ! length of vector arrays
 
 contains
 
   integer function smoke_tests() result(ret)
     implicit none
 
-    integer(c_long)         :: lenrw(1), leniw(1) ! real and int work space size
-    integer(c_long)         :: ival               ! integer work value
-    type(c_ptr)             :: cptr               ! c_ptr work value
-    real(c_double)          :: rval               ! real work value
-    real(c_double)          :: xdata(N)           ! vector data array
-    real(c_double), pointer :: xptr(:)            ! pointer to vector data array
-    real(c_double)          :: nvarr(nv)          ! array of nv constants to go with vector array
-    type(N_Vector), pointer :: x, y, z, tmp       ! N_Vectors
-    type(c_ptr)             :: xvecs, zvecs       ! C pointer to array of C pointers to N_Vectors
+    integer(kind=myindextype) :: lenrw(1), leniw(1) ! real and int work space size
+    integer(c_long)            :: ival               ! integer work value
+    real(c_double)             :: rval               ! real work value
+    real(c_double)             :: xdata(N)           ! vector data array
+    real(c_double), pointer    :: xptr(:)            ! pointer to vector data array
+    real(c_double)             :: nvarr(nv)          ! array of nv constants to go with vector array
+    type(N_Vector), pointer    :: x, y, z, tmp       ! N_Vectors
+    type(c_ptr)                :: xvecs, zvecs       ! C pointer to array of C pointers to N_Vectors
 
     !===== Setup ====
     x => FN_VMake_Serial(N, xdata, sunctx)
@@ -50,7 +49,7 @@ contains
 
     xvecs = FN_VCloneVectorArray(nv, x)
     zvecs = FN_VCloneVectorArray(nv, z)
-    nvarr = (/ ONE, ONE, ONE /)
+    nvarr = (/ONE, ONE, ONE/)
 
     !===== Test =====
 
@@ -69,7 +68,7 @@ contains
     call FN_VSpace_Serial(x, lenrw, leniw)
     xptr => FN_VGetArrayPointer_Serial(x)
     call FN_VSetArrayPointer_Serial(xdata, x)
-    cptr = FN_VGetCommunicator(x)
+    ival = FN_VGetCommunicator(x)
     ival = FN_VGetLength_Serial(x)
 
     ! test standard vector operations
@@ -141,17 +140,16 @@ contains
 
 end module
 
-
-integer(C_INT) function check_ans(ans, X, local_length) result(failure)
+function check_ans(ans, X, local_length) result(failure)
   use, intrinsic :: iso_c_binding
-  use fsundials_nvector_mod
   use test_utilities
   implicit none
 
-  real(C_DOUBLE)          :: ans
-  type(N_Vector)          :: X
-  integer(C_LONG)         :: local_length, i
-  real(C_DOUBLE), pointer :: Xdata(:)
+  integer(kind=myindextype) :: failure
+  real(C_DOUBLE)             :: ans
+  type(N_Vector)             :: X
+  integer(kind=myindextype) :: local_length, i
+  real(C_DOUBLE), pointer    :: Xdata(:)
 
   failure = 0
 
@@ -163,10 +161,8 @@ integer(C_INT) function check_ans(ans, X, local_length) result(failure)
   end do
 end function check_ans
 
-
 logical function has_data(X) result(failure)
   use, intrinsic :: iso_c_binding
-  use fsundials_nvector_mod
   use test_utilities
   implicit none
 
@@ -176,7 +172,6 @@ logical function has_data(X) result(failure)
   xptr => FN_VGetArrayPointer(x)
   failure = associated(xptr)
 end function has_data
-
 
 program main
   !======== Inclusions ==========
@@ -190,7 +185,7 @@ program main
   !============== Introduction =============
   print *, 'Serial N_Vector Fortran 2003 interface test'
 
-  call Test_Init(c_null_ptr)
+  call Test_Init(SUN_COMM_NULL)
 
   fails = smoke_tests()
   if (fails /= 0) then

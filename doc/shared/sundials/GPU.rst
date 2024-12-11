@@ -1,6 +1,6 @@
 .. ----------------------------------------------------------------
    SUNDIALS Copyright Start
-   Copyright (c) 2002-2023, Lawrence Livermore National Security
+   Copyright (c) 2002-2024, Lawrence Livermore National Security
    and Southern Methodist University.
    All rights reserved.
 
@@ -16,27 +16,13 @@
 Features for GPU Accelerated Computing
 =============================================
 
-.. ifconfig:: package_name == 'kinsol'
-
-   In this section, we introduce the SUNDIALS GPU programming model and
-   highlight SUNDIALS GPU features. The model leverages the fact that all of the
-   SUNDIALS packages interact with simulation data either through the shared
-   vector, matrix, and solver APIs (see Chapters :numref:`NVectors`,
-   :numref:`SUNMatrix`, and :numref:`SUNLinSol`) or through user-supplied
-   callback functions. Thus, under the model, the overall structure of the
-   user’s calling program, and the way users interact with the SUNDIALS packages
-   is similar to using SUNDIALS in CPU-only environments.
-
-.. ifconfig:: package_name != 'kinsol'
-
-   In this section, we introduce the SUNDIALS GPU programming model and
-   highlight SUNDIALS GPU features. The model leverages the fact that all of the
-   SUNDIALS packages interact with simulation data either through the shared
-   vector, matrix, and solver APIs (see Chapters :numref:`NVectors`,
-   :numref:`SUNMatrix`, :numref:`SUNLinSol`, and :numref:`SUNNonlinSol`) or
-   through user-supplied callback functions. Thus, under the model, the overall
-   structure of the user’s calling program, and the way users interact with the
-   SUNDIALS packages is similar to using SUNDIALS in CPU-only environments.
+In this section, we introduce the SUNDIALS GPU programming model and highlight
+SUNDIALS GPU features. The model leverages the fact that all of the SUNDIALS
+packages interact with simulation data either through the shared vector, matrix,
+and solver APIs or through user-supplied callback functions. Thus, under the
+model, the overall structure of the user’s calling program, and the way users
+interact with the SUNDIALS packages is similar to using SUNDIALS in CPU-only
+environments.
 
 
 .. _SUNDIALS.GPU.Model:
@@ -78,7 +64,7 @@ data partitioning (achievable with the NVECTOR_MANYVECTOR, see
    programming environments they support, and what class of memory they support
    (unmanaged or UVM).  Users may also supply their own GPU-enabled
    :c:type:`N_Vector`, :c:type:`SUNMatrix`, or :c:type:`SUNLinearSolver`
-   implementation, and the capabilties will be leveraged since SUNDIALS operates
+   implementation, and the capabilities will be leveraged since SUNDIALS operates
    on data through these APIs.
 
 .. ifconfig:: package_name != 'kinsol'
@@ -91,7 +77,7 @@ data partitioning (achievable with the NVECTOR_MANYVECTOR, see
    programming environments they support, and what class of memory they support
    (unmanaged or UVM).  Users may also supply their own GPU-enabled
    :c:type:`N_Vector`, :c:type:`SUNMatrix`, :c:type:`SUNLinearSolver`, or
-   :c:type:`SUNNonlinearSolver` implementation, and the capabilties will be
+   :c:type:`SUNNonlinearSolver` implementation, and the capabilities will be
    leveraged since SUNDIALS operates on data through these APIs.
 
 In addition, SUNDIALS provides a memory management helper module
@@ -188,7 +174,7 @@ accelerated SUNDIALS are:
 #. Write user-supplied functions so that they use data only in the device memory
    space (again, unless an atypical data partitioning is used). A few examples
    of these functions are the right-hand side evaluation function, the Jacobian
-   evalution function, or the preconditioner evaulation function. In the context
+   evaluation function, or the preconditioner evaluation function. In the context
    of CUDA and the right-hand side function, one way a user might ensure data is
    accessed on the device is, for example, calling a CUDA kernel, which does all
    of the computation, from a CPU function which simply extracts the underlying

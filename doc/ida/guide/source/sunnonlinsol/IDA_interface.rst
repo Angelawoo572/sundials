@@ -1,6 +1,6 @@
 .. ----------------------------------------------------------------
    SUNDIALS Copyright Start
-   Copyright (c) 2002-2023, Lawrence Livermore National Security
+   Copyright (c) 2002-2024, Lawrence Livermore National Security
    and Southern Methodist University.
    All rights reserved.
 
@@ -47,7 +47,7 @@ the ``SUNNonlinearSolver`` API. For example, such a user might need access to
 the current :math:`y` and :math:`\dot{y}` vectors to compute Jacobian data.
 
 
-.. c:function:: int IDAGetCurrentCj(void *ida_mem, realtype *cj)
+.. c:function:: int IDAGetCurrentCj(void *ida_mem, sunrealtype *cj)
 
    The function ``IDAGetCurrentCj`` returns the scalar :math:`c_j` which is
    proportional to the inverse of the step size (:math:`\alpha` in
@@ -88,7 +88,7 @@ the current :math:`y` and :math:`\dot{y}` vectors to compute Jacobian data.
       * ``IDA_MEM_NULL`` -- The IDA memory block is ``NULL``.
 
 
-.. c:function:: int IDAGetNonlinearSystemData(void *ida_mem, realtype *tcur, N_Vector *yypred, N_Vector *yppred, N_Vector *yyn, N_Vector *ypn, N_Vector *res, realtype *cj, void **user_data)
+.. c:function:: int IDAGetNonlinearSystemData(void *ida_mem, sunrealtype *tcur, N_Vector *yypred, N_Vector *yppred, N_Vector *yyn, N_Vector *ypn, N_Vector *res, sunrealtype *cj, void **user_data)
 
    The function ``IDAGetNonlinearSystemData`` returns all internal data required
    to construct the current nonlinear system :eq:`IDA_res_corrector`.
@@ -117,13 +117,13 @@ the current :math:`y` and :math:`\dot{y}` vectors to compute Jacobian data.
       This routine is intended for users who wish to attach a custom
       :c:type:`SUNNonlinSolSysFn` to an existing ``SUNNonlinearSolver`` object
       (through a call to :c:func:`SUNNonlinSolSetSysFn`) or who need access to
-      nonlinear system data to compute the nonlinear system fucntion as part of a
+      nonlinear system data to compute the nonlinear system function as part of a
       custom ``SUNNonlinearSolver`` object.
 
       When supplying a custom :c:type:`SUNNonlinSolSysFn` to an existing
       ``SUNNonlinearSolver`` object, the user should call
       :c:func:`IDAGetNonlinearSystemData` inside the nonlinear system function to
-      access the requisite data for evaluting the nonlinear system function of
+      access the requisite data for evaluating the nonlinear system function of
       their choosing. Additionlly, if the ``SUNNonlinearSolver`` object (existing
       or custom) leverages the :c:type:`SUNNonlinSolLSetupFn` and/or
       :c:type:`SUNNonlinSolLSolveFn` functions supplied by IDA (through calls to

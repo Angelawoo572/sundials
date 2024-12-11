@@ -2,7 +2,7 @@
 // Programmer: Cody J. Balos @ LLNL
 // ---------------------------------------------------------------
 // SUNDIALS Copyright Start
-// Copyright (c) 2002-2023, Lawrence Livermore National Security
+// Copyright (c) 2002-2024, Lawrence Livermore National Security
 // and Southern Methodist University.
 // All rights reserved.
 //
@@ -31,18 +31,33 @@
 %include "nvector/nvector_manyvector.h"
 
 %insert("wrapper") %{
+#ifdef SUNDIALS_INT32_T
+SWIGEXPORT double * _wrap_FN_VGetSubvectorArrayPointer_ManyVector(N_Vector farg1, int32_t const *farg2) {
+  double * fresult ;
+  N_Vector arg1 = (N_Vector) 0 ;
+  sunindextype arg2 ;
+  sunrealtype *result = 0 ;
+
+  arg1 = (N_Vector)(farg1);
+  arg2 = (sunindextype)(*farg2);
+  result = (sunrealtype *)N_VGetSubvectorArrayPointer_ManyVector(arg1,arg2);
+  fresult = result;
+  return fresult;
+}
+#else
 SWIGEXPORT double * _wrap_FN_VGetSubvectorArrayPointer_ManyVector(N_Vector farg1, int64_t const *farg2) {
   double * fresult ;
   N_Vector arg1 = (N_Vector) 0 ;
   sunindextype arg2 ;
-  realtype *result = 0 ;
-  
+  sunrealtype *result = 0 ;
+
   arg1 = (N_Vector)(farg1);
   arg2 = (sunindextype)(*farg2);
-  result = (realtype *)N_VGetSubvectorArrayPointer_ManyVector(arg1,arg2);
+  result = (sunrealtype *)N_VGetSubvectorArrayPointer_ManyVector(arg1,arg2);
   fresult = result;
   return fresult;
 }
+#endif
 %}
 
 %insert("fdecl") %{
@@ -55,7 +70,11 @@ bind(C, name="_wrap_FN_VGetSubvectorArrayPointer_ManyVector") &
 result(fresult)
 use, intrinsic :: ISO_C_BINDING
 type(C_PTR), value :: farg1
+#ifdef SUNDIALS_INT32_T
+integer(C_INT32_T), intent(in) :: farg2
+#else
 integer(C_INT64_T), intent(in) :: farg2
+#endif
 type(C_PTR) :: fresult
 end function
 %}
@@ -66,10 +85,18 @@ result(swig_result)
 use, intrinsic :: ISO_C_BINDING
 real(C_DOUBLE), dimension(:), pointer :: swig_result
 type(N_Vector), target, intent(inout) :: v
+#ifdef SUNDIALS_INT32_T
+integer(C_INT32_T), intent(in) :: vec_num
+#else
 integer(C_INT64_T), intent(in) :: vec_num
-type(C_PTR) :: fresult 
-type(C_PTR) :: farg1 
-integer(C_INT64_T) :: farg2 
+#endif
+type(C_PTR) :: fresult
+type(C_PTR) :: farg1
+#ifdef SUNDIALS_INT32_T
+integer(C_INT32_T) :: farg2
+#else
+integer(C_INT64_T) :: farg2
+#endif
 
 farg1 = c_loc(v)
 farg2 = vec_num

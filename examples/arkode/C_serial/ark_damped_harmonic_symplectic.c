@@ -3,7 +3,7 @@
  * Programmer(s): Cody J. Balos @ LLNL
  * ----------------------------------------------------------------------------
  * SUNDIALS Copyright Start
- * Copyright (c) 2002-2023, Lawrence Livermore National Security
+ * Copyright (c) 2002-2024, Lawrence Livermore National Security
  * and Southern Methodist University.
  * All rights reserved.
  *
@@ -90,7 +90,7 @@ int main(int argc, char* argv[])
   dTout = (Tf - T0) / ((sunrealtype)num_output_times);
 
   /* Create the SUNDIALS context object for this simulation */
-  retval = SUNContext_Create(NULL, &sunctx);
+  retval = SUNContext_Create(SUN_COMM_NULL, &sunctx);
   if (check_retval(&retval, "SUNContext_Create", 1)) { return 1; }
 
   printf("\n   Begin time-dependent damped harmonic oscillator problem\n\n");
@@ -106,17 +106,17 @@ int main(int argc, char* argv[])
   /* Create SPRKStep integrator */
   arkode_mem = SPRKStepCreate(qdot, pdot, T0, y, sunctx);
 
-  retval = SPRKStepSetOrder(arkode_mem, order);
-  if (check_retval(&retval, "SPRKStepSetOrder", 1)) { return 1; }
+  retval = ARKodeSetOrder(arkode_mem, order);
+  if (check_retval(&retval, "ARKodeSetOrder", 1)) { return 1; }
 
   retval = SPRKStepSetUseCompensatedSums(arkode_mem, use_compsums);
   if (check_retval(&retval, "SPRKStepSetUseCompensatedSums", 1)) { return 1; }
 
-  retval = SPRKStepSetFixedStep(arkode_mem, dt);
-  if (check_retval(&retval, "SPRKStepSetFixedStep", 1)) { return 1; }
+  retval = ARKodeSetFixedStep(arkode_mem, dt);
+  if (check_retval(&retval, "ARKodeSetFixedStep", 1)) { return 1; }
 
-  retval = SPRKStepSetMaxNumSteps(arkode_mem, ((long int)ceil(Tf / dt)) + 2);
-  if (check_retval(&retval, "SPRKStepSetMaxNumSteps", 1)) { return 1; }
+  retval = ARKodeSetMaxNumSteps(arkode_mem, ((long int)ceil(Tf / dt)) + 2);
+  if (check_retval(&retval, "ARKodeSetMaxNumSteps", 1)) { return 1; }
 
   /* Print out starting Hamiltonian before integrating */
   tret = T0;
@@ -128,8 +128,8 @@ int main(int argc, char* argv[])
   /* Do integration */
   for (iout = 0; iout < num_output_times; iout++)
   {
-    if (args.use_tstop) { SPRKStepSetStopTime(arkode_mem, tout); }
-    retval = SPRKStepEvolve(arkode_mem, tout, y, &tret, ARK_NORMAL);
+    if (args.use_tstop) { ARKodeSetStopTime(arkode_mem, tout); }
+    retval = ARKodeEvolve(arkode_mem, tout, y, &tret, ARK_NORMAL);
 
     /* Output current integration status */
     fprintf(stdout, "t = %.6Lf, q(t) = %.6Lf, H = %.6Lf\n", (long double)tret,
@@ -149,17 +149,17 @@ int main(int argc, char* argv[])
   }
 
   fprintf(stdout, "\n");
-  SPRKStepPrintAllStats(arkode_mem, stdout, SUN_OUTPUTFORMAT_TABLE);
+  ARKodePrintAllStats(arkode_mem, stdout, SUN_OUTPUTFORMAT_TABLE);
   N_VDestroy(y);
-  SPRKStepFree(&arkode_mem);
+  ARKodeFree(&arkode_mem);
   SUNContext_Free(&sunctx);
 
   return 0;
 }
 
-sunrealtype omega(sunrealtype t) { return cos(t / SUN_RCONST(2.0)); }
+static sunrealtype omega(sunrealtype t) { return cos(t / SUN_RCONST(2.0)); }
 
-sunrealtype F(sunrealtype t) { return SUN_RCONST(0.018) * sin(t / PI); }
+static sunrealtype F(sunrealtype t) { return SUN_RCONST(0.018) * sin(t / PI); }
 
 sunrealtype Hamiltonian(N_Vector yvec, sunrealtype t)
 {

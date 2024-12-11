@@ -1,6 +1,6 @@
 .. ----------------------------------------------------------------
    SUNDIALS Copyright Start
-   Copyright (c) 2002-2023, Lawrence Livermore National Security
+   Copyright (c) 2002-2024, Lawrence Livermore National Security
    and Southern Methodist University.
    All rights reserved.
 
@@ -57,7 +57,7 @@ users, but might be useful for users who choose to provide their own
 implementation of the :c:type:`SUNNonlinearSolver` API. For example, such a user
 might need access to the current value of :math:`\gamma` to compute Jacobian data.
 
-.. c:function:: int CVodeGetCurrentGamma(void* cvode_mem, realtype* gamma)
+.. c:function:: int CVodeGetCurrentGamma(void* cvode_mem, sunrealtype* gamma)
 
    The function ``CVodeGetCurrentGamma`` returns the current value of the scalar :math:`gamma`.
 
@@ -81,7 +81,7 @@ might need access to the current value of :math:`\gamma` to compute Jacobian dat
      * ``CV_SUCCESS`` -- The optional output value has been successfully set.
      * ``CV_MEM_NULL`` -- The CVODE memory block was ``NULL``.
 
-.. c:function:: int CVodeGetNonlinearSystemData(void *cvode_mem, realtype *tcur, N_Vector *ypred, N_Vector *yn, N_Vector *fn, realtype *gamma, realtype *rl1, N_Vector *zn1, void **user_data)
+.. c:function:: int CVodeGetNonlinearSystemData(void *cvode_mem, sunrealtype *tcur, N_Vector *ypred, N_Vector *yn, N_Vector *fn, sunrealtype *gamma, sunrealtype *rl1, N_Vector *zn1, void **user_data)
 
    The function ``CVodeGetNonlinearSystemData`` returns all internal data required to construct the current nonlinear system :eq:`CVODE_res_corrector` or :eq:`CVODE_fp_corrector`.
 
@@ -111,7 +111,7 @@ might need access to the current value of :math:`\gamma` to compute Jacobian dat
       custom  ``SUNNonlinearSolver`` object.  When supplying a custom
       :c:type:`SUNNonlinSolSysFn` to an existing  ``SUNNonlinearSolver`` object,
       the user should call :c:func:`CVodeGetNonlinearSystemData` inside the
-      nonlinear system  function to access the requisite data for evaluting
+      nonlinear system  function to access the requisite data for evaluating
       the nonlinear system function of their choosing. Additionlly, if the
       ``SUNNonlinearSolver`` object  (existing or custom) leverages the
       :c:type:`SUNNonlinSolLSetupFn` and/or :c:type:`SUNNonlinSolLSolveFn`

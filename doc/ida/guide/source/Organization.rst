@@ -1,6 +1,6 @@
 .. ----------------------------------------------------------------
    SUNDIALS Copyright Start
-   Copyright (c) 2002-2023, Lawrence Livermore National Security
+   Copyright (c) 2002-2024, Lawrence Livermore National Security
    and Southern Methodist University.
    All rights reserved.
 
@@ -15,16 +15,6 @@
 *****************
 Code Organization
 *****************
-
-.. ifconfig:: package_name != 'super'
-
-   .. include:: ../../../shared/SundialsOrganization.rst
-
-
-.. _IDA.Organization.IDA:
-
-IDA organization
-================
 
 The IDA package is written in ANSI C. The following summarizes the basic
 structure of the package, although knowledge of this structure is not necessary

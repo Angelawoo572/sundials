@@ -3,7 +3,7 @@
 #                and Cody J. Balos @ LLNL
 # ---------------------------------------------------------------
 # SUNDIALS Copyright Start
-# Copyright (c) 2002-2023, Lawrence Livermore National Security
+# Copyright (c) 2002-2024, Lawrence Livermore National Security
 # and Southern Methodist University.
 # All rights reserved.
 #
@@ -19,22 +19,15 @@
 if(BUILD_NVECTOR_MANYVECTOR)
   install(CODE "MESSAGE(\"\nInstall NVECTOR_MANYVECTOR\n\")")
 
-  sundials_add_library(sundials_nvecmanyvector
-    SOURCES
-      nvector_manyvector.c
-    HEADERS
-      ${SUNDIALS_SOURCE_DIR}/include/nvector/nvector_manyvector.h
-    INCLUDE_SUBDIR
-      nvector
-    OBJECT_LIBRARIES
-      sundials_generic_obj
-    OUTPUT_NAME
-      sundials_nvecmanyvector
-    VERSION
-      ${nveclib_VERSION}
-    SOVERSION
-      ${nveclib_SOVERSION}
-    )
+  sundials_add_library(
+    sundials_nvecmanyvector
+    SOURCES nvector_manyvector.c
+    HEADERS ${SUNDIALS_SOURCE_DIR}/include/nvector/nvector_manyvector.h
+    INCLUDE_SUBDIR nvector
+    LINK_LIBRARIES PUBLIC sundials_core
+    OUTPUT_NAME sundials_nvecmanyvector
+    VERSION ${nveclib_VERSION}
+    SOVERSION ${nveclib_SOVERSION})
 
   message(STATUS "Added NVECTOR_MANYVECTOR module")
 endif()
@@ -52,29 +45,21 @@ if(BUILD_NVECTOR_MPIMANYVECTOR)
   endif()
 
   # Create the sundials_nvecmpimanyvector library
-  sundials_add_library(sundials_nvecmpimanyvector
-    SOURCES
-      nvector_manyvector.c
-    HEADERS
-      ${SUNDIALS_SOURCE_DIR}/include/nvector/nvector_mpimanyvector.h
-    INCLUDE_SUBDIR
-      nvector
-    OBJECT_LIBRARIES
-      sundials_generic_obj
-    COMPILE_DEFINITIONS
-      PRIVATE MANYVECTOR_BUILD_WITH_MPI
-    OUTPUT_NAME
-      sundials_nvecmpimanyvector
-    VERSION
-      ${nveclib_VERSION}
-    SOVERSION
-      ${nveclib_SOVERSION}
-    )
+  sundials_add_library(
+    sundials_nvecmpimanyvector
+    SOURCES nvector_manyvector.c
+    HEADERS ${SUNDIALS_SOURCE_DIR}/include/nvector/nvector_mpimanyvector.h
+    INCLUDE_SUBDIR nvector
+    LINK_LIBRARIES PUBLIC sundials_core
+    COMPILE_DEFINITIONS PRIVATE MANYVECTOR_BUILD_WITH_MPI
+    OUTPUT_NAME sundials_nvecmpimanyvector
+    VERSION ${nveclib_VERSION}
+    SOVERSION ${nveclib_SOVERSION})
 
   message(STATUS "Added NVECTOR_MPIMANYVECTOR module")
 endif()
 
 # Add F2003 module if the interface is enabled
 if(BUILD_FORTRAN_MODULE_INTERFACE)
-  add_subdirectory(fmod)
+  add_subdirectory("fmod_int${SUNDIALS_INDEX_SIZE}")
 endif()

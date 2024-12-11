@@ -2,7 +2,7 @@
  * Programmer(s): Cody J. Balos @ LLNL
  * ----------------------------------------------------------------------------
  * SUNDIALS Copyright Start
- * Copyright (c) 2002-2023, Lawrence Livermore National Security
+ * Copyright (c) 2002-2024, Lawrence Livermore National Security
  * and Southern Methodist University.
  * All rights reserved.
  *
@@ -34,7 +34,7 @@ typedef struct
   sunrealtype dt;
 } ProgramArgs;
 
-static void PrintHelp()
+static void PrintHelp(void)
 {
   fprintf(stderr,
           "ark_damped_harmonic_symplectic: an ARKODE example demonstrating "

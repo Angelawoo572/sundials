@@ -2,7 +2,7 @@
  * Programmer(s): Cody J. Balos @ LLNL
  * ----------------------------------------------------------------------------
  * SUNDIALS Copyright Start
- * Copyright (c) 2002-2023, Lawrence Livermore National Security
+ * Copyright (c) 2002-2024, Lawrence Livermore National Security
  * and Southern Methodist University.
  * All rights reserved.
  *
@@ -37,12 +37,12 @@ typedef struct
   const char* method_name;
 } ProgramArgs;
 
-
-int ComputeConvergence(int num_dt, sunrealtype* orders,
-                       sunrealtype expected_order, sunrealtype a11,
-                       sunrealtype a12, sunrealtype a21, sunrealtype a22,
-                       sunrealtype b1, sunrealtype b2, sunrealtype* ord_avg,
-                       sunrealtype* ord_max, sunrealtype* ord_est)
+static int ComputeConvergence(int num_dt, sunrealtype* orders,
+                              sunrealtype expected_order, sunrealtype a11,
+                              sunrealtype a12, sunrealtype a21, sunrealtype a22,
+                              sunrealtype b1, sunrealtype b2,
+                              sunrealtype* ord_avg, sunrealtype* ord_max,
+                              sunrealtype* ord_est)
 {
   /* Compute/print overall estimated convergence rate */
   int i           = 0;
@@ -53,14 +53,13 @@ int ComputeConvergence(int num_dt, sunrealtype* orders,
     *ord_avg += orders[i - 1];
     *ord_max = SUNMAX(*ord_max, orders[i - 1]);
   }
-  *ord_avg = *ord_avg / ((realtype)num_dt - 1);
+  *ord_avg = *ord_avg / ((sunrealtype)num_dt - 1);
   det      = a11 * a22 - a12 * a21;
   *ord_est = (a11 * b2 - a21 * b1) / det;
   return 0;
 }
 
-
-static void PrintHelp()
+static void PrintHelp(void)
 {
   fprintf(stderr, "ark_kepler: an ARKODE example demonstrating the SPRKStep "
                   "time-stepping module solving the Kepler problem\n");

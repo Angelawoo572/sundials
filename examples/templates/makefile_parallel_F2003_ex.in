@@ -2,7 +2,7 @@
 # Programmer(s): David J. Gardner @ LLNL
 # -----------------------------------------------------------------
 # SUNDIALS Copyright Start
-# Copyright (c) 2002-2023, Lawrence Livermore National Security
+# Copyright (c) 2002-2024, Lawrence Livermore National Security
 # and Southern Methodist University.
 # All rights reserved.
 #
@@ -19,7 +19,7 @@
 # -----------------------------------------------------------------
 
 F90      = @MPI_Fortran_COMPILER@
-F90FLAGS = @CMAKE_Fortran_FLAGS_RELEASE@
+F90FLAGS = @CMAKE_Fortran_FLAGS_RELEASE@ -DSUNDIALS_INT@SUNDIALS_INDEX_SIZE@_T @CMAKE_Fortran_COMPILE_OPTIONS_PREPROCESS_ON@
 F90LIBS  = @LIBS@
 
 SUNDIALS_PREFIX      = @CMAKE_INSTALL_PREFIX@

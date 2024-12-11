@@ -2,7 +2,7 @@
    Daniel R. Reynolds @ SMU
    ----------------------------------------------------------------
    SUNDIALS Copyright Start
-   Copyright (c) 2002-2023, Lawrence Livermore National Security
+   Copyright (c) 2002-2024, Lawrence Livermore National Security
    and Southern Methodist University.
    All rights reserved.
 
@@ -44,54 +44,58 @@ set up the linear solver object to utilize an updated matrix :math:`A`
 (:c:func:`SUNLinSolSetup`), and destroy a linear solver object
 (:c:func:`SUNLinSolFree`).
 
+.. c:enum:: SUNLinearSolver_Type
 
-.. c:function:: SUNLinearSolver_Type SUNLinSolGetType(SUNLinearSolver LS)
-
-   Returns the type identifier for the linear solver *LS*.
-
-   **Return value:**
-
-      * ``SUNLINEARSOLVER_DIRECT (0)`` -- the SUNLinSol module
-        requires a matrix, and computes an "exact" solution to the linear
-        system defined by that matrix.
-
-      * ``SUNLINEARSOLVER_ITERATIVE (1)`` -- the SUNLinSol module does
-        not require a matrix (though one may be provided), and computes
-        an inexact solution to the linear system using a matrix-free
-        iterative algorithm. That is it solves the linear system defined
-        by the package-supplied ``ATimes`` routine (see
-        :c:func:`SUNLinSolSetATimes()` below), even if that linear system
-        differs from the one encoded in the matrix object (if one is
-        provided). As the solver computes the solution only inexactly (or
-        may diverge), the linear solver should check for solution
-        convergence/accuracy as appropriate.
-
-      * ``SUNLINEARSOLVER_MATRIX_ITERATIVE (2)`` -- the SUNLinSol
-        module requires a matrix, and computes an inexact solution to the
-        linear system defined by that matrix using an iterative
-        algorithm. That is it solves the linear system defined by the
-        matrix object even if that linear system differs from that
-        encoded by the package-supplied ``ATimes`` routine. As the solver
-        computes the solution only inexactly (or may diverge), the linear
-        solver should check for solution convergence/accuracy as
-        appropriate.
-
-      * ``SUNLINEARSOLVER_MATRIX_EMBEDDED (3)`` -- the SUNLinSol module sets up
-        and solves the specified linear system at each linear solve call.  Any
-        matrix-related data structures are held internally to the linear solver itself,
-        and are not provided by the SUNDIALS package.
-
-   **Usage:**
-
-      .. code-block:: c
-
-         type = SUNLinSolGetType(LS);
+   An identifier indicating the type of linear solver.
 
    .. note::
 
       See :numref:`SUNLinSol.Intended` for more information on
       intended use cases corresponding to the linear solver type.
 
+   .. c:enumerator:: SUNLINEARSOLVER_DIRECT
+
+      The linear solver requires a matrix, and computes an "exact" solution to
+      the linear system defined by that matrix.
+
+   .. c:enumerator:: SUNLINEARSOLVER_ITERATIVE
+
+      The linear solver does not require a matrix (though one may be provided),
+      and computes an inexact solution to the linear system using a matrix-free
+      iterative algorithm. That is it solves the linear system defined by the
+      package-supplied ``ATimes`` routine (see :c:func:`SUNLinSolSetATimes()`
+      below), even if that linear system differs from the one encoded in the
+      matrix object (if one is provided). As the solver computes the solution
+      only inexactly (or may diverge), the linear solver should check for
+      solution convergence/accuracy as appropriate.
+
+   .. c:enumerator:: SUNLINEARSOLVER_MATRIX_ITERATIVE
+
+      The linear solver module requires a matrix, and computes an inexact
+      solution to the linear system defined by that matrix using an iterative
+      algorithm. That is it solves the linear system defined by the matrix
+      object even if that linear system differs from that encoded by the
+      package-supplied ``ATimes`` routine. As the solver computes the solution
+      only inexactly (or may diverge), the linear solver should check for
+      solution convergence/accuracy as appropriate.
+
+   .. c:enumerator:: SUNLINEARSOLVER_MATRIX_EMBEDDED
+
+      The linear solver sets up and solves the specified linear system at each
+      linear solve call.  Any matrix-related data structures are held internally
+      to the linear solver itself, and are not provided by the SUNDIALS package.
+
+
+.. c:function:: SUNLinearSolver_Type SUNLinSolGetType(SUNLinearSolver LS)
+
+   Returns the :c:enum:`SUNLinearSolver_Type` type identifier for the linear
+   solver.
+
+   **Usage:**
+
+      .. code-block:: c
+
+         type = SUNLinSolGetType(LS);
 
 .. c:function:: SUNLinearSolver_ID SUNLinSolGetID(SUNLinearSolver LS)
 
@@ -117,16 +121,14 @@ set up the linear solver object to utilize an updated matrix :math:`A`
       ``SUNLINEARSOLVER_CUSTOM`` identifier.
 
 
-.. c:function:: int SUNLinSolInitialize(SUNLinearSolver LS)
+.. c:function:: SUNErrCode SUNLinSolInitialize(SUNLinearSolver LS)
 
    Performs linear solver initialization (assuming that all
    solver-specific options have been set).
 
    **Return value:**
 
-      Zero for a successful call, and a negative value for a failure.
-      Ideally, this should return one of the generic error codes listed in
-      :numref:`SUNLinSol.ErrorCodes`.
+      A :c:type:`SUNErrCode`.
 
    **Usage:**
 
@@ -157,7 +159,7 @@ set up the linear solver object to utilize an updated matrix :math:`A`
          retval = SUNLinSolSetup(LS, A);
 
 
-.. c:function:: int SUNLinSolSolve(SUNLinearSolver LS, SUNMatrix A, N_Vector x, N_Vector b, realtype tol)
+.. c:function:: int SUNLinSolSolve(SUNLinearSolver LS, SUNMatrix A, N_Vector x, N_Vector b, sunrealtype tol)
 
    This *required* function solves a linear system :math:`Ax = b`.
 
@@ -207,15 +209,13 @@ set up the linear solver object to utilize an updated matrix :math:`A`
          retval = SUNLinSolSolve(LS, A, x, b, tol);
 
 
-.. c:function:: int SUNLinSolFree(SUNLinearSolver LS)
+.. c:function:: SUNErrCode SUNLinSolFree(SUNLinearSolver LS)
 
    Frees memory allocated by the linear solver.
 
    **Return value:**
 
-      Zero for a successful call, and a negative value for a failure.
-      Ideally, this should return one of the generic error codes listed in
-      :numref:`SUNLinSol.ErrorCodes`.
+      A :c:type:`SUNErrCode`.
 
    **Usage:**
 
@@ -240,7 +240,7 @@ the functionality for any optional routine should leave the corresponding
 function pointer ``NULL`` instead of supplying a dummy routine.
 
 
-.. c:function:: int SUNLinSolSetATimes(SUNLinearSolver LS, void* A_data, SUNATimesFn ATimes)
+.. c:function:: SUNErrCode SUNLinSolSetATimes(SUNLinearSolver LS, void* A_data, SUNATimesFn ATimes)
 
    *Required for matrix-free linear solvers* (otherwise optional).
 
@@ -253,9 +253,7 @@ function pointer ``NULL`` instead of supplying a dummy routine.
 
    **Return value:**
 
-      Zero for a successful call, and a negative value for a failure.
-      Ideally, this should return one of the generic error codes listed in
-      :numref:`SUNLinSol.ErrorCodes`.
+      A :c:type:`SUNErrCode`.
 
    **Usage:**
 
@@ -264,7 +262,7 @@ function pointer ``NULL`` instead of supplying a dummy routine.
          retval = SUNLinSolSetATimes(LS, A_data, ATimes);
 
 
-.. c:function:: int SUNLinSolSetPreconditioner(SUNLinearSolver LS, void* P_data, SUNPSetupFn Pset, SUNPSolveFn Psol)
+.. c:function:: SUNErrCode SUNLinSolSetPreconditioner(SUNLinearSolver LS, void* P_data, SUNPSetupFn Pset, SUNPSolveFn Psol)
 
    This *optional* routine provides :c:type:`SUNPSetupFn` and
    :c:type:`SUNPSolveFn` function pointers that implement the
@@ -276,9 +274,7 @@ function pointer ``NULL`` instead of supplying a dummy routine.
 
    **Return value:**
 
-      Zero for a successful call, and a negative value for a failure.
-      Ideally, this should return one of the generic error codes listed in
-      :numref:`SUNLinSol.ErrorCodes`.
+      A :c:type:`SUNErrCode`.
 
    **Usage:**
 
@@ -287,10 +283,10 @@ function pointer ``NULL`` instead of supplying a dummy routine.
          retval = SUNLinSolSetPreconditioner(LS, Pdata, Pset, Psol);
 
 
-.. c:function:: int SUNLinSolSetScalingVectors(SUNLinearSolver LS, N_Vector s1, N_Vector s2)
+.. c:function:: SUNErrCode SUNLinSolSetScalingVectors(SUNLinearSolver LS, N_Vector s1, N_Vector s2)
 
    This *optional* routine provides left/right scaling vectors for the
-   linear system solve.  Here, *s1* and *s2* are ``N_Vectors`` of positive
+   linear system solve.  Here, *s1* and *s2* are vectors of positive
    scale factors containing the diagonal of the matrices :math:`S_1`
    and :math:`S_2` from :eq:`eq:transformed_linear_system_components`, respectively.
    Neither vector needs to be tested for positivity, and a ``NULL`` argument for either
@@ -299,9 +295,7 @@ function pointer ``NULL`` instead of supplying a dummy routine.
 
    **Return value:**
 
-      Zero for a successful call, and a negative value for a failure.
-      Ideally, this should return one of the generic error codes listed in
-      :numref:`SUNLinSol.ErrorCodes`.
+      A :c:type:`SUNErrCode`.
 
    **Usage:**
 
@@ -310,17 +304,15 @@ function pointer ``NULL`` instead of supplying a dummy routine.
          retval = SUNLinSolSetScalingVectors(LS, s1, s2);
 
 
-.. c:function:: int SUNLinSolSetZeroGuess(SUNLinearSolver LS, booleantype onoff)
+.. c:function:: SUNErrCode SUNLinSolSetZeroGuess(SUNLinearSolver LS, sunbooleantype onoff)
 
-   This *optional* routine indicates if the upcoming :c:func:`SUNlinSolSolve` call
+   This *optional* routine indicates if the upcoming :c:func:`SUNLinSolSolve` call
    will be made with a zero initial guess (``SUNTRUE``) or a non-zero initial
    guess (``SUNFALSE``).
 
    **Return value:**
 
-      Zero for a successful call, and a negative value for a failure.
-      Ideally, this should return one of the generic error codes listed in
-      :numref:`SUNLinSol.ErrorCodes`.
+      A :c:type:`SUNErrCode`.
 
    **Usage:**
 
@@ -357,7 +349,7 @@ linear solve.  *All routines are optional.*
          its = SUNLinSolNumIters(LS);
 
 
-.. c:function:: realtype SUNLinSolResNorm(SUNLinearSolver LS)
+.. c:function:: sunrealtype SUNLinSolResNorm(SUNLinearSolver LS)
 
    This *optional* routine should return the final residual norm from
    the most-recent "solve" call.
@@ -407,18 +399,21 @@ linear solve.  *All routines are optional.*
          lflag = SUNLinLastFlag(LS);
 
 
-.. c:function:: int SUNLinSolSpace(SUNLinearSolver LS, long int *lenrwLS, long int *leniwLS)
+.. c:function:: SUNErrCode SUNLinSolSpace(SUNLinearSolver LS, long int *lenrwLS, long int *leniwLS)
 
    This *optional* routine should return the storage requirements for
    the linear solver *LS*:
 
-   * *lrw* is a ``long int`` containing the number of realtype words
+   * *lrw* is a ``long int`` containing the number of sunrealtype words
    * *liw* is a ``long int`` containing the number of integer words.
-
-   The return value is an integer flag denoting success/failure of the operation.
 
    This function is advisory only, for use by users to help determine
    their total space requirements.
+
+   **Return value:**
+
+      A :c:type:`SUNErrCode`.
+
 
    **Usage:**
 
@@ -469,7 +464,7 @@ these routines are defined in the header file
       Zero for a successful call, and non-zero upon failure.
 
 
-.. c:type:: int (*SUNPSolveFn)(void *P_data, N_Vector r, N_Vector z, realtype tol, int lr)
+.. c:type:: int (*SUNPSolveFn)(void *P_data, N_Vector r, N_Vector z, sunrealtype tol, int lr)
 
    Solves the preconditioner equation :math:`Pz = r` for the vector :math:`z`.
    Memory for *z* will already be allocated prior to calling this function.
@@ -523,14 +518,7 @@ provide additional information to the user in case of a linear solver failure.
    +------------------------------+-------+---------------------------------------------------+
    | Error code                   | Value | Meaning                                           |
    +==============================+=======+===================================================+
-   | ``SUNLS_SUCCESS``            | 0     | successful call or converged solve                |
-   +------------------------------+-------+---------------------------------------------------+
-   | ``SUNLS_MEM_NULL``           | -801  | the memory argument to the function is ``NULL``   |
-   +------------------------------+-------+---------------------------------------------------+
-   | ``SUNLS_ILL_INPUT``          | -802  | an illegal input has been provided to the         |
-   |                              |       | function                                          |
-   +------------------------------+-------+---------------------------------------------------+
-   | ``SUNLS_MEM_FAIL``           | -803  | failed memory access or allocation                |
+   | ``SUN_SUCCESS``              | 0     | successful call or converged solve                |
    +------------------------------+-------+---------------------------------------------------+
    | ``SUNLS_ATIMES_NULL``        | -804  | the ``Atimes`` function is ``NULL``               |
    +------------------------------+-------+---------------------------------------------------+
@@ -545,16 +533,11 @@ provide additional information to the user in case of a linear solver failure.
    | ``SUNLS_PSOLVE_FAIL_UNREC``  | -808  | an unrecoverable failure occurred in the          |
    |                              |       | ``Psolve`` routine                                |
    +------------------------------+-------+---------------------------------------------------+
-   | ``SUNLS_PACKAGE_FAIL_UNREC`` | -809  | an unrecoverable failure occurred in an external  |
-   |                              |       | linear solver package                             |
-   +------------------------------+-------+---------------------------------------------------+
    | ``SUNLS_GS_FAIL``            | -810  | a failure occurred during Gram-Schmidt            |
    |                              |       | orthogonalization (SPGMR/SPFGMR)                  |
    +------------------------------+-------+---------------------------------------------------+
    | ``SUNLS_QRSOL_FAIL``         | -811  | a singular $R$ matrix was encountered in a QR     |
    |                              |       | factorization (SPGMR/SPFGMR)                      |
-   +------------------------------+-------+---------------------------------------------------+
-   | ``SUNLS_VECTOROP_ERR``       | -812  | a vector operation error occurred                 |
    +------------------------------+-------+---------------------------------------------------+
    | ``SUNLS_RES_REDUCED``        | 801   | an iterative solver reduced the residual, but did |
    |                              |       | not converge to the desired tolerance             |
@@ -588,51 +571,96 @@ provide additional information to the user in case of a linear solver failure.
 The generic SUNLinearSolver module
 -----------------------------------------
 
-SUNDIALS packages interact with specific SUNLinSol implementations
-through the generic SUNLinearSolver abstract base class.  The
-``SUNLinearSolver`` type is a pointer to a structure containing an
-implementation-dependent *content* field, and an *ops* field, and is
-defined as
+SUNDIALS packages interact with linear solver implementations through the
+:c:type:`SUNLinearSolver` class. A :c:type:`SUNLinearSolver` is a pointer to the
+:c:struct:`_generic_SUNLinearSolver` structure:
 
 .. c:type:: struct _generic_SUNLinearSolver *SUNLinearSolver
 
-and the generic structure is defined as
+.. c:struct:: _generic_SUNLinearSolver
 
-.. code-block:: c
+   The structure defining the SUNDIALS linear solver class.
 
-   struct _generic_SUNLinearSolver {
-     void *content;
-     struct _generic_SUNLinearSolver_Ops *ops;
-   };
+   .. c:member:: void *content
 
-where the ``_generic_SUNLinearSolver_Ops`` structure is a list of
-pointers to the various actual linear solver operations provided by a
-specific implementation.  The ``_generic_SUNLinearSolver_Ops``
-structure is defined as
+      Pointer to the linear solver-specific member data
 
-.. code-block:: c
+   .. c:member:: SUNLinearSolver_Ops ops
 
-   struct _generic_SUNLinearSolver_Ops {
-     SUNLinearSolver_Type (*gettype)(SUNLinearSolver);
-     SUNLinearSolver_ID   (*getid)(SUNLinearSolver);
-     int                  (*setatimes)(SUNLinearSolver, void*, SUNATimesFn);
-     int                  (*setpreconditioner)(SUNLinearSolver, void*,
-                                               SUNPSetupFn, SUNPSolveFn);
-     int                  (*setscalingvectors)(SUNLinearSolver,
-                                               N_Vector, N_Vector);
-     int                  (*setzeroguess)(SUNLinearSolver, booleantype);
-     int                  (*initialize)(SUNLinearSolver);
-     int                  (*setup)(SUNLinearSolver, SUNMatrix);
-     int                  (*solve)(SUNLinearSolver, SUNMatrix, N_Vector,
-                                   N_Vector, realtype);
-     int                  (*numiters)(SUNLinearSolver);
-     realtype             (*resnorm)(SUNLinearSolver);
-     sunindextype         (*lastflag)(SUNLinearSolver);
-     int                  (*space)(SUNLinearSolver, long int*, long int*);
-     N_Vector             (*resid)(SUNLinearSolver);
-     int                  (*free)(SUNLinearSolver);
-   };
+      A virtual table of linear solver operations provided by a specific
+      implementation
 
+   .. c:member:: SUNContext sunctx
+
+      The SUNDIALS simulation context
+
+The virtual table structure is defined as
+
+.. c:type:: struct _generic_SUNLinearSolver_Ops *SUNLinearSolver_Ops
+
+.. c:struct:: _generic_SUNLinearSolver_Ops
+
+   The structure defining :c:type:`SUNLinearSolver` operations.
+
+   .. c:member:: SUNLinearSolver_Type (*gettype)(SUNLinearSolver)
+
+      The function implementing :c:func:`SUNLinSolGetType`
+
+   .. c:member:: SUNLinearSolver_ID (*getid)(SUNLinearSolver)
+
+      The function implementing :c:func:`SUNLinSolGetID`
+
+   .. c:member:: SUNErrCode (*setatimes)(SUNLinearSolver, void*, SUNATimesFn)
+
+      The function implementing :c:func:`SUNLinSolSetATimes`
+
+   .. c:member:: SUNErrCode (*setpreconditioner)(SUNLinearSolver, void*, SUNPSetupFn, SUNPSolveFn)
+
+      The function implementing :c:func:`SUNLinSolSetPreconditioner`
+
+   .. c:member:: SUNErrCode (*setscalingvectors)(SUNLinearSolver, N_Vector, N_Vector)
+
+      The function implementing :c:func:`SUNLinSolSetScalingVectors`
+
+   .. c:member:: SUNErrCode (*setzeroguess)(SUNLinearSolver, sunbooleantype)
+
+      The function implementing :c:func:`SUNLinSolSetZeroGuess`
+
+   .. c:member:: SUNErrCode (*initialize)(SUNLinearSolver)
+
+      The function implementing :c:func:`SUNLinSolInitialize`
+
+   .. c:member:: int (*setup)(SUNLinearSolver, SUNMatrix)
+
+      The function implementing :c:func:`SUNLinSolSetup`
+
+   .. c:member:: int (*solve)(SUNLinearSolver, SUNMatrix, N_Vector, N_Vector, sunrealtype)
+
+      The function implementing :c:func:`SUNLinSolSolve`
+
+   .. c:member:: int (*numiters)(SUNLinearSolver)
+
+      The function implementing :c:func:`SUNLinSolNumIters`
+
+   .. c:member:: sunrealtype (*resnorm)(SUNLinearSolver)
+
+      The function implementing :c:func:`SUNLinSolResNorm`
+
+   .. c:member:: sunindextype (*lastflag)(SUNLinearSolver)
+
+      The function implementing :c:func:`SUNLinSolLastFlag`
+
+   .. c:member:: SUNErrCode (*space)(SUNLinearSolver, long int*, long int*)
+
+      The function implementing :c:func:`SUNLinSolSpace`
+
+   .. c:member:: N_Vector (*resid)(SUNLinearSolver)
+
+      The function implementing :c:func:`SUNLinSolResid`
+
+   .. c:member:: SUNErrCode (*free)(SUNLinearSolver)
+
+      The function implementing :c:func:`SUNLinSolFree`
 
 The generic SUNLinSol class defines and implements the linear solver
 operations defined in :numref:`SUNLinSol.CoreFn` -- :numref:`SUNLinSol.GetFn`.
@@ -786,7 +814,7 @@ constructors this function will ease the introduction of any new optional linear
 solver operations to the ``SUNLinearSolver`` API by ensuring that only required
 operations need to be set.
 
-.. c:function:: SUNLinearSolver SUNLinSolNewEmpty()
+.. c:function:: SUNLinearSolver SUNLinSolNewEmpty(SUNContext sunctx)
 
    This function allocates a new generic ``SUNLinearSolver`` object and
    initializes its content pointer and the function pointers in the operations
@@ -824,11 +852,12 @@ Additionally, a ``SUNLinearSolver`` implementation *may* do the following:
 
 
 
-Each SUNLinSol implementation included in SUNDIALS has a unique
-identifier specified in enumeration and shown in
-:numref:`SUNLinSol.API.IDs`. It is recommended that a
-user-supplied SUNLinSol implementation use the
-``SUNLINEARSOLVER_CUSTOM`` identifier.
+.. c:enum:: SUNLinearSolver_ID
+
+   Each SUNLinSol implementation included in SUNDIALS has a unique identifier
+   specified in enumeration and shown in :numref:`SUNLinSol.API.IDs`. It is
+   recommended that a user-supplied SUNLinSol implementation use the
+   ``SUNLINEARSOLVER_CUSTOM`` identifier.
 
 .. _SUNLinSol.API.IDs:
 .. table:: Identifiers associated with :c:type:`SUNLinearSolver`
@@ -871,7 +900,7 @@ SUNLinSol implementations. As SUNDIALS packages utilize generic
 SUNLinSol modules they may naturally leverage user-supplied
 ``SUNLinearSolver`` implementations, thus there exist a wide range of
 possible linear solver combinations. Some intended use cases for both the
-SUNDIALS-provided and user-supplied SUNLinSol modules are discussd in the
+SUNDIALS-provided and user-supplied SUNLinSol modules are discussed in the
 sections below.
 
 
@@ -920,7 +949,7 @@ Matrix-based iterative linear solvers (reusing :math:`A`)
 
 Matrix-based iterative linear solver modules require a matrix and compute an
 inexact solution to the linear system *defined by the matrix*.  This
-matrix will be updated infrequently and resued across multiple solves
+matrix will be updated infrequently and reused across multiple solves
 to amortize the cost of matrix construction. As in the direct linear
 solver case, only thin SUNMATRIX and SUNLinSol wrappers for the underlying
 matrix and linear solver structures need to be created to utilize

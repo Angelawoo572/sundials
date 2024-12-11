@@ -2,7 +2,7 @@
    Programmer(s): Daniel R. Reynolds @ SMU
    ----------------------------------------------------------------
    SUNDIALS Copyright Start
-   Copyright (c) 2002-2023, Lawrence Livermore National Security
+   Copyright (c) 2002-2024, Lawrence Livermore National Security
    and Southern Methodist University.
    All rights reserved.
 
@@ -61,7 +61,7 @@ user-callable routines:
       check.
 
 
-.. c:function:: int SUNLinSol_KLUReInit(SUNLinearSolver S, SUNMatrix A, sunindextype nnz, int reinit_type)
+.. c:function:: SUNErrCode SUNLinSol_KLUReInit(SUNLinearSolver S, SUNMatrix A, sunindextype nnz, int reinit_type)
 
    This function reinitializes memory and flags for a new factorization
    (symbolic and numeric) to be conducted at the next solver setup
@@ -88,17 +88,13 @@ user-callable routines:
             constructor routine (or the previous ``SUNKLUReInit`` call).
 
    **Return value:**
-      * ``SUNLS_SUCCESS`` -- reinitialization successful.
-      * ``SUNLS_MEM_NULL`` -- either ``S`` or ``A`` are ``NULL``.
-      * ``SUNLS_ILL_INPUT`` -- ``A`` does not have type ``SUNMATRIX_SPARSE`` or
-         ``reinit_type`` is invalid.
-      * ``SUNLS_MEM_FAIL`` reallocation of the sparse matrix failed.
+      * A :c:type:`SUNErrCode`
 
    **Notes:**
       This routine assumes no other changes to solver use are necessary.
 
 
-.. c:function:: int SUNLinSol_KLUSetOrdering(SUNLinearSolver S, int ordering_choice)
+.. c:function:: SUNErrCode SUNLinSol_KLUSetOrdering(SUNLinearSolver S, int ordering_choice)
 
    This function sets the ordering used by KLU for reducing fill in
    the linear solve.
@@ -116,9 +112,7 @@ user-callable routines:
          The default is 1 for COLAMD.
 
    **Return value:**
-      * ``SUNLS_SUCCESS`` -- ordering choice successfully updated.
-      * ``SUNLS_MEM_NULL`` -- ``S`` is ``NULL``.
-      * ``SUNLS_ILL_INPUT`` -- ``ordering_choice``.
+      * A :c:type:`SUNErrCode`
 
 
 .. c:function:: sun_klu_symbolic* SUNLinSol_KLUGetSymbolic(SUNLinearSolver S)
@@ -126,10 +120,15 @@ user-callable routines:
    This function returns a pointer to the KLU symbolic factorization
    stored in the SUNLinSol_KLU ``content`` structure.
 
-   When SUNDIALS is compiled with 32-bit indices (``SUNDIALS_INDEX_SIZE=32``),
-   ``sun_klu_symbolic`` is mapped to the KLU type ``klu_symbolic``; when
-   SUNDIALS compiled with 64-bit indices (``SUNDIALS_INDEX_SIZE=64``) this is
-   mapped to the KLU type ``klu_l_symbolic``.
+   .. c:type:: sun_klu_symbolic
+
+      This type is an alias that depends on the SUNDIALS index size, see
+      :c:type:`sunindextype` and :cmakeop:`SUNDIALS_INDEX_SIZE`. It is
+      equivalent to:
+
+      * ``klu_symbolic`` when SUNDIALS is compiled with 32-bit indices
+
+      * ``klu_l_symbolic`` when SUNDIALS is compiled with 64-bit indices
 
 
 .. c:function:: sun_klu_numeric* SUNLinSol_KLUGetNumeric(SUNLinearSolver S)
@@ -137,10 +136,15 @@ user-callable routines:
    This function returns a pointer to the KLU numeric factorization
    stored in the SUNLinSol_KLU ``content`` structure.
 
-   When SUNDIALS is compiled with 32-bit indices (``SUNDIALS_INDEX_SIZE=32``),
-   ``sun_klu_numeric`` is mapped to the KLU type ``klu_numeric``; when
-   SUNDIALS is compiled with 64-bit indices (``SUNDIALS_INDEX_SIZE=64``) this is
-   mapped to the KLU type ``klu_l_numeric``.
+   .. c:type:: sun_klu_numeric
+
+      This type is an alias that depends on the SUNDIALS index size, see
+      :c:type:`sunindextype` and :cmakeop:`SUNDIALS_INDEX_SIZE`. It is
+      equivalent to:
+
+      * ``klu_numeric`` when SUNDIALS is compiled with 32-bit indices
+
+      * ``klu_l_numeric``  when SUNDIALS is compiled with 64-bit indices
 
 
 .. c:function:: sun_klu_common* SUNLinSol_KLUGetCommon(SUNLinearSolver S)
@@ -148,29 +152,15 @@ user-callable routines:
    This function returns a pointer to the KLU common structure
    stored in the SUNLinSol_KLU ``content`` structure.
 
-   When SUNDIALS is compiled with 32-bit indices (``SUNDIALS_INDEX_SIZE=32``),
-   ``sun_klu_common`` is mapped to the KLU type ``klu_common``; when
-   SUNDIALS is compiled with 64-bit indices  (``SUNDIALS_INDEX_SIZE=64``) this is
-   mapped to the KLU type ``klu_l_common``.
+   .. c:type:: sun_klu_common
 
+      This type is an alias that depends on the SUNDIALS index size, see
+      :c:type:`sunindextype` and :cmakeop:`SUNDIALS_INDEX_SIZE`. It is
+      equivalent to:
 
-For backwards compatibility, we also provide the following wrapper functions,
-each with identical input and output arguments to the routines that
-they wrap:
+      * ``klu_common`` when SUNDIALS is compiled with 32-bit indices
 
-.. c:function:: SUNLinearSolver SUNKLU(N_Vector y, SUNMatrix A)
-
-   Wrapper function for :c:func:`SUNLinSol_KLU`
-
-.. c:function:: int SUNKLUReInit(SUNLinearSolver S, SUNMatrix A, sunindextype nnz, int reinit_type)
-
-   Wrapper function for :c:func:`SUNLinSol_KLUReInit()`
-
-.. c:function:: int SUNKLUSetOrdering(SUNLinearSolver S, int ordering_choice)
-
-   Wrapper function for :c:func:`SUNLinSol_KLUSetOrdering()`
-
-
+      * ``klu_l_common``  when SUNDIALS is compiled with 64-bit indices
 
 
 .. _SUNLinSol.KLU.Description:
@@ -233,8 +223,8 @@ that SUNDIALS has been configured appropriately to link with KLU
 (see :numref:`Installation.CMake.ExternalLibraries` for details).
 Additionally, this wrapper only supports double-precision
 calculations, and therefore cannot be compiled if SUNDIALS is
-configured to have :c:type:`realtype` set to either ``extended`` or
-``single`` (see :ref:`Usage.CC.DataTypes` for
+configured to have :c:type:`sunrealtype` set to either ``extended`` or
+``single`` (see :numref:`SUNDIALS.DataTypes` for
 details). Since the KLU library supports both 32-bit and 64-bit
 integers, this interface will be compiled for either of the available
 :c:type:`sunindextype` options.

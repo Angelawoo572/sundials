@@ -2,7 +2,7 @@
 # Programmer(s): Slaven Peles, Cody Balos @ LLNL
 # -----------------------------------------------------------------
 # SUNDIALS Copyright Start
-# Copyright (c) 2002-2023, Lawrence Livermore National Security
+# Copyright (c) 2002-2024, Lawrence Livermore National Security
 # and Southern Methodist University.
 # All rights reserved.
 #
@@ -23,7 +23,9 @@ ida_ex_serial.tex   \
 ida_ex_parallel.tex \
 ida_ex_petsc.tex    \
 ida_ex_trilinos.tex    \
-ida_ex_fortran.tex  \
 ida_ex_codes.tex
+
+# Remove F77 example text
+# ida_ex_fortran.tex  \
 
 include ../Makefile.in

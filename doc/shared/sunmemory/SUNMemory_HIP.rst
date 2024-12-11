@@ -1,7 +1,7 @@
 ..
    ----------------------------------------------------------------
    SUNDIALS Copyright Start
-   Copyright (c) 2002-2023, Lawrence Livermore National Security
+   Copyright (c) 2002-2024, Lawrence Livermore National Security
    and Southern Methodist University.
    All rights reserved.
 
@@ -71,7 +71,7 @@ The implementation provides the following operations defined by the
    * An ``int`` flag indicating success (zero) or failure (non-zero).
 
 
-.. c:function:: int SUNMemoryHelper_Dealloc_Hip(SUNMemoryHelper helper, \
+.. c:function:: SUNErrCode SUNMemoryHelper_Dealloc_Hip(SUNMemoryHelper helper, \
                                                 SUNMemory mem, \
                                                 void* queue)
 
@@ -88,7 +88,7 @@ The implementation provides the following operations defined by the
    * An ``int`` flag indicating success (zero) or failure (non-zero).
 
 
-.. c:function:: int SUNMemoryHelper_Copy_Hip(SUNMemoryHelper helper, \
+.. c:function:: SUNErrCode SUNMemoryHelper_Copy_Hip(SUNMemoryHelper helper, \
                                              SUNMemory dst, SUNMemory src, \
                                              size_t mem_size, void* queue)
 
@@ -110,7 +110,7 @@ The implementation provides the following operations defined by the
    * An ``int`` flag indicating success (zero) or failure (non-zero).
 
 
-.. c:function:: int SUNMemoryHelper_CopyAsync_Hip(SUNMemoryHelper helper, \
+.. c:function:: SUNErrCode SUNMemoryHelper_CopyAsync_Hip(SUNMemoryHelper helper, \
                                                   SUNMemory dst, \
                                                   SUNMemory src, \
                                                   size_t mem_size, void* queue)
@@ -135,7 +135,7 @@ The implementation provides the following operations defined by the
    * An ``int`` flag indicating success (zero) or failure (non-zero).
 
 
-.. c:function:: int SUNMemoryHelper_GetAllocStats_Hip(SUNMemoryHelper helper, SUNMemoryType mem_type, unsigned long* num_allocations, \
+.. c:function:: SUNErrCode SUNMemoryHelper_GetAllocStats_Hip(SUNMemoryHelper helper, SUNMemoryType mem_type, unsigned long* num_allocations, \
                                                       unsigned long* num_deallocations, size_t* bytes_allocated, \
                                                       size_t* bytes_high_watermark)
 

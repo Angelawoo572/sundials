@@ -1,6 +1,6 @@
 # -----------------------------------------------------------------------------
 # SUNDIALS Copyright Start
-# Copyright (c) 2002-2023, Lawrence Livermore National Security
+# Copyright (c) 2002-2024, Lawrence Livermore National Security
 # and Southern Methodist University.
 # All rights reserved.
 #
@@ -11,8 +11,8 @@
 # -----------------------------------------------------------------------------
 
 import sys, os
-sys.path.append(os.path.dirname(os.path.abspath('../../shared/versions.py')))
-from versions import *
+sys.path.append(os.path.dirname(os.path.abspath('../../shared/sundials_vars.py')))
+from sundials_vars import *
 sys.path.append(os.path.dirname(os.path.abspath('../../shared')))
 
 # -- General configuration ----------------------------------------------------
@@ -27,8 +27,14 @@ needs_sphinx = '4.0'
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
 extensions = ['sphinx_rtd_theme', 'sphinx.ext.ifconfig', 'sphinx.ext.mathjax',
-              'sphinxfortran.fortran_domain', 'sphinxcontrib.bibtex',
-              'sphinx_copybutton', 'sphinx_sundials']
+              'sphinx.ext.intersphinx', 'sphinxfortran.fortran_domain',
+              'sphinxcontrib.bibtex', 'sphinx_copybutton', 'sphinx.ext.graphviz',
+              'sphinx_sundials', 'sphinx_toolbox.collapse']
+
+intersphinx_mapping = {"sphinx": ("https://www.sphinx-doc.org/en/master/", None),}
+
+# No non-external references will be resolved by intersphinx
+intersphinx_disabled_reftypes = ["*"]
 
 # References
 bibtex_bibfiles = ['../../shared/sundials.bib']

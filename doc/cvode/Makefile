@@ -2,7 +2,7 @@
 # Programmer(s): Slaven Peles, Cody Balos @ LLNL
 # -----------------------------------------------------------------
 # SUNDIALS Copyright Start
-# Copyright (c) 2002-2023, Lawrence Livermore National Security
+# Copyright (c) 2002-2024, Lawrence Livermore National Security
 # and Southern Methodist University.
 # All rights reserved.
 #
@@ -22,7 +22,9 @@ cv_ex_intro.tex \
 cv_ex_serial.tex \
 cv_ex_parallel.tex \
 cv_ex_parhyp.tex \
-cv_ex_fortran.tex \
 cv_ex_tests.tex
+
+# Remove F77 example text
+# cv_ex_fortran.tex \
 
 include ../Makefile.in

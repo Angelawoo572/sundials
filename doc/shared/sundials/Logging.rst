@@ -1,6 +1,6 @@
 .. ----------------------------------------------------------------
    SUNDIALS Copyright Start
-   Copyright (c) 2002-2023, Lawrence Livermore National Security
+   Copyright (c) 2002-2024, Lawrence Livermore National Security
    and Southern Methodist University.
    All rights reserved.
 
@@ -12,8 +12,8 @@
 
 .. _SUNDIALS.Logging:
 
-SUNDIALS Status Logging
-=======================
+Status and Error Logging
+========================
 
 .. versionadded:: 6.2.0
 
@@ -28,14 +28,15 @@ Enabling Logging
 ----------------
 
 To enable logging, the CMake option :cmakeop:`SUNDIALS_LOGGING_LEVEL` must be
-set to a value greater than ``0`` when configuring SUNDIALS. This option
-specifies the maximum desired output level. See the documentation entry for
-:cmakeop:`SUNDIALS_LOGGING_LEVEL` for the numeric values correspond to errors,
-warnings, info output, and debug output where errors < warnings < info
-output < debug output < extra debug output. If it is desired that the logger is
-MPI-aware, then the option :cmakeop:`SUNDIALS_LOGGING_ENABLE_MPI` is set to
-``TRUE``. More details in regards to configuring SUNDIALS with CMake can be
-found in :numref:`Installation`.
+set to the maximum desired output level when configuring SUNDIALS. See the
+:cmakeop:`SUNDIALS_LOGGING_LEVEL` documentation for the numeric values
+corresponding to errors, warnings, info output, and debug output where errors <
+warnings < info output < debug output < extra debug output. By default only
+warning and error messages are logged.
+
+.. note::
+
+   As of version 7.0.0, enabling MPI in SUNDIALS enables MPI-aware logging.
 
 When SUNDIALS is built with logging enabled, then the default logger (stored in
 the :c:type:`SUNContext` object) may be configured through environment variables
@@ -55,30 +56,68 @@ The different variables may all be set to the same file, or to distinct files,
 or some combination there of. To disable output for one of the streams, then
 do not set the environment variable, or set it to an empty string.
 
+If :cmakeop:`SUNDIALS_LOGGING_LEVEL` was set at build-time to a level lower than
+the corresponding environment variable, then setting the environment variable
+will do nothing. For example, if the logging level is set to ``2`` (errors and
+warnings), setting ``SUNLOGGER_INFO_FILENAME`` will do nothing.
+
 .. warning::
 
-   A non-default logger should be created prior to any other SUNDIALS calls
-   in order to capture all log events.
+   A non-default logger should be created and attached to the context object prior
+   to any other SUNDIALS calls in order to capture all log events.
+
+Error or warning logs are a single line output with an error or warning message
+
+.. code-block:: text
+
+   [level][rank][scope][label] message describing the error or warning
+
+Informational or debugging logs are either a single line output with a
+comma-separated list of key-value pairs of the form
+
+.. code-block:: text
+
+   [level][rank][scope][label] key1 = value, key2 = value
+
+or multiline output with one value per line for keys corresponding to a vector
+or array e.g.,
+
+.. code-block:: text
+
+   [level][rank][scope][label] y(:) =
+   y[0]
+   y[1]
+   ...
+
+In the example log outputs above, the values in brackets have the following
+meaning:
+
+* ``level`` is the log level of the message and will be ``ERROR``, ``WARNING``,
+  ``INFO``, or ``DEBUG``
+
+* ``rank`` is the MPI rank the message was written from (``0`` by default or if
+  SUNDIALS was built without MPI enabled)
+
+* ``scope`` is the message scope i.e., the name of the function from which the
+  message was written
+
+* ``label`` provides additional context or information about the logging
+  output e.g., ``begin-step``, ``end-linear-solve``, etc.
 
 .. note::
 
-   If :cmakeop:`SUNDIALS_LOGGING_LEVEL` was set to ``1`` (corresponding to
-   error-level output) at build-time, then setting the environment variable
-   ``SUNLOGGER_INFO_FILENAME`` will do nothing.
-
-.. note::
-
-   Extra debugging output is turned on by setting :cmakeop:`SUNDIALS_LOGGING_LEVEL` to 5.
-   This extra output includes vector-values (so long as the :c:type:`N_Vector` used
-   supports printing).
-
+   When extra debugging output is enabled, the output will include vector values
+   (so long as the :c:type:`N_Vector` used supports printing). Depending on the
+   problem size, this may result in very large logging files.
 
 Logger API
 ----------
 
 The central piece of the Logger API is the :c:type:`SUNLogger` type:
 
-.. c:type:: struct SUNLogger_* SUNLogger
+.. c:type:: SUNLogger
+
+   An opaque pointer containing logging information.
 
 When SUNDIALS is built with logging enabled, a default logging object is stored
 in the :c:type:`SUNContext` object and can be accessed with a call to
@@ -91,52 +130,51 @@ functions to identify the output level or file.
 
    The SUNDIALS logging level
 
-.. c:enumerator:: SUN_LOGLEVEL_ALL
+   .. c:enumerator:: SUN_LOGLEVEL_ALL
 
-   Represents all output levels
+      Represents all output levels
 
-.. c:enumerator:: SUN_LOGLEVEL_NONE
+   .. c:enumerator:: SUN_LOGLEVEL_NONE
 
-   Represents none of the output levels
+      Represents none of the output levels
 
-.. c:enumerator:: SUN_LOGLEVEL_ERROR
+   .. c:enumerator:: SUN_LOGLEVEL_ERROR
 
-   Represents error-level logging messages
+      Represents error-level logging messages
 
-.. c:enumerator:: SUN_LOGLEVEL_WARNING
+   .. c:enumerator:: SUN_LOGLEVEL_WARNING
 
-   Represents warning-level logging messages
+      Represents warning-level logging messages
 
-.. c:enumerator:: SUN_LOGLEVEL_INFO
+   .. c:enumerator:: SUN_LOGLEVEL_INFO
 
-   Represents info-level logging messages
+      Represents info-level logging messages
 
-.. c:enumerator:: SUN_LOGLEVEL_DEBUG
+   .. c:enumerator:: SUN_LOGLEVEL_DEBUG
 
-   Represents deubg-level logging messages
+      Represents deubg-level logging messages
 
 
 The :c:type:`SUNLogger` class provides the following methods.
 
 
-.. c:function:: int SUNLogger_Create(void* comm, int output_rank, SUNLogger* logger)
+.. c:function:: int SUNLogger_Create(SUNComm comm, int output_rank, SUNLogger* logger)
 
    Creates a new :c:type:`SUNLogger` object.
 
    **Arguments:**
-      * ``comm`` -- a pointer to the MPI communicator if MPI is enabled,
-        otherwise can be ``NULL``.
+      * ``comm`` -- the MPI communicator to use, if MPI is enabled, otherwise can be ``SUN_COMM_NULL``.
       * ``output_rank`` -- the MPI rank used for output (can be ``-1`` to print
         to all ranks).
       * ``logger`` -- [in,out] On input this is a pointer to a
-         :c:type:`SUNLogger`, on output it will point to a new
-         :c:type:`SUNLogger` instance.
+        :c:type:`SUNLogger`, on output it will point to a new
+        :c:type:`SUNLogger` instance.
 
    **Returns:**
       * Returns zero if successful, or non-zero if an error occurred.
 
 
-.. c:function:: int SUNLogger_CreateFromEnv(void* comm, SUNLogger* logger)
+.. c:function:: int SUNLogger_CreateFromEnv(SUNComm comm, SUNLogger* logger)
 
    Creates a new :c:type:`SUNLogger` object and opens the output streams/files
    from the environment variables:
@@ -149,11 +187,10 @@ The :c:type:`SUNLogger` class provides the following methods.
       SUNLOGGER_DEBUG_FILENAME
 
    **Arguments:**
-      * ``comm`` -- a pointer to the MPI communicator if MPI is enabled,
-        otherwise can be ``NULL``.
+      * ``comm`` -- the MPI communicator to use, if MPI is enabled, otherwise can be   ``SUN_COMM_NULL``.
       * ``logger`` -- [in,out] On input this is a pointer to a
-         :c:type:`SUNLogger`, on output it will point to a new
-         :c:type:`SUNLogger` instance.
+        :c:type:`SUNLogger`, on output it will point to a new
+        :c:type:`SUNLogger` instance.
 
    **Returns:**
       * Returns zero if successful, or non-zero if an error occurred.
@@ -274,16 +311,20 @@ The :c:type:`SUNLogger` class provides the following methods.
 Example Usage
 -------------
 
-As previously mentioned, if it is enabled at build time, there is a default
-:c:type:`SUNLogger` attached to a :c:type:`SUNContext` instance when it is
-created. This logger can be configured using the environment variables, e.g.,
+As noted above, enabling logging must be done when configuring SUNDIALS by
+setting the CMake option :cmakeop:`SUNDIALS_LOGGING_LEVEL` to the desired
+logging level. When running a program with SUNDIALS logging enabled, a default
+logger is created and attached to the :c:type:`SUNContext` instance at creation.
+Environment variables or run-time functions can be used to determine where the
+logging output is written. For example, consider the CVODE Roberts example, where
+we can direct the informational output to the file ``sun.log`` as follows
 
 .. code-block::
 
-   SUNDIALS_INFO_FILENAME=stdout ./examples/cvode/serial/cvKrylovDemo_ls
+   SUNDIALS_INFO_FILENAME=sun.log ./examples/cvode/serial/cvRoberts_dns
 
-SUNDIALS also includes several example codes that demonstrate how to use the
-logging interface via the C API.
+Alternatively, the following examples demonstrate how to use the logging
+interface via the C API:
 
 .. code-block::
 
@@ -292,3 +333,13 @@ logging interface via the C API.
    examples/cvode/parallel/cvAdvDiff_diag_p.c
    examples/kinsol/CXX_parallel/kin_em_p.cpp
    examples/kinsol/CUDA_mpi/kin_em_mpicuda.cpp
+
+To assist with extracting informational logging data from output files the
+``tools`` directory contains a Python module, ``suntools``, that provides
+utilities for parsing log files. Some example scripts using the ``suntools``
+module are included in the ``tools`` directory. For example, we can plot the
+step size history from the CVODE Roberts problem with
+
+.. code-block::
+
+   ./log_example.py sun.log

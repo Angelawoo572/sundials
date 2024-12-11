@@ -1,6 +1,6 @@
 .. ----------------------------------------------------------------
    SUNDIALS Copyright Start
-   Copyright (c) 2002-2023, Lawrence Livermore National Security
+   Copyright (c) 2002-2024, Lawrence Livermore National Security
    and Southern Methodist University.
    All rights reserved.
 
@@ -12,18 +12,24 @@
 
 .. _SUNDIALS:
 
-**************
-Using SUNDIALS
-**************
+***************
+Getting Started
+***************
 
-As discussed in :numref:`Organization`, the all SUNDIALS packages are built upon
-a common set of interfaces for vectors, matrices, and algebraic solvers. In
-addition, the packages all leverage some other common infrastructure discussed
-in this section.
+The packages that make up SUNDIALS are built upon shared classes for vectors,
+matrices, and algebraic solvers. In addition, the packages all leverage some
+other common infrastructure, which we discuss in this section.
+
+.. _Organization.Sundials.HighLevelDiagram:
+.. figure:: ../figs/sunorg1.png
+   :align: center
+
+   High-level diagram of the SUNDIALS suite.
 
 .. toctree::
    Types_link
    SUNContext_link
+   Errors_link
    Logging_link
    Profiling_link
    version_information_link

@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
 # ---------------------------------------------------------------
 # Programmer(s): Steven Smith @ LLNL
 #                David J. Gardner @ LLNL
@@ -6,7 +6,7 @@
 # Acknowledgement: Based on code from Chris White @ LLNL
 # ---------------------------------------------------------------
 # SUNDIALS Copyright Start
-# Copyright (c) 2002-2023, Lawrence Livermore National Security
+# Copyright (c) 2002-2024, Lawrence Livermore National Security
 # and Southern Methodist University.
 # All rights reserved.
 #
@@ -188,7 +188,7 @@ def main():
             else:
                 answerFileName = testName
 
-        # if user supplies filename overide default choices
+        # if user supplies filename override default choices
         if(args.answerFile):
             answerFileName = args.answerFile
 
@@ -201,9 +201,11 @@ def main():
             dateTime = datetime.datetime.now().strftime("%m%d%Y_%H%M%S")
             profilePath = os.path.join(caliDir, args.testName+".%s.cali" % dateTime)
             os.environ['CALI_SERVICES_ENABLE'] = 'env'
+            os.environ['TEST_NAME'] = testName
+            os.environ['CALI_ENV_EXTRA'] = 'TEST_NAME'
             os.environ['CALI_CONFIG'] = 'spot(output=%s)' % profilePath
 
-        # if user supplies precision info overide the default choices
+        # if user supplies precision info override the default choices
         if(args.floatPrecision >= 0):
             testInfo.floatPrecision=args.floatPrecision
 
@@ -218,7 +220,8 @@ def main():
             print("  Answer File = " + answerPath)
             print("  Output File = " + outPath)
             if(args.profile):
-                print("  ENV{CALI_CONFIG} = " + os.environ['CALI_CONFIG'] + "\n")
+                print("  ENV{CALI_CONFIG} = " + os.environ['CALI_CONFIG'])
+            print("\n")
 
         outFile = open(outPath, 'w')
         try:
@@ -406,7 +409,7 @@ def getInfo(testName, testDir):
 
     if len(testInfos) == 0:
         # Note: If no info is found in the testInfo file then run the test
-        # without arguments and use the default comparisions values
+        # without arguments and use the default comparisons values
         testInfos.append(TestInfo(4,10,""))
     return testInfos
 

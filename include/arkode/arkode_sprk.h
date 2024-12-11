@@ -2,7 +2,7 @@
  * Programmer(s): Cody J. Balos @ LLNL
  * -----------------------------------------------------------------
  * SUNDIALS Copyright Start
- * Copyright (c) 2002-2023, Lawrence Livermore National Security
+ * Copyright (c) 2002-2024, Lawrence Livermore National Security
  * and Southern Methodist University.
  * All rights reserved.
  *
@@ -79,7 +79,7 @@ void ARKodeSPRKTable_Write(ARKodeSPRKTable sprk_table, FILE* outfile);
 
 SUNDIALS_EXPORT
 void ARKodeSPRKTable_Space(ARKodeSPRKTable sprk_storage, sunindextype* liw,
-                            sunindextype* lrw);
+                           sunindextype* lrw);
 SUNDIALS_EXPORT
 void ARKodeSPRKTable_Free(ARKodeSPRKTable sprk_storage);
 

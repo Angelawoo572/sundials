@@ -2,7 +2,7 @@
  * Programmer(s): Cody J. Balos @ LLNL
  * -----------------------------------------------------------------------------
  * SUNDIALS Copyright Start
- * Copyright (c) 2002-2023, Lawrence Livermore National Security
+ * Copyright (c) 2002-2024, Lawrence Livermore National Security
  * and Southern Methodist University.
  * All rights reserved.
  *
@@ -23,7 +23,7 @@
 
 namespace sundials {
 namespace impl {
-using BaseMemoryHelper = BaseObject<_SUNMemoryHelper, _SUNMemoryHelper_Ops>;
+using BaseMemoryHelper = BaseObject<SUNMemoryHelper_, SUNMemoryHelper_Ops_>;
 } // namespace impl
 
 namespace experimental {
@@ -31,9 +31,10 @@ struct SUNMemoryHelperDeleter
 {
   void operator()(SUNMemoryHelper helper)
   {
-    if (helper) SUNMemoryHelper_Destroy(helper);
+    if (helper) { SUNMemoryHelper_Destroy(helper); }
   }
 };
+
 using SUNMemoryHelperView = ClassView<SUNMemoryHelper, SUNMemoryHelperDeleter>;
 } // namespace experimental
 } // namespace sundials

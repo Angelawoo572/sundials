@@ -2,7 +2,7 @@
 # Programmer(s): Cody J. Balos @ LLNL
 # ---------------------------------------------------------------
 # SUNDIALS Copyright Start
-# Copyright (c) 2002-2023, Lawrence Livermore National Security
+# Copyright (c) 2002-2024, Lawrence Livermore National Security
 # and Southern Methodist University.
 # All rights reserved.
 #
@@ -32,13 +32,6 @@ else()
   set(SUNDIALS_DEPRECATED_MSG_MACRO "SUNDIALS_DEPRECATED")
 endif()
 
-# prepare substitution variable SUNDIALS_USE_GENERIC_MATH for sundials_config.h
-if(SUNDIALS_C_COMPILER_HAS_MATH_PRECISIONS)
-  set(SUNDIALS_USE_GENERIC_MATH FALSE)
-else()
-  set(SUNDIALS_USE_GENERIC_MATH TRUE)
-endif()
-
 if($ENV{CI_JOB_ID})
   set(JOB_ID $ENV{CI_JOB_ID})
 else()
@@ -51,10 +44,9 @@ else()
   string(TIMESTAMP JOB_START_TIME "%Y%m%d%H%M%S")
 endif()
 
-
 # ============================================================================
-# Generate macros and substitution variables related to TPLs
-# that SUNDIALS is being built with.
+# Generate macros and substitution variables related to TPLs that SUNDIALS is
+# being built with.
 # ============================================================================
 
 # prepare substitution variables for modules that have been built
@@ -66,13 +58,14 @@ foreach(_item ${SUNDIALS_BUILD_LIST})
   endif()
 endforeach()
 
-# prepare substitution variable SUNDIALS_${TPL NAME}_ENABLED for sundials_config.h
+# prepare substitution variable SUNDIALS_${TPL NAME}_ENABLED for
+# sundials_config.h
 foreach(tpl ${SUNDIALS_TPL_LIST})
   set(SUNDIALS_${tpl}_ENABLED TRUE)
 endforeach()
 
 # prepare substitution variable SUNDIALS_TRILINOS_HAVE_MPI for sundials_config.h
-if(Trilinos_MPI)
+if(ENABLE_MPI)
   set(SUNDIALS_TRILINOS_HAVE_MPI TRUE)
 endif()
 
@@ -101,7 +94,5 @@ endif()
 # Generate the header file and place it in the binary dir.
 # =============================================================================
 
-configure_file(
-  ${PROJECT_SOURCE_DIR}/include/sundials/sundials_config.in
-  ${PROJECT_BINARY_DIR}/include/sundials/sundials_config.h
-  )
+configure_file(${PROJECT_SOURCE_DIR}/include/sundials/sundials_config.in
+               ${PROJECT_BINARY_DIR}/include/sundials/sundials_config.h)

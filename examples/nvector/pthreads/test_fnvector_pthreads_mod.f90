@@ -2,7 +2,7 @@
 ! Programmer(s): Cody J. Balos @ LLNL
 ! -----------------------------------------------------------------
 ! SUNDIALS Copyright Start
-! Copyright (c) 2002-2023, Lawrence Livermore National Security
+! Copyright (c) 2002-2024, Lawrence Livermore National Security
 ! and Southern Methodist University.
 ! All rights reserved.
 !
@@ -17,23 +17,21 @@
 
 module test_nvector_pthreads
   use, intrinsic :: iso_c_binding
-  use fsundials_nvector_mod
   use fnvector_pthreads_mod
   use test_utilities
   implicit none
 
-  integer(c_long), parameter :: N = 100 ! vector length
-  integer(c_int),  parameter :: nv = 3  ! length of vector arrays
-  integer(c_int),  parameter :: ns = 2  ! number of vector arrays
+  integer(kind=myindextype), parameter :: N = 100 ! vector length
+  integer(kind=myindextype), parameter :: ns = 2  ! number of vector arrays
+  integer(c_int), parameter :: nv = 3  ! length of vector arrays
 
-  contains
+contains
 
   integer function smoke_tests() result(ret)
     implicit none
 
-    integer(c_long)         :: lenrw(1), leniw(1) ! real and int work space size
+    integer(kind=myindextype) :: lenrw(1), leniw(1) ! real and int work space size
     integer(c_long)         :: ival               ! integer work value
-    type(c_ptr)             :: cptr               ! c_ptr work value
     real(c_double)          :: rval               ! real work value
     real(c_double)          :: xdata(N)           ! vector data array
     real(c_double), pointer :: xptr(:)            ! pointer to vector data array
@@ -51,7 +49,7 @@ module test_nvector_pthreads
 
     xvecs = FN_VCloneVectorArray(nv, x)
     zvecs = FN_VCloneVectorArray(nv, z)
-    nvarr = (/ ONE, ONE, ONE /)
+    nvarr = (/ONE, ONE, ONE/)
 
     !===== Test =====
 
@@ -70,7 +68,7 @@ module test_nvector_pthreads
     call FN_VSpace_Pthreads(x, lenrw, leniw)
     xptr => FN_VGetArrayPointer_Pthreads(x)
     call FN_VSetArrayPointer_Pthreads(xdata, x)
-    cptr = FN_VGetCommunicator(x)
+    ival = FN_VGetCommunicator(x)
     ival = FN_VGetLength_Pthreads(x)
 
     ! test standard vector operations
@@ -95,16 +93,16 @@ module test_nvector_pthreads
     rval = FN_VMinQuotient_Pthreads(x, y)
 
     ! test fused vector operations
-    ival = FN_VLinearCombination_Pthreads(nv, nvarr, xvecs, x)
-    ival = FN_VScaleAddMulti_Pthreads(nv, nvarr, x, xvecs, zvecs)
-    ival = FN_VDotProdMulti_Pthreads(nv, x, xvecs, nvarr)
+    ival = FN_VLinearCombination_Pthreads(int(nv, 4), nvarr, xvecs, x)
+    ival = FN_VScaleAddMulti_Pthreads(int(nv, 4), nvarr, x, xvecs, zvecs)
+    ival = FN_VDotProdMulti_Pthreads(int(nv, 4), x, xvecs, nvarr)
 
     ! test vector array operations
-    ival = FN_VLinearSumVectorArray_Pthreads(nv, ONE, xvecs, ONE, xvecs, zvecs)
-    ival = FN_VScaleVectorArray_Pthreads(nv, nvarr, xvecs, zvecs)
-    ival = FN_VConstVectorArray_Pthreads(nv, ONE, xvecs)
-    ival = FN_VWrmsNormVectorArray_Pthreads(nv, xvecs, xvecs, nvarr)
-    ival = FN_VWrmsNormMaskVectorArray_Pthreads(nv, xvecs, xvecs, x, nvarr)
+    ival = FN_VLinearSumVectorArray_Pthreads(int(nv, 4), ONE, xvecs, ONE, xvecs, zvecs)
+    ival = FN_VScaleVectorArray_Pthreads(int(nv, 4), nvarr, xvecs, zvecs)
+    ival = FN_VConstVectorArray_Pthreads(int(nv, 4), ONE, xvecs)
+    ival = FN_VWrmsNormVectorArray_Pthreads(int(nv, 4), xvecs, xvecs, nvarr)
+    ival = FN_VWrmsNormMaskVectorArray_Pthreads(int(nv, 4), xvecs, xvecs, x, nvarr)
 
     !==== Cleanup =====
     call FN_VDestroy_Pthreads(x)
@@ -142,17 +140,16 @@ module test_nvector_pthreads
 
 end module
 
-
 integer(C_INT) function check_ans(ans, X, local_length) result(failure)
   use, intrinsic :: iso_c_binding
-  use fsundials_nvector_mod
+
   use test_utilities
   implicit none
 
-  real(C_DOUBLE)          :: ans
-  type(N_Vector)          :: X
-  integer(C_LONG)         :: local_length, i
-  real(C_DOUBLE), pointer :: Xdata(:)
+  real(C_DOUBLE)            :: ans
+  type(N_Vector)            :: X
+  integer(kind=myindextype) :: local_length, i
+  real(C_DOUBLE), pointer   :: Xdata(:)
 
   failure = 0
 
@@ -164,10 +161,9 @@ integer(C_INT) function check_ans(ans, X, local_length) result(failure)
   end do
 end function check_ans
 
-
 logical function has_data(X) result(failure)
   use, intrinsic :: iso_c_binding
-  use fsundials_nvector_mod
+
   use test_utilities
   implicit none
 
@@ -177,7 +173,6 @@ logical function has_data(X) result(failure)
   xptr => FN_VGetArrayPointer(x)
   failure = associated(xptr)
 end function has_data
-
 
 program main
   !======== Inclusions ==========
@@ -191,7 +186,7 @@ program main
   !============== Introduction =============
   print *, 'Pthreads N_Vector Fortran 2003 interface test'
 
-  call Test_Init(c_null_ptr)
+  call Test_Init(SUN_COMM_NULL)
 
   fails = smoke_tests()
   if (fails /= 0) then

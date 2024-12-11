@@ -1,6 +1,6 @@
 .. ----------------------------------------------------------------
    SUNDIALS Copyright Start
-   Copyright (c) 2002-2023, Lawrence Livermore National Security
+   Copyright (c) 2002-2024, Lawrence Livermore National Security
    and Southern Methodist University.
    All rights reserved.
 
@@ -57,7 +57,7 @@ interested reader.
   :c:func:`N_VMaxNorm`                        x
   :c:func:`N_VWrmsNorm`                       x      x           x         x
   :c:func:`N_VMin`                            x
-  :c:func:`N_MinQuotient`                     x
+  :c:func:`N_VMinQuotient`                    x
   :c:func:`N_VConstrMask`                     x
   :c:func:`N_VCompare`                        x           x
   :c:func:`N_VInvTest`                                    x
