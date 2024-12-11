@@ -162,11 +162,11 @@ options as the vector they are cloned from while vectors created with
 **Notes**
 
 * When there is a need to access components of an ``N_Vector_Petsc v``, it
-  is recommeded to extract the PETSc vector via ``x_vec = N_VGetVector_Petsc(v);``
+  is recommended to extract the PETSc vector via ``x_vec = N_VGetVector_Petsc(v);``
   and then access components using appropriate PETSc functions.
 
 * The functions :c:func:`N_VNewEmpty_Petsc` and :c:func:`N_VMake_Petsc`, set the
-  field *own_data* to ``SUNFALSE``. The routine :c:func:`N_VDestroy_Petsc()`
+  field *own_data* to ``SUNFALSE``. The implementation of :c:func:`N_VDestroy`
   will not attempt to free the pointer ``pvec`` for any ``N_Vector`` with
   *own_data* set to ``SUNFALSE``. In such a case, it is the user's
   responsibility to deallocate the ``pvec`` pointer.

@@ -14,9 +14,9 @@
 
 .. _ARKODE.Constants:
 
-===========================
-Appendix: ARKODE Constants
-===========================
+================
+ARKODE Constants
+================
 
 Below we list all input and output constants used by the main solver,
 timestepper, and linear solver modules, together with a short
@@ -52,6 +52,8 @@ contains the ARKODE output constants.
    +-----------------------------------------------+------------------------------------------------------------+
    | **Interpolation module input constants**      |                                                            |
    +-----------------------------------------------+------------------------------------------------------------+
+   | :index:`ARK_INTERP_NONE`                      | Disables polynomial interpolation for dense output.        |
+   +-----------------------------------------------+------------------------------------------------------------+
    | :index:`ARK_INTERP_HERMITE`                   | Specifies use of the Hermite polynomial interpolation      |
    |                                               | module (for non-stiff problems).                           |
    +-----------------------------------------------+------------------------------------------------------------+
@@ -62,7 +64,7 @@ contains the ARKODE output constants.
    +-----------------------------------------------+------------------------------------------------------------+
    |                                               |                                                            |
    +-----------------------------------------------+------------------------------------------------------------+
-   | **Relaxtion module input constants**          |                                                            |
+   | **Relaxation module input constants**         |                                                            |
    +-----------------------------------------------+------------------------------------------------------------+
    | :index:`ARK_RELAX_BRENT`                      | Specifies Brent's method as the relaxation nonlinear       |
    |                                               | solver.                                                    |
@@ -74,7 +76,15 @@ contains the ARKODE output constants.
    +-----------------------------------------------+------------------------------------------------------------+
    | **Explicit Butcher table specification**      |                                                            |
    +-----------------------------------------------+------------------------------------------------------------+
+   | :index:`ARKODE_FORWARD_EULER_1_1`             | Use the Forward-Euler-1-1 ERK method.                      |
+   +-----------------------------------------------+------------------------------------------------------------+
    | :index:`ARKODE_HEUN_EULER_2_1_2`              | Use the Heun-Euler-2-1-2 ERK method.                       |
+   +-----------------------------------------------+------------------------------------------------------------+
+   | :index:`ARKODE_RALSTON_EULER_2_1_2`           | Use the Ralston-Euler-2-1-2 ERK method.                    |
+   +-----------------------------------------------+------------------------------------------------------------+
+   | :index:`ARKODE_EXPLICIT_MIDPOINT_EULER_2_1_2` | Use the Explicit-Midpoint-Euler-2-1-2 ERK method.          |
+   +-----------------------------------------------+------------------------------------------------------------+
+   | :index:`ARKODE_ARK2_ERK_3_1_2`                | Use the ARK2-ERK-3-1-2 ERK method.                         |
    +-----------------------------------------------+------------------------------------------------------------+
    | :index:`ARKODE_BOGACKI_SHAMPINE_4_2_3`        | Use the Bogacki-Shampine-4-2-3 ERK method.                 |
    +-----------------------------------------------+------------------------------------------------------------+
@@ -116,6 +126,9 @@ contains the ARKODE output constants.
    +-----------------------------------------------+------------------------------------------------------------+
    | :index:`ARKODE_VERNER_16_8_9`                 | Use the Verner-16-8-9 ERK method.                          |
    +-----------------------------------------------+------------------------------------------------------------+
+   | :index:`ARKSTEP_DEFAULT_ERK_1`                | Use ARKStep's default first-order ERK method               |
+   |                                               | (ARKODE_FORWARD_EULER_1_1).                                |
+   +-----------------------------------------------+------------------------------------------------------------+
    | :index:`ARKSTEP_DEFAULT_ERK_2`                | Use ARKStep's default second-order ERK method              |
    |                                               | (ARKODE_HEUN_EULER_2_1_2).                                 |
    +-----------------------------------------------+------------------------------------------------------------+
@@ -139,6 +152,9 @@ contains the ARKODE output constants.
    +-----------------------------------------------+------------------------------------------------------------+
    | :index:`ARKSTEP_DEFAULT_ERK_9`                | Use ARKStep's default ninth-order ERK method               |
    |                                               | (ARKODE_VERNER_16_8_9).                                    |
+   +-----------------------------------------------+------------------------------------------------------------+
+   | :index:`ERKSTEP_DEFAULT_1`                    | Use ERKStep's default first-order ERK method               |
+   |                                               | (ARKODE_FORWARD_EULER_1_1).                                |
    +-----------------------------------------------+------------------------------------------------------------+
    | :index:`ERKSTEP_DEFAULT_2`                    | Use ERKStep's default second-order ERK method              |
    |                                               | (ARKODE_HEUN_EULER_2_1_2).                                 |
@@ -168,7 +184,15 @@ contains the ARKODE output constants.
    +-----------------------------------------------+------------------------------------------------------------+
    | **Implicit Butcher table specification**      |                                                            |
    +-----------------------------------------------+------------------------------------------------------------+
+   | :index:`ARKODE_BACKWARD_EULER_1_1`            | Use the Backward-Euler-1-1 SDIRK method.                   |
+   +-----------------------------------------------+------------------------------------------------------------+
    | :index:`ARKODE_SDIRK_2_1_2`                   | Use the SDIRK-2-1-2 SDIRK method.                          |
+   +-----------------------------------------------+------------------------------------------------------------+
+   | :index:`ARKODE_ARK2_DIRK_3_1_2`               | Use the ARK2-DIRK-3-1-2 SDIRK method.                      |
+   +-----------------------------------------------+------------------------------------------------------------+
+   | :index:`ARKODE_IMPLICIT_MIDPOINT_1_2`         | Use the Implicit-Midpoint-1-2 SDIRK method.                |
+   +-----------------------------------------------+------------------------------------------------------------+
+   | :index:`ARKODE_IMPLICIT_TRAPEZOIDAL_2_2`      | Use the Implicit-Trapezoidal-2-2 ESDIRK method.            |
    +-----------------------------------------------+------------------------------------------------------------+
    | :index:`ARKODE_BILLINGTON_3_3_2`              | Use the Billington-3-3-2 SDIRK method.                     |
    +-----------------------------------------------+------------------------------------------------------------+
@@ -214,6 +238,9 @@ contains the ARKODE output constants.
    +-----------------------------------------------+------------------------------------------------------------+
    | :index:`ARKODE_ESDIRK547L2SA2_7_4_5`          | Use the ESDIRK547L2SA2-7-4-5 ESDIRK method.                |
    +-----------------------------------------------+------------------------------------------------------------+
+   | :index:`ARKSTEP_DEFAULT_DIRK_1`               | Use ARKStep's default first-order DIRK method              |
+   |                                               | (ARKODE_BACKWARD_EULER_1_1).                               |
+   +-----------------------------------------------+------------------------------------------------------------+
    | :index:`ARKSTEP_DEFAULT_DIRK_2`               | Use ARKStep's default second-order DIRK method             |
    |                                               | (ARKODE_SDIRK_2_1_2).                                      |
    +-----------------------------------------------+------------------------------------------------------------+
@@ -229,6 +256,9 @@ contains the ARKODE output constants.
    |                                               |                                                            |
    +-----------------------------------------------+------------------------------------------------------------+
    | **ImEx Butcher table specification**          |                                                            |
+   +-----------------------------------------------+------------------------------------------------------------+
+   | ARKODE_ARK2_ERK_3_1_2 &                       | Use the :index:`ARK-3-1-2 ARK method`.                     |
+   | ARKODE_ARK2_DIRK_3_1_2                        |                                                            |
    +-----------------------------------------------+------------------------------------------------------------+
    | ARKODE_ARK324L2SA_ERK_4_2_3 &                 | Use the :index:`ARK-4-2-3 ARK method`.                     |
    | ARKODE_ARK324L2SA_DIRK_4_2_3                  |                                                            |
@@ -287,6 +317,49 @@ contains the ARKODE output constants.
    +-----------------------------------------------+------------------------------------------------------------+
    |                                               |                                                            |
    +-----------------------------------------------+------------------------------------------------------------+
+   | **LSRK method types**                         |                                                            |
+   +-----------------------------------------------+------------------------------------------------------------+
+   | :index:`ARKODE_LSRK_RKC_2`                    | 2nd order Runge-Kutta-Chebyshev (RKC) method               |
+   |                                               | :c:enumerator:`ARKODE_LSRK_RKC_2`                          |
+   +-----------------------------------------------+------------------------------------------------------------+
+   | :index:`ARKODE_LSRK_RKL_2`                    | 2nd order Runge-Kutta-Legendre (RKL) method                |
+   |                                               | :c:enumerator:`ARKODE_LSRK_RKL_2`                          |
+   +-----------------------------------------------+------------------------------------------------------------+
+   | :index:`ARKODE_LSRK_SSP_S_2`                  | Optimal 2nd order s-stage SSP RK method                    |
+   |                                               | :c:enumerator:`ARKODE_LSRK_SSP_S_2`                        |
+   +-----------------------------------------------+------------------------------------------------------------+
+   | :index:`ARKODE_LSRK_SSP_S_3`                  | Optimal 3rd order s-stage SSP RK method                    |
+   |                                               | :c:enumerator:`ARKODE_LSRK_SSP_S_3`                        |
+   +-----------------------------------------------+------------------------------------------------------------+
+   | :index:`ARKODE_LSRK_SSP_10_4`                 | Optimal 4th order 10-stage SSP RK method                   |
+   |                                               | :c:enumerator:`ARKODE_LSRK_SSP_10_4`                       |
+   +-----------------------------------------------+------------------------------------------------------------+
+   |                                               |                                                            |
+   +-----------------------------------------------+------------------------------------------------------------+
+   | **Splitting Coefficients specification**      |                                                            |
+   +-----------------------------------------------+------------------------------------------------------------+
+   | :index:`ARKODE_SPLITTING_LIE_TROTTER_1_1_2`   | 1st order Lie-Trotter splitting for problems with two      |
+   |                                               | partitions.                                                |
+   +-----------------------------------------------+------------------------------------------------------------+
+   | :index:`ARKODE_SPLITTING_STRANG_2_2_2`        | 2nd order Strang splitting for problems with two           |
+   |                                               | partitions.                                                |
+   +-----------------------------------------------+------------------------------------------------------------+
+   | :index:`ARKODE_SPLITTING_BEST_2_2_2`          | 2nd order splitting with optimal error for problems with   |
+   |                                               | two partitions.                                            |
+   +-----------------------------------------------+------------------------------------------------------------+
+   | :index:`ARKODE_SPLITTING_SUZUKI_3_3_2`        | 3rd order Suzuki splitting for problems with two           |
+   |                                               | partitions.                                                |
+   +-----------------------------------------------+------------------------------------------------------------+
+   | :index:`ARKODE_SPLITTING_RUTH_3_3_2`          | 3rd order Ruth splitting for problems with two partitions. |
+   +-----------------------------------------------+------------------------------------------------------------+
+   | :index:`ARKODE_SPLITTING_YOSHIDA_4_4_2`       | 4th order Yoshida splitting for problems with two          |
+   |                                               | partitions.                                                |
+   +-----------------------------------------------+------------------------------------------------------------+
+   | :index:`ARKODE_SPLITTING_YOSHIDA_8_6_2`       | 6th order Yoshida splitting for problems with two          |
+   |                                               | partitions.                                                |
+   +-----------------------------------------------+------------------------------------------------------------+
+   |                                               |                                                            |
+   +-----------------------------------------------+------------------------------------------------------------+
    | **MRI method types**                          |                                                            |
    +-----------------------------------------------+------------------------------------------------------------+
    | :index:`MRISTEP_EXPLICIT`                     | Use an explicit (at the slow time scale) MRI method.       |
@@ -299,44 +372,114 @@ contains the ARKODE output constants.
    +-----------------------------------------------+------------------------------------------------------------+
    | **MRI coupling table specification**          |                                                            |
    +-----------------------------------------------+------------------------------------------------------------+
-   | :index:`ARKODE_MIS_MW3`                       | Use the Knoth-Wolke-3 MIS method.                          |
+   | :index:`ARKODE_MRI_GARK_FORWARD_EULER`        | Use the forward Euler MRI-GARK method.                     |
+   +-----------------------------------------------+------------------------------------------------------------+
+   | :index:`ARKODE_MRI_GARK_ERK22a`               | Use the ERK22a MRI-GARK method.                            |
+   +-----------------------------------------------+------------------------------------------------------------+
+   | :index:`ARKODE_MRI_GARK_ERK22b`               | Use the ERK22b MRI-GARK method.                            |
+   +-----------------------------------------------+------------------------------------------------------------+
+   | :index:`ARKODE_MRI_GARK_RALSTON2`             | Use the second order Ralston MRI-GARK method.              |
+   +-----------------------------------------------+------------------------------------------------------------+
+   | :index:`ARKODE_MIS_KW3`                       | Use the Knoth-Wolke-3 MIS method (non-embedded).           |
    +-----------------------------------------------+------------------------------------------------------------+
    | :index:`ARKODE_MRI_GARK_ERK33a`               | Use the ERK33a MRI-GARK method.                            |
    +-----------------------------------------------+------------------------------------------------------------+
+   | :index:`ARKODE_MRI_GARK_RALSTON3`             | Use the third order Ralston MRI-GARK method.               |
+   +-----------------------------------------------+------------------------------------------------------------+
    | :index:`ARKODE_MRI_GARK_ERK45a`               | Use the ERK45a MRI-GARK method.                            |
    +-----------------------------------------------+------------------------------------------------------------+
+   | :index:`ARKODE_MERK21`                        | Use the MERK21 method.                                     |
+   +-----------------------------------------------+------------------------------------------------------------+
+   | :index:`ARKODE_MERK32`                        | Use the MERK32 method.                                     |
+   +-----------------------------------------------+------------------------------------------------------------+
+   | :index:`ARKODE_MERK43`                        | Use the MERK43 method.                                     |
+   +-----------------------------------------------+------------------------------------------------------------+
+   | :index:`ARKODE_MERK54`                        | Use the MERK54 method.                                     |
+   +-----------------------------------------------+------------------------------------------------------------+
+   | :index:`ARKODE_MRI_GARK_BACKWARD_EULER`       | Use the backward Euler MRI-GARK method.                    |
+   +-----------------------------------------------+------------------------------------------------------------+
    | :index:`ARKODE_MRI_GARK_IRK21a`               | Use the IRK21a MRI-GARK method.                            |
+   +-----------------------------------------------+------------------------------------------------------------+
+   | :index:`ARKODE_MRI_GARK_IMPLICIT_MIDPOINT`    | Use the implicit midpoint MRI-GARK method.                 |
    +-----------------------------------------------+------------------------------------------------------------+
    | :index:`ARKODE_MRI_GARK_ESDIRK34a`            | Use the ESDIRK34a MRI-GARK method.                         |
    +-----------------------------------------------+------------------------------------------------------------+
    | :index:`ARKODE_MRI_GARK_ESDIRK46a`            | Use the ESDIRK46a MRI-GARK method.                         |
    +-----------------------------------------------+------------------------------------------------------------+
-   | :index:`ARKODE_IMEX_MRI_GARK3a`               | Use the IMEX-MRI-GARK3a method.                            |
+   | :index:`ARKODE_IMEX_MRI_GARK_EULER`           | Use the Euler IMEX-MRI-GARK method.                        |
    +-----------------------------------------------+------------------------------------------------------------+
-   | :index:`ARKODE_IMEX_MRI_GARK3b`               | Use the IMEX-MRI-GARK3b method.                            |
+   | :index:`ARKODE_IMEX_MRI_GARK_TRAPEZOIDAL`     | Use the trapezoidal rule IMEX-MRI-GARK method.             |
    +-----------------------------------------------+------------------------------------------------------------+
-   | :index:`ARKODE_IMEX_MRI_GARK4`                | Use the IMEX-MRI-GARK4 method.                             |
+   | :index:`ARKODE_IMEX_MRI_GARK_MIDPOINT`        | Use the midpoint rule IMEX-MRI-GARK method.                |
    +-----------------------------------------------+------------------------------------------------------------+
-   | :index:`MRISTEP_DEFAULT_EXPL_TABLE_3`         | Use MRIStep's default 3rd-order explicit method            |
-   |                                               | (MIS_MW3).                                                 |
+   | :index:`ARKODE_IMEX_MRI_GARK3a`               | Use the IMEX-MRI-GARK3a method (non-embedded).             |
    +-----------------------------------------------+------------------------------------------------------------+
-   | :index:`MRISTEP_DEFAULT_EXPL_TABLE_4`         | Use MRIStep's default 4th-order explicit method            |
-   |                                               | (MRI_GARK_ERK45a).                                         |
+   | :index:`ARKODE_IMEX_MRI_GARK3b`               | Use the IMEX-MRI-GARK3b method (non-embedded).             |
    +-----------------------------------------------+------------------------------------------------------------+
-   | :index:`MRISTEP_DEFAULT_IMPL_SD_TABLE_2`      | Use MRIStep's default 2nd-order solve-decoupled implicit   |
-   |                                               | method (MRI_GARK_IRK21a).                                  |
+   | :index:`ARKODE_IMEX_MRI_GARK4`                | Use the IMEX-MRI-GARK4 method (non-embedded).              |
    +-----------------------------------------------+------------------------------------------------------------+
-   | :index:`MRISTEP_DEFAULT_IMPL_SD_TABLE_3`      | Use MRIStep's default 3rd-order solve-decoupled implicit   |
-   |                                               | method (MRI_GARK_ESDIRK34a).                               |
+   | :index:`ARKODE_IMEX_MRI_SR21`                 | Use the IMEX-MRI-SR21 method.                              |
    +-----------------------------------------------+------------------------------------------------------------+
-   | :index:`MRISTEP_DEFAULT_IMPL_SD_TABLE_4`      | Use MRIStep's default 4th-order solve-decoupled implicit   |
-   |                                               | method (MRI_GARK_ESDIRK46a).                               |
+   | :index:`ARKODE_IMEX_MRI_SR32`                 | Use the IMEX-MRI-SR32 method.                              |
    +-----------------------------------------------+------------------------------------------------------------+
-   | :index:`MRISTEP_DEFAULT_IMEX_SD_TABLE_3`      | Use MRIStep's default 3rd-order solve-decoupled ImEx       |
-   |                                               | method (IMEX_MRI_GARK3b).                                  |
+   | :index:`ARKODE_IMEX_MRI_SR43`                 | Use the IMEX-MRI-SR43 method.                              |
    +-----------------------------------------------+------------------------------------------------------------+
-   | :index:`MRISTEP_DEFAULT_IMEX_SD_TABLE_4`      | Use MRIStep's default 4th-order solve-decoupled ImEx       |
-   |                                               | method (IMEX_MRI_GARK4).                                   |
+   | :index:`MRISTEP_DEFAULT_EXPL_1`               | Use MRIStep's default 1st-order explicit method            |
+   |                                               | (ARKODE_MRI_GARK_FORWARD_EULER).                           |
+   +-----------------------------------------------+------------------------------------------------------------+
+   | :index:`MRISTEP_DEFAULT_EXPL_2`               | Use MRIStep's default 2nd-order explicit method            |
+   |                                               | (ARKODE_MRI_GARK_ERK22b).                                  |
+   +-----------------------------------------------+------------------------------------------------------------+
+   | :index:`MRISTEP_DEFAULT_EXPL_3`               | Use MRIStep's default 3rd-order explicit method            |
+   |                                               | (ARKODE_MIS_KW3).                                          |
+   +-----------------------------------------------+------------------------------------------------------------+
+   | :index:`MRISTEP_DEFAULT_EXPL_4`               | Use MRIStep's default 4th-order explicit method            |
+   |                                               | (ARKODE_MRI_GARK_ERK45a).                                  |
+   +-----------------------------------------------+------------------------------------------------------------+
+   | :index:`MRISTEP_DEFAULT_EXPL_2_AD`            | Use MRIStep's default 2nd-order adaptive explicit method   |
+   |                                               | (ARKODE_MRI_GARK_ERK22a).                                  |
+   +-----------------------------------------------+------------------------------------------------------------+
+   | :index:`MRISTEP_DEFAULT_EXPL_3_AD`            | Use MRIStep's default 3rd-order adaptive explicit method   |
+   |                                               | (ARKODE_MRI_GARK_ERK33a).                                  |
+   +-----------------------------------------------+------------------------------------------------------------+
+   | :index:`MRISTEP_DEFAULT_EXPL_4_AD`            | Use MRIStep's default 4th-order adaptive explicit method   |
+   |                                               | (ARKODE_MRI_GARK_ERK45a).                                  |
+   +-----------------------------------------------+------------------------------------------------------------+
+   | :index:`MRISTEP_DEFAULT_EXPL_5_AD`            | Use MRIStep's default 5th-order adaptive explicit method   |
+   |                                               | (ARKODE_MERK54).                                           |
+   +-----------------------------------------------+------------------------------------------------------------+
+   | :index:`MRISTEP_DEFAULT_IMPL_SD_1`            | Use MRIStep's default 1st-order solve-decoupled implicit   |
+   |                                               | method (ARKODE_MRI_GARK_BACKWARD_EULER).                   |
+   +-----------------------------------------------+------------------------------------------------------------+
+   | :index:`MRISTEP_DEFAULT_IMPL_SD_2`            | Use MRIStep's default 2nd-order solve-decoupled implicit   |
+   |                                               | method (ARKODE_MRI_GARK_IRK21a).                           |
+   +-----------------------------------------------+------------------------------------------------------------+
+   | :index:`MRISTEP_DEFAULT_IMPL_SD_3`            | Use MRIStep's default 3rd-order solve-decoupled implicit   |
+   |                                               | method (ARKODE_MRI_GARK_ESDIRK34a).                        |
+   +-----------------------------------------------+------------------------------------------------------------+
+   | :index:`MRISTEP_DEFAULT_IMPL_SD_4`            | Use MRIStep's default 4th-order solve-decoupled implicit   |
+   |                                               | method (ARKODE_MRI_GARK_ESDIRK46a).                        |
+   +-----------------------------------------------+------------------------------------------------------------+
+   | :index:`MRISTEP_DEFAULT_IMEX_SD_1`            | Use MRIStep's default 1st-order solve-decoupled ImEx       |
+   |                                               | method (ARKODE_IMEX_MRI_GARK_EULER).                       |
+   +-----------------------------------------------+------------------------------------------------------------+
+   | :index:`MRISTEP_DEFAULT_IMEX_SD_2`            | Use MRIStep's default 2nd-order solve-decoupled ImEx       |
+   |                                               | method (ARKODE_IMEX_MRI_GARK_TRAPEZOIDAL).                 |
+   +-----------------------------------------------+------------------------------------------------------------+
+   | :index:`MRISTEP_DEFAULT_IMEX_SD_3`            | Use MRIStep's default 3rd-order solve-decoupled ImEx       |
+   |                                               | method (ARKODE_IMEX_MRI_GARK3b).                           |
+   +-----------------------------------------------+------------------------------------------------------------+
+   | :index:`MRISTEP_DEFAULT_IMEX_SD_4`            | Use MRIStep's default 4th-order solve-decoupled ImEx       |
+   |                                               | method (ARKODE_IMEX_MRI_GARK4).                            |
+   +-----------------------------------------------+------------------------------------------------------------+
+   | :index:`MRISTEP_DEFAULT_IMEX_SD_2_AD`         | Use MRIStep's default 2nd-order solve-decoupled adaptive   |
+   |                                               | ImEx method (ARKODE_IMEX_MRI_SR21).                        |
+   +-----------------------------------------------+------------------------------------------------------------+
+   | :index:`MRISTEP_DEFAULT_IMEX_SD_3_AD`         | Use MRIStep's default 3rd-order solve-decoupled adaptive   |
+   |                                               | ImEx method (ARKODE_IMEX_MRI_SR32).                        |
+   +-----------------------------------------------+------------------------------------------------------------+
+   | :index:`MRISTEP_DEFAULT_IMEX_SD_4_AD`         | Use MRIStep's default 4th-order solve-decoupled adaptive   |
+   |                                               | ImEx method (ARKODE_IMEX_MRI_SR43).                        |
    +-----------------------------------------------+------------------------------------------------------------+
 
 
@@ -470,6 +613,19 @@ contains the ARKODE output constants.
    +-------------------------------------+------+------------------------------------------------------------+
    | :index:`ARK_CONTROLLER_ERR`         | -47  | An error with a SUNAdaptController object was encountered. |
    +-------------------------------------+------+------------------------------------------------------------+
+   | :index:`ARK_STEPPER_UNSUPPORTED`    | -48  | An operation was not supported by the current              |
+   |                                     |      | time-stepping module.                                      |
+   +-------------------------------------+------+------------------------------------------------------------+
+   | :index:`ARK_DOMEIG_FAIL`            | -49  | The dominant eigenvalue function failed. It is either not  |
+   |                                     |      | provided or returns an illegal value.                      |
+   +-------------------------------------+------+------------------------------------------------------------+
+   | :index:`ARK_MAX_STAGE_LIMIT_FAIL`   | -50  | Stepper failed to achieve stable results. Either reduce    |
+   |                                     |      | the step size or increase the stage_max_limit              |
+   +-------------------------------------+------+------------------------------------------------------------+
+   | :index:`ARK_SUNSTEPPER_ERR`         | -51  | An error occurred in the SUNStepper module.                |
+   +-------------------------------------+------+------------------------------------------------------------+
+   | :index:`ARK_STEP_DIRECTION_ERR`     | -52  | An error occurred changing the step direction.             |
+   +-------------------------------------+------+------------------------------------------------------------+
    | :index:`ARK_UNRECOGNIZED_ERROR`     | -99  | An unknown error was encountered.                          |
    +-------------------------------------+------+------------------------------------------------------------+
    |                                                                                                         |
@@ -510,8 +666,18 @@ contains the ARKODE output constants.
    |                                     |      | :c:type:`SUNLinearSolver` module.                          |
    +-------------------------------------+------+------------------------------------------------------------+
 
+.. c:enum:: ARKRelaxSolver
 
+   Nonlinear solver identifiers used to specify the method for solving
+   :eq:`ARKODE_RELAX_NLS` when relaxation is enabled.
 
+   .. c:enumerator:: ARK_RELAX_NEWTON
+
+      Newton's method
+
+   .. c:enumerator:: ARK_RELAX_BRENT
+
+      Brent's method
 ..
    Commented-out table rows:
 

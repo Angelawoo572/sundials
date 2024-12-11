@@ -25,27 +25,20 @@ else()
 endif()
 
 # Create the library
-sundials_add_library(sundials_nvecparallel
-  SOURCES
-    nvector_parallel.c
-  HEADERS
-    ${SUNDIALS_SOURCE_DIR}/include/nvector/nvector_parallel.h
-  INCLUDE_SUBDIR
-    nvector
-  LINK_LIBRARIES
-    PUBLIC sundials_core
+sundials_add_library(
+  sundials_nvecparallel
+  SOURCES nvector_parallel.c
+  HEADERS ${SUNDIALS_SOURCE_DIR}/include/nvector/nvector_parallel.h
+  INCLUDE_SUBDIR nvector
+  LINK_LIBRARIES PUBLIC sundials_core
   OBJECT_LIBRARIES
-  OUTPUT_NAME
-    sundials_nvecparallel
-  VERSION
-    ${nveclib_VERSION}
-  SOVERSION
-    ${nveclib_SOVERSION}
-)
+  OUTPUT_NAME sundials_nvecparallel
+  VERSION ${nveclib_VERSION}
+  SOVERSION ${nveclib_SOVERSION})
 
 message(STATUS "Added NVECTOR_PARALLEL module")
 
 # Add F2003 module if the interface is enabled
 if(BUILD_FORTRAN_MODULE_INTERFACE)
-  add_subdirectory(fmod)
+  add_subdirectory("fmod_int${SUNDIALS_INDEX_SIZE}")
 endif()

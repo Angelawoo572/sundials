@@ -373,12 +373,10 @@ pertinent to their choice of linear solver.
       size (see the documentation of  the particular ``SUNMatrix`` type in
       Chapter :numref:`SUNMatrix` for  further information).
 
-      The previous routines :c:func:`KINDlsSetLinearSolver` and
-      :c:func:`KINSpilsSetLinearSolver` are
-      now wrappers for this routine, and may  still be used for
-      backward-compatibility.  However, these will be  deprecated in future
-      releases, so we recommend that users transition  to the new routine name
-      soon.
+   .. versionadded:: 4.0.0
+
+      Replaces the deprecated functions ``KINDlsSetLinearSolver`` and
+      ``KINSpilsSetLinearSolver``.
 
 .. _KINSOL.Usage.CC.kin:
 
@@ -457,8 +455,6 @@ negative, so a test ``retval`` :math:`<0` will catch any error.
   |                   **Optional input**                   |        **Function name**         |         **Default**          |
   +========================================================+==================================+==============================+
   | **KINSOL main solver**                                 |                                  |                              |
-  +--------------------------------------------------------+----------------------------------+------------------------------+
-  | Info handler function                                  | :c:func:`KINSetInfoHandlerFn`    | internal fn.                 |
   +--------------------------------------------------------+----------------------------------+------------------------------+
   | Data for problem-defining function                     | :c:func:`KINSetUserData`         | ``NULL``                     |
   +--------------------------------------------------------+----------------------------------+------------------------------+
@@ -1034,7 +1030,7 @@ negative, so a test ``retval`` :math:`<0` will catch any error.
 .. c:function:: int KINSetDampingAA(void * kin_mem, sunrealtype beta)
 
    The function :c:func:`KINSetDampingAA` specifies the value of the Anderson
-   acceleration damping paramter.
+   acceleration damping parameter.
 
    **Arguments:**
      * ``kin_mem`` -- pointer to the KINSOL memory block.
@@ -1148,12 +1144,9 @@ pointer ``user_data`` may be specified through :c:func:`KINSetUserData`.
       this default function is used.  An error will occur if no ``jac`` is supplied when
       using other matrix types.
 
-   .. warning::
+   .. versionadded:: 4.0.0
 
-      The previous routine :c:func:`KINDlsSetJacFn` is now a wrapper for this routine,
-      and may still be used for backward-compatibility.  However, this will be
-      deprecated in future releases, so we recommend that users transition to
-      the new routine name soon.
+      Replaces the deprecated function ``KINDlsSetJacFn``.
 
 
 When using matrix-free linear solver modules, the KINLS linear solver
@@ -1164,7 +1157,7 @@ difference quotient approximation that comes with the KINLS solver
 interface.
 
 A user-defined Jacobian-vector function must be of type :c:type:`KINLsJacTimesVecFn`
-and can be specified through a call to :c:func:`KINLsSetJacTimesVecFn` (see
+and can be specified through a call to :c:func:`KINSetJacTimesVecFn` (see
 :numref:`KINSOL.Usage.CC.user_fct_sim.jtimesFn` for specification details). The pointer
 ``user_data`` received through :c:func:`KINSetUserData` (or a pointer to ``NULL`` if
 ``user_data`` was not specified) is passed to the Jacobian-times-vector function
@@ -1192,11 +1185,11 @@ user-supplied functions without using global data in the program.
       must be called after the KINLS linear solver  interface has been
       initialized through a call to  :c:func:`KINSetLinearSolver`.  The function
       type :c:type:`KINLsJacTimesVecFn` is described in
-      :numref:`KINSOL.Usage.CC.user_fct_sim.jtimesFn`.  The previous
-      routine :c:func:`KINSpilsSetJacTimesVecFn` is now a wrapper for  this
-      routine, and may still be used for backward-compatibility.  However, this
-      will be deprecated in future releases, so we recommend  that users
-      transition to the new routine name soon.
+      :numref:`KINSOL.Usage.CC.user_fct_sim.jtimesFn`.
+
+   .. versionadded:: 4.0.0
+
+      Replaces the deprecated function ``KINSpilsSetJacTimesVecFn``.
 
 
 When using the internal difference quotient the user may optionally supply an
@@ -1272,12 +1265,9 @@ global data in the program.
       This function must be called after the KINLS linear solver interface has
       been initialized through a call to :c:func:`KINSetLinearSolver`.
 
-   .. warning::
+   .. versionadded:: 4.0.0
 
-      The previous routine :c:func:`KINSpilsSetPreconditioner` is now a wrapper for
-      this routine, and may still be used for backward-compatibility.  However,
-      this will be removed in future releases, so we recommend that users
-      transition to the new routine name soon.
+      Replaces the deprecated function ``KINSpilsSetPreconditioner``.
 
 
 .. _KINSOL.Usage.CC.optional_output:
@@ -1337,7 +1327,7 @@ different quantities that may be of interest to the user, such as solver
 workspace requirements and solver performance statistics. These optional output
 functions are described next.
 
-.. c:function:: int KINGetWorkSpace(void * kin_mem, long int lenrw, long int leniw)
+.. c:function:: int KINGetWorkSpace(void * kin_mem, long int * lenrw, long int * leniw)
 
    The function :c:func:`KINGetWorkSpace` returns the  KINSOL integer and real
    workspace sizes.
@@ -1362,7 +1352,7 @@ functions are described next.
       :math:`22 + 5 N` (increased by :math:`N` if constraint checking is enabled).
 
 
-.. c:function:: int KINGetNumFuncEvals(void * kin_mem, long int nfevals)
+.. c:function:: int KINGetNumFuncEvals(void * kin_mem, long int * nfevals)
 
    The function :c:func:`KINGetNumFuncEvals` returns the number of evaluations
    of the system function.
@@ -1376,7 +1366,7 @@ functions are described next.
      * ``KIN_MEM_NULL`` -- The ``kin_mem`` pointer is ``NULL``.
 
 
-.. c:function:: int KINGetNumNonlinSolvIters(void * kin_mem, long int nniters)
+.. c:function:: int KINGetNumNonlinSolvIters(void * kin_mem, long int * nniters)
 
    The function :c:func:`KINGetNumNonlinSolvIters` returns the number  of
    nonlinear iterations.
@@ -1390,7 +1380,7 @@ functions are described next.
      * ``KIN_MEM_NULL`` -- The ``kin_mem`` pointer is ``NULL``.
 
 
-.. c:function:: int KINGetNumBetaCondFails(void * kin_mem, long int nbcfails)
+.. c:function:: int KINGetNumBetaCondFails(void * kin_mem, long int * nbcfails)
 
    The function :c:func:`KINGetNumBetaCondFails` returns the number  of
    :math:`\beta`-condition failures.
@@ -1404,7 +1394,7 @@ functions are described next.
      * ``KIN_MEM_NULL`` -- The ``kin_mem`` pointer is ``NULL``.
 
 
-.. c:function:: int KINGetNumBacktrackOps(void * kin_mem, long int nbacktr)
+.. c:function:: int KINGetNumBacktrackOps(void * kin_mem, long int * nbacktr)
 
    The function :c:func:`KINGetNumBacktrackOps` returns the number of  backtrack
    operations (step length adjustments) performed by the  line search algorithm.
@@ -1418,7 +1408,7 @@ functions are described next.
      * ``KIN_MEM_NULL`` -- The ``kin_mem`` pointer is ``NULL``.
 
 
-.. c:function:: int KINGetFuncNorm(void * kin_mem, sunrealtype fnorm)
+.. c:function:: int KINGetFuncNorm(void * kin_mem, sunrealtype * fnorm)
 
    The function :c:func:`KINGetFuncNorm` returns the scaled Euclidean
    :math:`\ell_2` norm of the  nonlinear system function :math:`F(u)` evaluated
@@ -1433,7 +1423,7 @@ functions are described next.
      * ``KIN_MEM_NULL`` -- The ``kin_mem`` pointer is ``NULL``.
 
 
-.. c:function:: int KINGetStepLength(void * kin_mem, sunrealtype steplength)
+.. c:function:: int KINGetStepLength(void * kin_mem, sunrealtype * steplength)
 
    The function :c:func:`KINGetStepLength` returns the scaled Euclidean
    :math:`\ell_2` norm of  the step used during the previous iteration.
@@ -1484,9 +1474,9 @@ functions are described next.
 
    .. note::
 
-      The file ``scripts/sundials_csv.py`` provides python utility functions to
-      read and output the data from a SUNDIALS CSV output file using the key
-      and value pair format.
+      The Python module ``tools/suntools`` provides utilities to read and output
+      the data from a SUNDIALS CSV output file using the key and value pair
+      format.
 
    .. versionadded:: 6.2.0
 
@@ -1566,10 +1556,10 @@ The following optional outputs are available from the KINLS modules:
       ``SUNLinearSolver`` object attached to it.  The template Jacobian
       matrix allocated by the user outside of KINLS is not included in this report.
 
-   .. warning::
+   .. versionadded:: 4.0.0
 
-      The previous routines :c:func:`KINDlsGetWorkspace` and :c:func:`KINSpilsGetWorkspace`
-      are now deprecated.
+      Replaces the deprecated function ``KINDlsGetWorkspace`` and
+      ``KINSpilsGetWorkspace``.
 
 
 .. c:function:: int KINGetNumJacEvals(void * kin_mem, long int * njevals)
@@ -1586,14 +1576,13 @@ The following optional outputs are available from the KINLS modules:
       * ``KINLS_MEM_NULL`` -- The ``kin_mem`` pointer is ``NULL``.
       * ``KINLS_LMEM_NULL`` -- The KINLS linear solver has not been initialized.
 
-   .. warning::
+   .. versionadded:: 4.0.0
 
-      The previous routine :c:func:`KINDlsGetNumJacEvals` is now deprecated,
-
+      Replaces the deprecated function ``KINDlsGetNumJacEvals``.
 
 .. c:function:: int KINGetNumLinFuncEvals(void * kin_mem, long int * nrevalsLS)
 
-   The function :c:func:`KINGetNumLinResEvals` returns the cumulative number of
+   The function :c:func:`KINGetNumLinFuncEvals` returns the cumulative number of
    calls to the user residual function due to the finite difference Jacobian
    approximation or finite difference Jacobian-vector product approximation.
 
@@ -1611,9 +1600,10 @@ The following optional outputs are available from the KINLS modules:
       The value ``nrevalsLS`` is incremented only if one of the default internal
       difference quotient functions is used.
 
-   .. warning::
-      The previous routines :c:func:`KINDlsGetNumRhsEvals` and
-      :c:func:`KINSpilsGetNumRhsEvals` are now deprecated.
+   .. versionadded:: 4.0.0
+
+      Replaces the deprecated functions ``KINDlsGetNumRhsEvals`` and
+      ``KINSpilsGetNumRhsEvals``.
 
 
 .. c:function:: int KINGetNumLinIters(void * kin_mem, long int * nliters)
@@ -1630,8 +1620,9 @@ The following optional outputs are available from the KINLS modules:
       * ``KINLS_MEM_NULL`` -- The ``kin_mem`` pointer is ``NULL``.
       * ``KINLS_LMEM_NULL`` -- The KINLS linear solver has not been initialized.
 
-   .. warning::
-      The previous routine :c:func:`KINSpilsGetNumLinIters` is now deprecated.
+   .. versionadded:: 4.0.0
+
+      Replaces the deprecated function ``KINSpilsGetNumLinIters``.
 
 
 .. c:function:: int KINGetNumLinConvFails(void * kin_mem, long int * nlcfails)
@@ -1648,8 +1639,9 @@ The following optional outputs are available from the KINLS modules:
       * ``KINLS_MEM_NULL`` -- The ``kin_mem`` pointer is ``NULL``.
       * ``KINLS_LMEM_NULL`` -- The KINLS linear solver has not been initialized.
 
-   .. warning::
-      The previous routine :c:func:`KINSpilsGetNumConvFails` is now deprecated.
+   .. versionadded:: 4.0.0
+
+      Replaces the deprecated function ``KINSpilsGetNumConvFails``.
 
 
 .. c:function:: int KINGetNumPrecEvals(void * kin_mem, long int * npevals)
@@ -1666,9 +1658,9 @@ The following optional outputs are available from the KINLS modules:
       * ``KINLS_MEM_NULL`` -- The ``kin_mem`` pointer is ``NULL``.
       * ``KINLS_LMEM_NULL`` -- The KINLS linear solver has not been initialized.
 
-   .. warning::
+   .. versionadded:: 4.0.0
 
-      The previous routine :c:func:`KINSpilsGetNumPrecEvals` is now deprecated.
+      Replaces the deprecated function ``KINSpilsGetNumPrecEvals``.
 
 
 .. c:function:: int KINGetNumPrecSolves(void * kin_mem, long int * npsolves)
@@ -1685,9 +1677,9 @@ The following optional outputs are available from the KINLS modules:
       * ``KINLS_MEM_NULL`` -- The ``kin_mem`` pointer is ``NULL``.
       * ``KINLS_LMEM_NULL`` -- The KINLS linear solver has not been initialized.
 
-   .. warning::
+   .. versionadded:: 4.0.0
 
-      The previous routine :c:func:`KINSpilsGetNumPrecSolves` is now deprecated.
+      Replaces the deprecated function ``KINSpilsGetNumPrecSolves``.
 
 
 .. c:function:: int KINGetNumJtimesEvals(void * kin_mem, long int * njvevals)
@@ -1704,9 +1696,9 @@ The following optional outputs are available from the KINLS modules:
       * ``KINLS_MEM_NULL`` -- The ``kin_mem`` pointer is ``NULL``.
       * ``KINLS_LMEM_NULL`` -- The KINLS linear solver has not been initialized.
 
-   .. warning::
+   .. versionadded:: 4.0.0
 
-      The previous routine :c:func:`KINSpilsGetNumJtimesEvals` is now deprecated.
+      Replaces the deprecated function ``KINSpilsGetNumJtimesEvals``.
 
 
 .. c:function:: int KINGetLastLinFlag(void * kin_mem, long int * lsflag)
@@ -1724,7 +1716,7 @@ The following optional outputs are available from the KINLS modules:
       * ``KINLS_LMEM_NULL`` -- The KINLS linear solver has not been initialized.
 
    **Notes:**
-      If the KINLS setup function failed (i.e., :c:func:`KINSolve` returned
+      If the KINLS setup function failed (i.e., :c:func:`KINSol` returned
       ``KIN_LSETUP_FAIL``) when using the :ref:`SUNLINSOL_DENSE <SUNLinSol_Dense>`
       or :ref:`SUNLINSOL_BAND <SUNLinSol_Band>` modules, then the value of
       ``lsflag`` is equal to the column index (numbered from one) at which a zero
@@ -1735,7 +1727,7 @@ The following optional outputs are available from the KINLS modules:
       object, then ``lsflag`` will be ``SUNLS_PSET_FAIL_UNREC``,
       ``SUNLS_ASET_FAIL_UNREC``, or ``SUN_ERR_EXT_FAIL``.
 
-      If the KINLS solve function failed (:c:func:`KINSolve` returned ``KIN_LSOLVE_FAIL``),
+      If the KINLS solve function failed (:c:func:`KINSol` returned ``KIN_LSOLVE_FAIL``),
       ``lsflag`` contains the error return flag from the ``SUNLinearSolver``
       object, which will be one of: ``SUN_ERR_ARG_CORRUPTRRUPT``, indicating that the
       ``SUNLinearSolver`` memory is ``NULL``; ``SUNLS_ATIMES_FAIL_UNREC``,
@@ -1748,10 +1740,10 @@ The following optional outputs are available from the KINLS modules:
       ``SUN_ERR_EXT_FAIL``, indicating an unrecoverable failure in an
       external iterative linear solver package.
 
-   .. warning::
+   .. versionadded:: 4.0.0
 
-      The previous routines :c:func:`KINDlsGetLastFlag` and :c:func:`KINSpilsGetLastFlag`
-      are now deprecated.
+      Replaces the deprecated functions ``KINDlsGetLastFlag`` and
+      ``KINSpilsGetLastFlag``.
 
 
 .. c:function:: char* KINGetLinReturnFlagName(long int lsflag)
@@ -1767,10 +1759,10 @@ The following optional outputs are available from the KINLS modules:
         :math:`1 \leq \mathtt{lsflag} \leq N` (LU factorization failed), this
         function returns "NONE".
 
-   .. warning::
+   .. versionadded:: 4.0.0
 
-      The previous routines :c:func:`KINDlsGetReturnFlagName` and
-      :c:func:`KINSpilsGetReturnFlagName` are now deprecated.
+      Replaces the deprecated functions ``KINDlsGetReturnFlagName`` and
+      ``KINSpilsGetReturnFlagName``.
 
 
 .. _KINSOL.Usage.CC.user_fct_sim:
@@ -1933,12 +1925,9 @@ provide a function of type :c:type:`KINLsJacFn` defined as follows:
       ``SUNSparseMatrix_NNZ``. The ``SUNMATRIX_SPARSE`` type and accessor macros
       are documented in :numref:`SUNMatrix.Sparse`.
 
-   .. warning::
+   .. versionadded:: 4.0.0
 
-      The previous function type :c:func:`KINDlsJacFn` is identical to
-      :c:type:`KINLsJacFn`, and may still be used for backward-compatibility.
-      However, this will be deprecated in future releases, so we recommend that
-      users transition to the new function type name soon.
+      Replaces the deprecated type ``KINDlsJacFn``.
 
 
 .. _KINSOL.Usage.CC.user_fct_sim.jtimesFn:
@@ -1957,7 +1946,7 @@ supplied, the default is a difference quotient approximation to these products.
    This function computes the product :math:`J v` (or an approximation to it).
 
    **Arguments:**
-      * ``v`` -- is the vector by which the Jacobian must be multplied to the right.
+      * ``v`` -- is the vector by which the Jacobian must be multiplied to the right.
       * ``Jv`` -- is the computed output vector.
       * ``u`` -- is the current value of the dependent variable vector.
       * ``user_data`` -- is a pointer to user data, the same as the ``user_data``
@@ -1985,13 +1974,9 @@ supplied, the default is a difference quotient approximation to these products.
       and/or ``f_scale`` as needed. The unit roundoff can be accessed as
       ``SUN_UNIT_ROUNDOFF`` defined in ``sundials_types.h``.
 
-   .. warning::
+   .. versionadded:: 4.0.0
 
-      The previous function type :c:type:`KINSpilsJacTimesVecFn` is identical to
-      :c:type:`KINLsJacTimesVecFn`, and may still be used for
-      backward-compatibility. However, this will be removed in future
-      releases, so we recommend that users transition to the new function type
-      name soon.
+      Replaces the deprecated type ``KINSpilsJacTimesVecFn``.
 
 
 .. _KINSOL.Usage.CC.user_fct_sim.psolveFn:
@@ -2014,7 +1999,7 @@ of type :c:type:`KINLsPrecSolveFn`, defined as follows:
       * ``uscale`` -- is a vector containing diagonal elements of the scaling matrix ``u``
       * ``fval`` -- is the vector :math:`F(u)` evaluated at ``u``
       * ``fscale`` -- is a vector containing diagonal elements of the scaling matrix for ``fval``
-      * ``v`` -- on inpuut, ``v`` is set to the right-hand side vector of the linear system, ``r``. On    output, ``v`` must contain the solution ``z`` of the linear system :math:`Pz=r`
+      * ``v`` -- on input, ``v`` is set to the right-hand side vector of the linear system, ``r``. On    output, ``v`` must contain the solution ``z`` of the linear system :math:`Pz=r`
       * ``user_data`` -- is a pointer to user data, the same as the ``user_data``
         parameter passed to :c:func:`KINSetUserData`.
 
@@ -2146,7 +2131,7 @@ communication.
 
    **Return value:**
       An :c:type:`KINBBDLocalFn` function type should return 0 to indicate success,
-      or non-zero if an error occured.
+      or non-zero if an error occurred.
 
    **Notes:**
       This function must assume that all inter-processor communication of data
@@ -2170,7 +2155,7 @@ communication.
 
    **Return value:**
       An :c:type:`KINBBDLocalFn` function type should return 0 to indicate success,
-      or non-zero if an error occured.
+      or non-zero if an error occurred.
 
    **Notes:**
       The ``Gcomm`` function is expected to save communicated data in space defined
@@ -2245,7 +2230,7 @@ user main program presented in :numref:`KINSOL.Usage.CC.skeleton_sim` are not bo
 The user-callable functions that initialize or re-initialize the KINBBDPRE
 preconditioner module are described next.
 
-.. c:function:: int KINBBDPrecInit(void* kin_mem, sunindextype Nlocal, sunindextype mudq, sunindexype mldq, sunindextype mukeep, sunindextype mlkeep, sunrealtype dq_rel_u, KINBBDLocalFn Gloc, KINBBDCommFn Gcomm)
+.. c:function:: int KINBBDPrecInit(void* kin_mem, sunindextype Nlocal, sunindextype mudq, sunindextype mldq, sunindextype mukeep, sunindextype mlkeep, sunrealtype dq_rel_u, KINBBDLocalFn Gloc, KINBBDCommFn Gcomm)
 
    The function :c:func:`KINBBDPrecInit` initializes and allocates  memory for
    the KINBBDPRE preconditioner.

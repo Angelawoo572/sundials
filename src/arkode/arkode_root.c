@@ -24,28 +24,34 @@
 
 #include "arkode_impl.h"
 
-/*---------------------------------------------------------------
-  arkRootInit:
+/*===============================================================
+  Exported functions
+  ===============================================================*/
 
-  arkRootInit initializes a rootfinding problem to be solved
+/*---------------------------------------------------------------
+  ARKodeRootInit:
+
+  ARKodeRootInit initializes a rootfinding problem to be solved
   during the integration of the ODE system.  It loads the root
   function pointer and the number of root functions, notifies
   ARKODE that the "fullrhs" function is required, and allocates
   workspace memory.  The return value is ARK_SUCCESS = 0 if no
   errors occurred, or a negative value otherwise.
   ---------------------------------------------------------------*/
-int arkRootInit(ARKodeMem ark_mem, int nrtfn, ARKRootFn g)
+int ARKodeRootInit(void* arkode_mem, int nrtfn, ARKRootFn g)
 {
   int i, nrt;
 
-  /* Check ark_mem pointer */
-  if (ark_mem == NULL)
+  /* unpack ark_mem */
+  ARKodeMem ark_mem;
+  if (arkode_mem == NULL)
   {
     arkProcessError(NULL, ARK_MEM_NULL, __LINE__, __func__, __FILE__,
                     MSG_ARK_NO_MEM);
     return (ARK_MEM_NULL);
   }
-  nrt = (nrtfn < 0) ? 0 : nrtfn;
+  ark_mem = (ARKodeMem)arkode_mem;
+  nrt     = (nrtfn < 0) ? 0 : nrtfn;
 
   /* Ensure that stepper provides fullrhs function */
   if (nrt > 0)
@@ -91,7 +97,7 @@ int arkRootInit(ARKodeMem ark_mem, int nrtfn, ARKRootFn g)
     ark_mem->liw += ARK_ROOT_LIW;
   }
 
-  /* If rerunning arkRootInit() with a different number of root
+  /* If rerunning ARKodeRootInit() with a different number of root
      functions (changing number of gfun components), then free
      currently held memory resources */
   if ((nrt != ark_mem->root_mem->nrtfn) && (ark_mem->root_mem->nrtfn > 0))
@@ -113,7 +119,7 @@ int arkRootInit(ARKodeMem ark_mem, int nrtfn, ARKRootFn g)
     ark_mem->liw -= 3 * (ark_mem->root_mem->nrtfn);
   }
 
-  /* If arkRootInit() was called with nrtfn == 0, then set
+  /* If ARKodeRootInit() was called with nrtfn == 0, then set
      nrtfn to zero and gfun to NULL before returning */
   if (nrt == 0)
   {
@@ -122,7 +128,7 @@ int arkRootInit(ARKodeMem ark_mem, int nrtfn, ARKRootFn g)
     return (ARK_SUCCESS);
   }
 
-  /* If rerunning arkRootInit() with the same number of root
+  /* If rerunning ARKodeRootInit() with the same number of root
      functions (not changing number of gfun components), then
      check if the root function argument has changed */
   /* If g != NULL then return as currently reserved memory
@@ -264,6 +270,10 @@ int arkRootInit(ARKodeMem ark_mem, int nrtfn, ARKRootFn g)
 
   return (ARK_SUCCESS);
 }
+
+/*===============================================================
+  Private functions
+  ===============================================================*/
 
 /*---------------------------------------------------------------
   arkRootFree
@@ -424,7 +434,12 @@ int arkRootCheck1(void* arkode_mem)
   retval       = rootmem->gfun(rootmem->tlo, ark_mem->yn, rootmem->glo,
                                rootmem->root_data);
   rootmem->nge = 1;
-  if (retval != 0) { return (ARK_RTFUNC_FAIL); }
+  if (retval != 0)
+  {
+    arkProcessError(ark_mem, ARK_RTFUNC_FAIL, __LINE__, __func__, __FILE__,
+                    MSG_ARK_RTFUNC_FAILED, ark_mem->tcur);
+    return (ARK_RTFUNC_FAIL);
+  }
 
   zroot = SUNFALSE;
   for (i = 0; i < rootmem->nrtfn; i++)
@@ -437,6 +452,20 @@ int arkRootCheck1(void* arkode_mem)
   }
   if (!zroot) { return (ARK_SUCCESS); }
 
+  /* call full RHS if needed */
+  if (!(ark_mem->fn_is_current))
+  {
+    retval = ark_mem->step_fullrhs(ark_mem, ark_mem->tn, ark_mem->yn,
+                                   ark_mem->fn, ARK_FULLRHS_START);
+    if (retval)
+    {
+      arkProcessError(ark_mem, ARK_RHSFUNC_FAIL, __LINE__, __func__, __FILE__,
+                      MSG_ARK_RHSFUNC_FAILED, ark_mem->tcur);
+      return ARK_RHSFUNC_FAIL;
+    }
+    ark_mem->fn_is_current = SUNTRUE;
+  }
+
   /* Some g_i is zero at t0; look at g at t0+(small increment). */
   hratio = SUNMAX(rootmem->ttol / SUNRabs(ark_mem->h), TENTH);
   smallh = hratio * ark_mem->h;
@@ -444,7 +473,12 @@ int arkRootCheck1(void* arkode_mem)
   N_VLinearSum(ONE, ark_mem->yn, smallh, ark_mem->fn, ark_mem->ycur);
   retval = rootmem->gfun(tplus, ark_mem->ycur, rootmem->ghi, rootmem->root_data);
   rootmem->nge++;
-  if (retval != 0) { return (ARK_RTFUNC_FAIL); }
+  if (retval != 0)
+  {
+    arkProcessError(ark_mem, ARK_RTFUNC_FAIL, __LINE__, __func__, __FILE__,
+                    MSG_ARK_RTFUNC_FAILED, ark_mem->tcur);
+    return (ARK_RTFUNC_FAIL);
+  }
 
   /* We check now only the components of g which were exactly 0.0 at t0
    * to see if we can 'activate' them. */
@@ -499,7 +533,7 @@ int arkRootCheck2(void* arkode_mem)
   if (rootmem->irfnd == 0) { return (ARK_SUCCESS); }
 
   /* Set ark_ycur = y(tlo) */
-  (void)arkGetDky(ark_mem, rootmem->tlo, 0, ark_mem->ycur);
+  (void)ARKodeGetDky(ark_mem, rootmem->tlo, 0, ark_mem->ycur);
 
   /* Evaluate root-finding function: glo = g(tlo, y(tlo)) */
   retval = rootmem->gfun(rootmem->tlo, ark_mem->ycur, rootmem->glo,
@@ -539,7 +573,7 @@ int arkRootCheck2(void* arkode_mem)
   else
   {
     /*   set ark_ycur = y(tplus) via interpolation */
-    (void)arkGetDky(ark_mem, tplus, 0, ark_mem->ycur);
+    (void)ARKodeGetDky(ark_mem, tplus, 0, ark_mem->ycur);
   }
   /*     set ghi = g(tplus,y(tplus)) */
   retval = rootmem->gfun(tplus, ark_mem->ycur, rootmem->ghi, rootmem->root_data);
@@ -609,7 +643,7 @@ int arkRootCheck3(void* arkode_mem)
     else
     {
       rootmem->thi = rootmem->toutc;
-      (void)arkGetDky(ark_mem, rootmem->thi, 0, ark_mem->ycur);
+      (void)ARKodeGetDky(ark_mem, rootmem->thi, 0, ark_mem->ycur);
     }
   }
 
@@ -637,7 +671,7 @@ int arkRootCheck3(void* arkode_mem)
   if (ier == ARK_SUCCESS) { return (ARK_SUCCESS); }
 
   /* If a root was found, interpolate to get y(trout) and return.  */
-  (void)arkGetDky(ark_mem, rootmem->trout, 0, ark_mem->ycur);
+  (void)ARKodeGetDky(ark_mem, rootmem->trout, 0, ark_mem->ycur);
   return (RTFOUND);
 }
 
@@ -826,7 +860,7 @@ int arkRootfind(void* arkode_mem)
       tmid    = rootmem->thi - fracsub * (rootmem->thi - rootmem->tlo);
     }
 
-    (void)arkGetDky(ark_mem, tmid, 0, ark_mem->ycur);
+    (void)ARKodeGetDky(ark_mem, tmid, 0, ark_mem->ycur);
     retval = rootmem->gfun(tmid, ark_mem->ycur, rootmem->grout,
                            rootmem->root_data);
     rootmem->nge++;

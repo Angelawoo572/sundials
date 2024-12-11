@@ -17,27 +17,20 @@
 install(CODE "MESSAGE(\"\nInstall SUNNONLINSOL_FIXEDPOINT\n\")")
 
 # Add the library
-sundials_add_library(sundials_sunnonlinsolfixedpoint
-  SOURCES
-    sunnonlinsol_fixedpoint.c
-  HEADERS
-    ${SUNDIALS_SOURCE_DIR}/include/sunnonlinsol/sunnonlinsol_fixedpoint.h
-  INCLUDE_SUBDIR
-    sunnonlinsol
-  LINK_LIBRARIES
-    PUBLIC sundials_core
+sundials_add_library(
+  sundials_sunnonlinsolfixedpoint
+  SOURCES sunnonlinsol_fixedpoint.c
+  HEADERS ${SUNDIALS_SOURCE_DIR}/include/sunnonlinsol/sunnonlinsol_fixedpoint.h
+  INCLUDE_SUBDIR sunnonlinsol
+  LINK_LIBRARIES PUBLIC sundials_core
   OBJECT_LIBRARIES
-  OUTPUT_NAME
-    sundials_sunnonlinsolfixedpoint
-  VERSION
-    ${sunnonlinsollib_VERSION}
-  SOVERSION
-    ${sunnonlinsollib_SOVERSION}
-)
+  OUTPUT_NAME sundials_sunnonlinsolfixedpoint
+  VERSION ${sunnonlinsollib_VERSION}
+  SOVERSION ${sunnonlinsollib_SOVERSION})
 
 message(STATUS "Added SUNNONLINSOL_FIXEDPOINT module")
 
 # Add F2003 module if the interface is enabled
 if(BUILD_FORTRAN_MODULE_INTERFACE)
-  add_subdirectory(fmod)
+  add_subdirectory("fmod_int${SUNDIALS_INDEX_SIZE}")
 endif()

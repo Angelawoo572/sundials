@@ -27,10 +27,12 @@
 namespace sundials {
 namespace hip {
 
-#if defined(__HIP_PLATFORM_HCC__)
+#if defined(__HIP_PLATFORM_HCC__) || defined(__HIP_PLATFORM_AMD__)
 constexpr const sunindextype WARP_SIZE = 64;
-#elif defined(__HIP_PLATFORM_NVCC__)
+#elif defined(__HIP_PLATFORM_NVCC__) || defined(__HIP_PLATFORM_NVDIA__)
 constexpr const sunindextype WARP_SIZE = 32;
+#else
+#error "Unknown HIP_PLATFORM, report to github.com/LLNL/sundials/issues"
 #endif
 constexpr const sunindextype MAX_BLOCK_SIZE = 1024;
 constexpr const sunindextype MAX_WARPS      = MAX_BLOCK_SIZE / WARP_SIZE;
@@ -139,7 +141,7 @@ private:
 };
 
 /*
- * A kernel execution policy for performing a reduction across indvidual thread
+ * A kernel execution policy for performing a reduction across individual thread
  * blocks. The number of threads per block (blockSize) can be set to any valid
  * multiple of the HIP warp size. The number of blocks (gridSize) can be set to
  * any value greater or equal to 0. If it is set to 0, then the grid size will

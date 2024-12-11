@@ -28,7 +28,7 @@
  * being Modified in the first case, and Classical in the second.
  * The second run uses IDAReInit.
  * -----------------------------------------------------------------
- * When running this example for unit testing, set the environemnt
+ * When running this example for unit testing, set the environment
  * variables OMP_PROC_BIND=false and OMP_NUM_THREADS=2 to run
  * without thread binding and with two OpenMP threads.
  * -----------------------------------------------------------------
@@ -157,7 +157,7 @@ int main(int argc, char* argv[])
   Teuchos::RCP<const map_type> testMap = Teuchos::rcp(
     new map_type(global_length, index_base, comm, Tpetra::GloballyDistributed));
 
-  /* Construct a Tpetra vector and return refernce counting pointer to it. */
+  /* Construct a Tpetra vector and return reference counting pointer to it. */
   Teuchos::RCP<vector_type> rcpuu = Teuchos::rcp(new vector_type(testMap));
 
   if (comm->getSize() != 1)
@@ -225,7 +225,7 @@ int main(int argc, char* argv[])
   retval = SUNLinSol_SPGMRSetMaxRestarts(LS, 5);
   if (check_retval(&retval, "SUNSPGMRSetMaxRestarts", 1)) { return (1); }
 
-  /* Attach the linear sovler */
+  /* Attach the linear solver */
   retval = IDASetLinearSolver(mem, LS, NULL);
   if (check_retval(&retval, "IDASetLinearSolver", 1)) { return (1); }
 
@@ -415,7 +415,7 @@ int resHeat(sunrealtype tt, N_Vector uu, N_Vector up, N_Vector rr, void* user_da
  * PsetupHeat: setup for diagonal preconditioner for idaHeat2D_kry.
  *
  * The optional user-supplied functions PsetupHeat and
- * PsolveHeat together must define the left preconditoner
+ * PsolveHeat together must define the left preconditioner
  * matrix P approximating the system Jacobian matrix
  *                   J = dF/du + cj*dF/du'
  * (where the DAE system is F(t,u,u') = 0), and solve the linear
@@ -493,7 +493,7 @@ int PsolveHeat(sunrealtype tt, N_Vector uu, N_Vector up, N_Vector rr,
 static int SetInitialProfile(UserData* data, N_Vector uu, N_Vector up,
                              N_Vector res)
 {
-  sunindextype mm, mm1, i, j;
+  sunindextype mm, mm1;
   sunrealtype xfact, yfact;
 
   mm = data->mm;
@@ -513,10 +513,10 @@ static int SetInitialProfile(UserData* data, N_Vector uu, N_Vector up,
 #endif
 
   /* Initialize uu on all grid points. */
-  for (j = 0; j < mm; j++)
+  for (sunindextype j = 0; j < mm; j++)
   {
     yfact = data->dx * j;
-    for (i = 0; i < mm; i++)
+    for (sunindextype i = 0; i < mm; i++)
     {
       xfact            = data->dx * i;
       u_1d(mm * j + i) = SUN_RCONST(16.0) * xfact * (ONE - xfact) * yfact *

@@ -41,7 +41,7 @@
  * problem is advanced in time with a diagonally implicit Runge-Kutta method
  * using an inexact Newton method paired with the hypre's PCG or GMRES linear
  * solver and PFMG preconditioner. Several command line options are available
- * to change the problem parameters and ARKStep settings. Use the flag --help
+ * to change the problem parameters and ARKODE settings. Use the flag --help
  * for more information.
  * ---------------------------------------------------------------------------*/
 
@@ -155,7 +155,7 @@ struct UserData
   sunrealtype* Ssend;
   sunrealtype* Nsend;
 
-  // Send requests for neighor exchange
+  // Send requests for neighbor exchange
   MPI_Request reqSW;
   MPI_Request reqSE;
   MPI_Request reqSS;
@@ -185,7 +185,7 @@ struct UserData
                          //   3 - nonsymmetric R/B Gauss-Seidel
   HYPRE_Int pfmg_nrelax; // number of pre and post relaxation sweeps (2)
 
-  // Ouput variables
+  // Output variables
   int output;    // output level
   int nout;      // number of output times
   ofstream uout; // output file stream
@@ -382,6 +382,13 @@ int main(int argc, char* argv[])
   flag = SUNContext_Create(comm_w, &ctx);
   if (check_flag(&flag, "SUNContext_Create", 1)) { return 1; }
 
+  // Initialize hypre if v2.20.0 or newer
+#if HYPRE_RELEASE_NUMBER >= 22000 || SUN_HYPRE_VERSION_MAJOR > 2 || \
+  (SUN_HYPRE_VERSION_MAJOR == 2 && SUN_HYPRE_VERSION_MINOR >= 20)
+  flag = HYPRE_Init();
+  if (check_flag(&flag, "HYPRE_Init", 1)) { return 1; }
+#endif
+
   // Set output process flag
   bool outproc = (myid == 0);
 
@@ -439,7 +446,7 @@ int main(int argc, char* argv[])
   if (check_flag((void*)LS, "HypreLS", 0)) { return 1; }
 
   // --------------
-  // Setup ARKStep
+  // Setup ARKODE
   // --------------
 
   // Create integrator
@@ -447,60 +454,38 @@ int main(int argc, char* argv[])
   if (check_flag((void*)arkode_mem, "ARKStepCreate", 0)) { return 1; }
 
   // Specify tolerances
-  flag = ARKStepSStolerances(arkode_mem, udata->rtol, udata->atol);
-  if (check_flag(&flag, "ARKStepSStolerances", 1)) { return 1; }
+  flag = ARKodeSStolerances(arkode_mem, udata->rtol, udata->atol);
+  if (check_flag(&flag, "ARKodeSStolerances", 1)) { return 1; }
 
   // Attach user data
-  flag = ARKStepSetUserData(arkode_mem, (void*)udata);
-  if (check_flag(&flag, "ARKStepSetUserData", 1)) { return 1; }
+  flag = ARKodeSetUserData(arkode_mem, (void*)udata);
+  if (check_flag(&flag, "ARKodeSetUserData", 1)) { return 1; }
 
   // Attach linear solver
-  flag = ARKStepSetLinearSolver(arkode_mem, LS, A);
-  if (check_flag(&flag, "ARKStepSetLinearSolver", 1)) { return 1; }
+  flag = ARKodeSetLinearSolver(arkode_mem, LS, A);
+  if (check_flag(&flag, "ARKodeSetLinearSolver", 1)) { return 1; }
 
   // Specify the Jacobian evaluation function
-  flag = ARKStepSetJacFn(arkode_mem, Jac);
-  if (check_flag(&flag, "ARKStepSetJacFn", 1)) { return 1; }
+  flag = ARKodeSetJacFn(arkode_mem, Jac);
+  if (check_flag(&flag, "ARKodeSetJacFn", 1)) { return 1; }
 
   // Set linear solver setup frequency (update linear system matrix)
-  flag = ARKStepSetLSetupFrequency(arkode_mem, udata->msbp);
-  if (check_flag(&flag, "ARKStepSetLSetupFrequency", 1)) { return 1; }
+  flag = ARKodeSetLSetupFrequency(arkode_mem, udata->msbp);
+  if (check_flag(&flag, "ARKodeSetLSetupFrequency", 1)) { return 1; }
 
   // Set linear solver tolerance factor
-  flag = ARKStepSetEpsLin(arkode_mem, udata->epslin);
-  if (check_flag(&flag, "ARKStepSetEpsLin", 1)) { return 1; }
+  flag = ARKodeSetEpsLin(arkode_mem, udata->epslin);
+  if (check_flag(&flag, "ARKodeSetEpsLin", 1)) { return 1; }
 
-  // Select method order
-  if (udata->order > 1)
-  {
-    // Use an ARKode provided table
-    flag = ARKStepSetOrder(arkode_mem, udata->order);
-    if (check_flag(&flag, "ARKStepSetOrder", 1)) { return 1; }
-  }
-  else
-  {
-    // Use implicit Euler (requires fixed step size)
-    sunrealtype c[1], A[1], b[1];
-    ARKodeButcherTable B = NULL;
-
-    // Create implicit Euler Butcher table
-    c[0] = A[0] = b[0] = ONE;
-    B                  = ARKodeButcherTable_Create(1, 1, 0, c, A, b, NULL);
-    if (check_flag((void*)B, "ARKodeButcherTable_Create", 0)) { return 1; }
-
-    // Attach the Butcher table
-    flag = ARKStepSetTables(arkode_mem, 1, 0, B, NULL);
-    if (check_flag(&flag, "ARKStepSetTables", 1)) { return 1; }
-
-    // Free the Butcher table
-    ARKodeButcherTable_Free(B);
-  }
+  // Use an ARKode provided table
+  flag = ARKodeSetOrder(arkode_mem, udata->order);
+  if (check_flag(&flag, "ARKodeSetOrder", 1)) { return 1; }
 
   // Set fixed step size or adaptivity method
   if (udata->hfixed > ZERO)
   {
-    flag = ARKStepSetFixedStep(arkode_mem, udata->hfixed);
-    if (check_flag(&flag, "ARKStepSetFixedStep", 1)) { return 1; }
+    flag = ARKodeSetFixedStep(arkode_mem, udata->hfixed);
+    if (check_flag(&flag, "ARKodeSetFixedStep", 1)) { return 1; }
   }
   else
   {
@@ -513,24 +498,24 @@ int main(int argc, char* argv[])
     case (ARK_ADAPT_IMP_GUS): C = SUNAdaptController_ImpGus(ctx); break;
     case (ARK_ADAPT_IMEX_GUS): C = SUNAdaptController_ImExGus(ctx); break;
     }
-    flag = ARKStepSetAdaptController(arkode_mem, C);
-    if (check_flag(&flag, "ARKStepSetAdaptController", 1)) { return 1; }
+    flag = ARKodeSetAdaptController(arkode_mem, C);
+    if (check_flag(&flag, "ARKodeSetAdaptController", 1)) { return 1; }
   }
 
   // Specify linearly implicit non-time-dependent RHS
   if (udata->linear)
   {
-    flag = ARKStepSetLinear(arkode_mem, 0);
-    if (check_flag(&flag, "ARKStepSetLinear", 1)) { return 1; }
+    flag = ARKodeSetLinear(arkode_mem, 0);
+    if (check_flag(&flag, "ARKodeSetLinear", 1)) { return 1; }
   }
 
   // Set max steps between outputs
-  flag = ARKStepSetMaxNumSteps(arkode_mem, udata->maxsteps);
-  if (check_flag(&flag, "ARKStepSetMaxNumSteps", 1)) { return 1; }
+  flag = ARKodeSetMaxNumSteps(arkode_mem, udata->maxsteps);
+  if (check_flag(&flag, "ARKodeSetMaxNumSteps", 1)) { return 1; }
 
   // Set stopping time
-  flag = ARKStepSetStopTime(arkode_mem, udata->tf);
-  if (check_flag(&flag, "ARKStepSetStopTime", 1)) { return 1; }
+  flag = ARKodeSetStopTime(arkode_mem, udata->tf);
+  if (check_flag(&flag, "ARKodeSetStopTime", 1)) { return 1; }
 
   // -----------------------
   // Loop over output times
@@ -540,7 +525,7 @@ int main(int argc, char* argv[])
   sunrealtype dTout = udata->tf / udata->nout;
   sunrealtype tout  = dTout;
 
-  // Inital output
+  // Initial output
   flag = OpenOutput(udata);
   if (check_flag(&flag, "OpenOutput", 1)) { return 1; }
 
@@ -553,8 +538,8 @@ int main(int argc, char* argv[])
     t1 = MPI_Wtime();
 
     // Evolve in time
-    flag = ARKStepEvolve(arkode_mem, tout, u, &t, ARK_NORMAL);
-    if (check_flag(&flag, "ARKStepEvolve", 1)) { break; }
+    flag = ARKodeEvolve(arkode_mem, tout, u, &t, ARK_NORMAL);
+    if (check_flag(&flag, "ARKodeEvolve", 1)) { break; }
 
     // Stop timer
     t2 = MPI_Wtime();
@@ -614,11 +599,18 @@ int main(int argc, char* argv[])
   // Clean up and return
   // --------------------
 
-  ARKStepFree(&arkode_mem); // Free integrator memory
-  SUNLinSolFree(LS);        // Free linear solver
-  SUNMatDestroy(A);         // Free matrix
-  N_VDestroy(u);            // Free vectors
-  FreeUserData(udata);      // Free user data
+  // Finalize hypre if v2.20.0 or newer
+#if HYPRE_RELEASE_NUMBER >= 22000 || SUN_HYPRE_VERSION_MAJOR > 2 || \
+  (SUN_HYPRE_VERSION_MAJOR == 2 && SUN_HYPRE_VERSION_MINOR >= 20)
+  flag = HYPRE_Finalize();
+  if (check_flag(&flag, "HYPRE_Finalize", 1)) { return 1; }
+#endif
+
+  ARKodeFree(&arkode_mem); // Free integrator memory
+  SUNLinSolFree(LS);       // Free linear solver
+  SUNMatDestroy(A);        // Free matrix
+  N_VDestroy(u);           // Free vectors
+  FreeUserData(udata);     // Free user data
   delete udata;
   (void)SUNAdaptController_Destroy(C); // Free time adaptivity controller
   SUNContext_Free(&ctx);               // Free context
@@ -1874,7 +1866,7 @@ static void InputHelp()
   cout << "  --noforcing             : disable forcing term" << endl;
   cout << "  --tf <time>             : final time" << endl;
   cout << "  --rtol <rtol>           : relative tolerance" << endl;
-  cout << "  --atol <atol>           : absoltue tolerance" << endl;
+  cout << "  --atol <atol>           : absolute tolerance" << endl;
   cout << "  --nonlinear             : disable linearly implicit flag" << endl;
   cout << "  --order <ord>           : method order" << endl;
   cout << "  --fixedstep <step>      : used fixed step size" << endl;
@@ -2020,8 +2012,8 @@ static int OpenOutput(UserData* udata)
 static int WriteOutput(sunrealtype t, N_Vector u, UserData* udata)
 {
   int flag;
-  sunrealtype max;
-  bool outproc = (udata->myid_c == 0);
+  sunrealtype max = ZERO;
+  bool outproc    = (udata->myid_c == 0);
 
   if (udata->output > 0)
   {
@@ -2119,27 +2111,27 @@ static int OutputStats(void* arkode_mem, UserData* udata)
   int flag;
 
   // Get integrator and solver stats
-  long int nst, nst_a, netf, nfe, nfi, nni, ncfn, nli, nlcf, nsetups, nJeval;
-  flag = ARKStepGetNumSteps(arkode_mem, &nst);
-  if (check_flag(&flag, "ARKStepGetNumSteps", 1)) { return -1; }
-  flag = ARKStepGetNumStepAttempts(arkode_mem, &nst_a);
-  if (check_flag(&flag, "ARKStepGetNumStepAttempts", 1)) { return -1; }
-  flag = ARKStepGetNumErrTestFails(arkode_mem, &netf);
-  if (check_flag(&flag, "ARKStepGetNumErrTestFails", 1)) { return -1; }
-  flag = ARKStepGetNumRhsEvals(arkode_mem, &nfe, &nfi);
-  if (check_flag(&flag, "ARKStepGetNumRhsEvals", 1)) { return -1; }
-  flag = ARKStepGetNumNonlinSolvIters(arkode_mem, &nni);
-  if (check_flag(&flag, "ARKStepGetNumNonlinSolvIters", 1)) { return -1; }
-  flag = ARKStepGetNumNonlinSolvConvFails(arkode_mem, &ncfn);
-  if (check_flag(&flag, "ARKStepGetNumNonlinSolvConvFails", 1)) { return -1; }
-  flag = ARKStepGetNumLinIters(arkode_mem, &nli);
-  if (check_flag(&flag, "ARKStepGetNumLinIters", 1)) { return -1; }
-  flag = ARKStepGetNumLinConvFails(arkode_mem, &nlcf);
-  if (check_flag(&flag, "ARKStepGetNumLinConvFails", 1)) { return -1; }
-  flag = ARKStepGetNumLinSolvSetups(arkode_mem, &nsetups);
-  if (check_flag(&flag, "ARKStepGetNumLinSolvSetups", 1)) { return -1; }
-  flag = ARKStepGetNumJacEvals(arkode_mem, &nJeval);
-  if (check_flag(&flag, "ARKStepGetNumJacEvals", 1)) { return -1; }
+  long int nst, nst_a, netf, nfi, nni, ncfn, nli, nlcf, nsetups, nJeval;
+  flag = ARKodeGetNumSteps(arkode_mem, &nst);
+  if (check_flag(&flag, "ARKodeGetNumSteps", 1)) { return -1; }
+  flag = ARKodeGetNumStepAttempts(arkode_mem, &nst_a);
+  if (check_flag(&flag, "ARKodeGetNumStepAttempts", 1)) { return -1; }
+  flag = ARKodeGetNumErrTestFails(arkode_mem, &netf);
+  if (check_flag(&flag, "ARKodeGetNumErrTestFails", 1)) { return -1; }
+  flag = ARKodeGetNumRhsEvals(arkode_mem, 1, &nfi);
+  if (check_flag(&flag, "ARKodeGetNumRhsEvals", 1)) { return -1; }
+  flag = ARKodeGetNumNonlinSolvIters(arkode_mem, &nni);
+  if (check_flag(&flag, "ARKodeGetNumNonlinSolvIters", 1)) { return -1; }
+  flag = ARKodeGetNumNonlinSolvConvFails(arkode_mem, &ncfn);
+  if (check_flag(&flag, "ARKodeGetNumNonlinSolvConvFails", 1)) { return -1; }
+  flag = ARKodeGetNumLinIters(arkode_mem, &nli);
+  if (check_flag(&flag, "ARKodeGetNumLinIters", 1)) { return -1; }
+  flag = ARKodeGetNumLinConvFails(arkode_mem, &nlcf);
+  if (check_flag(&flag, "ARKodeGetNumLinConvFails", 1)) { return -1; }
+  flag = ARKodeGetNumLinSolvSetups(arkode_mem, &nsetups);
+  if (check_flag(&flag, "ARKodeGetNumLinSolvSetups", 1)) { return -1; }
+  flag = ARKodeGetNumJacEvals(arkode_mem, &nJeval);
+  if (check_flag(&flag, "ARKodeGetNumJacEvals", 1)) { return -1; }
 
   cout << fixed;
   cout << setprecision(6);
@@ -2642,7 +2634,7 @@ int HypreLS_Setup(SUNLinearSolver LS, SUNMatrix A)
     flag = HYPRE_StructPFMGCreate(udata->comm_c, &(HLS_PRECOND(LS)));
     if (flag != 0) { return (flag); }
 
-    // Signal that the inital guess is zero
+    // Signal that the initial guess is zero
     flag = HYPRE_StructPFMGSetZeroGuess(HLS_PRECOND(LS));
     if (flag != 0) { return (flag); }
 
@@ -2766,14 +2758,14 @@ int HypreLS_Solve(SUNLinearSolver LS, SUNMatrix A, N_Vector x, N_Vector b,
                                   HLS_X(LS));
   }
 
-  // If a convergence error occured, clear the error, and return with a
+  // If a convergence error occurred, clear the error, and return with a
   // recoverable error.
   if (flag == HYPRE_ERROR_CONV)
   {
     HYPRE_ClearError(HYPRE_ERROR_CONV);
     return SUNLS_CONV_FAIL;
   }
-  // If any other error occured return with an unrecoverable error.
+  // If any other error occurred return with an unrecoverable error.
   else if (flag != 0) { return SUN_ERR_EXT_FAIL; }
 
   // Update iteration count

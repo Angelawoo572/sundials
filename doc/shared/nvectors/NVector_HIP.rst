@@ -44,7 +44,7 @@ The content members are the vector length (size), a boolean flag that signals if
 the vector owns the data (i.e. it is in charge of freeing the data), pointers to
 vector data on the host and the device, pointers to :cpp:type:`SUNHipExecPolicy`
 implementations that control how the HIP kernels are launched for streaming and
-reduction vector kernels, and a private data structure which holds additonal members
+reduction vector kernels, and a private data structure which holds additional members
 that should not be accessed directly.
 
 When instantiated with :c:func:`N_VNew_Hip`, the underlying data will be
@@ -81,7 +81,7 @@ accessor functions:
 
 .. c:function:: sunbooleantype N_VIsManagedMemory_Hip(N_Vector v)
 
-   This function returns a boolean flag indiciating if the vector
+   This function returns a boolean flag indicating if the vector
    data array is in managed memory or not.
 
 
@@ -92,7 +92,7 @@ operations defined in :numref:`NVectors.Ops`, :numref:`NVectors.Ops.Fused`,
 The names of vector operations are obtained from those in
 :numref:`NVectors.Ops`, :numref:`NVectors.Ops.Fused`, :numref:`NVectors.Ops.Array`, and
 :numref:`NVectors.Ops.Local` by appending the suffix ``_Hip``
-(e.g. :c:func:`N_VDestroy_Hip`).  The module NVECTOR_HIP provides the
+(e.g. ``N_VDestroy_Hip``).  The module NVECTOR_HIP provides the
 following additional user-callable routines:
 
 
@@ -255,7 +255,7 @@ options as the vector they are cloned from while vectors created with
 **Notes**
 
 * When there is a need to access components of an ``N_Vector_Hip``, ``v``,
-  it is recommeded to use functions :c:func:`N_VGetDeviceArrayPointer_Hip()` or
+  it is recommended to use functions :c:func:`N_VGetDeviceArrayPointer_Hip()` or
   :c:func:`N_VGetHostArrayPointer_Hip()`. However, when using managed memory,
   the function :c:func:`N_VGetArrayPointer` may also be used.
 
@@ -271,7 +271,6 @@ options as the vector they are cloned from while vectors created with
 The ``SUNHipExecPolicy`` Class
 --------------------------------
 
-
 In order to provide maximum flexibility to users, the HIP kernel execution parameters used
 by kernels within SUNDIALS are defined by objects of the ``sundials::hip::ExecPolicy``
 abstract class type (this class can be accessed in the global namespace as ``SUNHipExecPolicy``).
@@ -283,28 +282,23 @@ Thus, users may provide custom execution policies that fit the needs of their pr
 where the ``sundials::hip::ExecPolicy`` class is defined in the header file
 ``sundials_hip_policies.hpp``, as follows:
 
-.. code-block:: c++
+.. cpp:class:: sundials::hip::ExecPolicy
 
-   class ExecPolicy
-   {
-   public:
-      ExecPolicy(hipStream_t stream = 0) : stream_(stream) { }
-      virtual size_t gridSize(size_t numWorkUnits = 0, size_t blockDim = 0) const = 0;
-      virtual size_t blockSize(size_t numWorkUnits = 0, size_t gridDim = 0) const = 0;
-      virtual const hipStream_t* stream() const { return (&stream_); }
-      virtual ExecPolicy* clone() const = 0;
-      ExecPolicy* clone_new_stream(hipStream_t stream) const {
-         ExecPolicy* ex = clone();
-         ex->stream_ = stream;
-         return ex;
-      }
-      virtual bool atomic() const { return false; }
-      virtual ~ExecPolicy() {}
-   protected:
-      hipStream_t stream_;
-   };
+   .. cpp:function:: ExecPolicy(hipStream_t stream = 0)
 
+   .. cpp:function:: virtual size_t gridSize(size_t numWorkUnits = 0, size_t blockDim = 0)
 
+   .. cpp:function:: virtual size_t blockSize(size_t numWorkUnits = 0, size_t gridDim = 0)
+
+   .. cpp:function:: virtual const hipStream_t* stream() const
+
+   .. cpp:function:: virtual ExecPolicy* clone() const
+
+   .. cpp:function:: ExecPolicy* clone_new_stream(hipStream_t stream) const
+
+   .. cpp:function:: virtual bool atomic() const
+
+   .. cpp:function:: virtual ~ExecPolicy()
 
 To define a custom execution policy, a user simply needs to create a class that inherits from
 the abstract class and implements the methods. The SUNDIALS provided
@@ -365,7 +359,7 @@ In total, SUNDIALS provides 4 execution policies:
 
    .. cpp:function:: SUNHipBlockReduceExecPolicy(const size_t blockDim, const hipStream_t stream = 0)
 
-      Is for kernels performing a reduction across indvidual thread blocks. The
+      Is for kernels performing a reduction across individual thread blocks. The
       number of threads per block (blockDim) can be set to any valid multiple of
       the HIP warp size. The grid size (gridDim) can be set to any value greater
       than 0. If it is set to 0, then the grid size will be chosen so that there
@@ -374,7 +368,7 @@ In total, SUNDIALS provides 4 execution policies:
 
    .. cpp:function:: SUNHipBlockReduceAtomicExecPolicy(const size_t blockDim, const hipStream_t stream = 0)
 
-      Is for kernels performing a reduction across indvidual thread blocks using
+      Is for kernels performing a reduction across individual thread blocks using
       atomic operations. The number of threads per block (blockDim) can be set
       to any valid multiple of the HIP warp size. The grid size (gridDim) can be
       set to any value greater than 0. If it is set to 0, then the grid size

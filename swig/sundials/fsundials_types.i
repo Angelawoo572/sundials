@@ -15,11 +15,20 @@
 // Swig interface file
 // ---------------------------------------------------------------
 
+// By default, wrap all constants as native fortran PARAMETERs
+%fortranconst;
+
 %include <stdint.i>
 
+#ifdef GENERATE_INT32
+// Inform SWIG of the configure-provided types
+#define SUNDIALS_INT32_T
+#define SUNDIALS_INDEX_TYPE int32_t
+#else
 // Inform SWIG of the configure-provided types
 #define SUNDIALS_INT64_T
 #define SUNDIALS_INDEX_TYPE int64_t
+#endif
 #define SUNDIALS_DOUBLE_PRECISION
 #define sunbooleantype int
 
@@ -73,27 +82,18 @@
 #ifndef SUNDIALS_DOUBLE_PRECISION
 #error "The Fortran bindings are only targeted at double-precision"
 #endif
-
-#ifndef SUNDIALS_INT64_T
-#error "The Fortran bindings are only targeted at 64-bit indices"
-#endif
 %}
 
 // We insert the binding code for SUN_COMM_NULL ourselves because
 // (1) SWIG expands SUN_COMM_NULL to its value
 // (2) We need it to be equivalent to MPI_COMM_NULL when MPI is enabled
 
-%insert("wrapper") %{
-SWIGEXPORT SWIGEXTERN int const _wrap_SUN_COMM_NULL = (int)(0);
-%}
-
 %insert("fdecl") %{
 #if SUNDIALS_MPI_ENABLED
  include "mpif.h"
  integer(C_INT), protected, public :: SUN_COMM_NULL = MPI_COMM_NULL
 #else
- integer(C_INT), protected, public, &
-   bind(C, name="_wrap_SUN_COMM_NULL") :: SUN_COMM_NULL
+ integer(C_INT), parameter, public :: SUN_COMM_NULL = 0_C_INT
 #endif
 %}
 

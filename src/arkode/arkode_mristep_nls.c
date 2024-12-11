@@ -24,23 +24,22 @@
 #include "arkode_mristep_impl.h"
 
 /*===============================================================
-  Exported functions
+  Interface routines supplied to ARKODE
   ===============================================================*/
 
 /*---------------------------------------------------------------
-  MRIStepSetNonlinearSolver:
+  mriStep_SetNonlinearSolver:
 
   This routine attaches a SUNNonlinearSolver object to the MRIStep
   module.
   ---------------------------------------------------------------*/
-int MRIStepSetNonlinearSolver(void* arkode_mem, SUNNonlinearSolver NLS)
+int mriStep_SetNonlinearSolver(ARKodeMem ark_mem, SUNNonlinearSolver NLS)
 {
-  ARKodeMem ark_mem;
   ARKodeMRIStepMem step_mem;
   int retval;
 
   /* access ARKodeMRIStepMem structure */
-  retval = mriStep_AccessStepMem(arkode_mem, __func__, &ark_mem, &step_mem);
+  retval = mriStep_AccessStepMem(ark_mem, __func__, &step_mem);
   if (retval != ARK_SUCCESS) { return (retval); }
 
   /* Return immediately if NLS input is NULL */
@@ -94,7 +93,7 @@ int MRIStepSetNonlinearSolver(void* arkode_mem, SUNNonlinearSolver NLS)
 
   /* set convergence test function */
   retval = SUNNonlinSolSetConvTestFn(step_mem->NLS, mriStep_NlsConvTest,
-                                     arkode_mem);
+                                     (void*)ark_mem);
   if (retval != ARK_SUCCESS)
   {
     arkProcessError(ark_mem, ARK_ILL_INPUT, __LINE__, __func__, __FILE__,
@@ -129,20 +128,19 @@ int MRIStepSetNonlinearSolver(void* arkode_mem, SUNNonlinearSolver NLS)
 }
 
 /*---------------------------------------------------------------
-  MRIStepSetNlsRhsFn:
+  mriStep_SetNlsRhsFn:
 
   This routine sets an alternative user-supplied slow ODE
   right-hand side function to use in the evaluation of nonlinear
   system functions.
   ---------------------------------------------------------------*/
-int MRIStepSetNlsRhsFn(void* arkode_mem, ARKRhsFn nls_fsi)
+int mriStep_SetNlsRhsFn(ARKodeMem ark_mem, ARKRhsFn nls_fsi)
 {
-  ARKodeMem ark_mem;
   ARKodeMRIStepMem step_mem;
   int retval;
 
   /* access ARKodeMRIStepMem structure */
-  retval = mriStep_AccessStepMem(arkode_mem, __func__, &ark_mem, &step_mem);
+  retval = mriStep_AccessStepMem(ark_mem, __func__, &step_mem);
   if (retval != ARK_SUCCESS) { return (retval); }
 
   if (nls_fsi) { step_mem->nls_fsi = nls_fsi; }
@@ -152,22 +150,21 @@ int MRIStepSetNlsRhsFn(void* arkode_mem, ARKRhsFn nls_fsi)
 }
 
 /*---------------------------------------------------------------
-  MRIStepGetNonlinearSystemData:
+  mriStep_GetNonlinearSystemData:
 
   This routine provides access to the relevant data needed to
   compute the nonlinear system function.
   ---------------------------------------------------------------*/
-int MRIStepGetNonlinearSystemData(void* arkode_mem, sunrealtype* tcur,
-                                  N_Vector* zpred, N_Vector* z, N_Vector* F,
-                                  sunrealtype* gamma, N_Vector* sdata,
-                                  void** user_data)
+int mriStep_GetNonlinearSystemData(ARKodeMem ark_mem, sunrealtype* tcur,
+                                   N_Vector* zpred, N_Vector* z, N_Vector* F,
+                                   sunrealtype* gamma, N_Vector* sdata,
+                                   void** user_data)
 {
-  ARKodeMem ark_mem;
   ARKodeMRIStepMem step_mem;
   int retval;
 
   /* access ARKodeMRIStepMem structure */
-  retval = mriStep_AccessStepMem(arkode_mem, __func__, &ark_mem, &step_mem);
+  retval = mriStep_AccessStepMem(ark_mem, __func__, &step_mem);
   if (retval != ARK_SUCCESS) { return (retval); }
 
   *tcur      = ark_mem->tcur;
@@ -181,9 +178,9 @@ int MRIStepGetNonlinearSystemData(void* arkode_mem, sunrealtype* tcur,
   return (ARK_SUCCESS);
 }
 
-/*---------------------------------------------------------------
+/*===============================================================
   Utility routines called by MRIStep
-  ---------------------------------------------------------------*/
+  ===============================================================*/
 
 /*---------------------------------------------------------------
   mriStep_NlsInit:
@@ -324,16 +321,15 @@ int mriStep_Nls(ARKodeMem ark_mem, int nflag)
   /* Reset the stored residual norm (for iterative linear solvers) */
   step_mem->eRNrm = SUN_RCONST(0.1) * step_mem->nlscoef;
 
+  SUNLogInfo(ARK_LOGGER, "begin-nonlinear-solve", "tol = %.16g",
+             step_mem->nlscoef);
+
   /* solve the nonlinear system for the actual correction */
   retval = SUNNonlinSolSolve(step_mem->NLS, step_mem->zpred, step_mem->zcor,
                              ark_mem->ewt, step_mem->nlscoef, callLSetup,
                              ark_mem);
 
-#ifdef SUNDIALS_LOGGING_EXTRA_DEBUG
-  SUNLogger_QueueMsg(ARK_LOGGER, SUN_LOGLEVEL_DEBUG, "ARKODE::mriStep_Nls",
-                     "correction", "zcor =", "");
-  N_VPrintFile(step_mem->zcor, ARK_LOGGER->debug_fp);
-#endif
+  SUNLogExtraDebugVec(ARK_LOGGER, "correction", step_mem->zcor, "zcor(:) =");
 
   /* increment counters */
   (void)SUNNonlinSolGetNumIters(step_mem->NLS, &nls_iters_inc);
@@ -347,8 +343,14 @@ int mriStep_Nls(ARKodeMem ark_mem, int nflag)
   {
     step_mem->jcur = SUNFALSE;
     N_VLinearSum(ONE, step_mem->zcor, ONE, step_mem->zpred, ark_mem->ycur);
+
+    SUNLogInfo(ARK_LOGGER, "end-nonlinear-solve",
+               "status = success, iters = %li", nls_iters_inc);
     return (ARK_SUCCESS);
   }
+
+  SUNLogInfo(ARK_LOGGER, "end-nonlinear-solve",
+             "status = failed, retval = %i, iters = %li", retval, nls_iters_inc);
 
   /* check for recoverable failure, return ARKODE::CONV_FAIL */
   if (retval == SUN_NLS_CONV_RECVR) { return (CONV_FAIL); }
@@ -356,9 +358,9 @@ int mriStep_Nls(ARKodeMem ark_mem, int nflag)
   return (retval);
 }
 
-/*---------------------------------------------------------------
+/*===============================================================
   Interface routines supplied to the SUNNonlinearSolver module
-  ---------------------------------------------------------------*/
+  ===============================================================*/
 
 /*---------------------------------------------------------------
   mriStep_NlsLSetup:
@@ -372,8 +374,8 @@ int mriStep_NlsLSetup(sunbooleantype jbad, sunbooleantype* jcur, void* arkode_me
   ARKodeMRIStepMem step_mem;
   int retval;
 
-  /* access ARKodeMRIStepMem structure */
-  retval = mriStep_AccessStepMem(arkode_mem, __func__, &ark_mem, &step_mem);
+  /* access ARKodeMem and ARKodeMRIStepMem structures */
+  retval = mriStep_AccessARKODEStepMem(arkode_mem, __func__, &ark_mem, &step_mem);
   if (retval != ARK_SUCCESS) { return (retval); }
 
   /* update convfail based on jbad flag */
@@ -415,8 +417,8 @@ int mriStep_NlsLSolve(N_Vector b, void* arkode_mem)
   ARKodeMRIStepMem step_mem;
   int retval, nonlin_iter;
 
-  /* access ARKodeMRIStepMem structure */
-  retval = mriStep_AccessStepMem(arkode_mem, __func__, &ark_mem, &step_mem);
+  /* access ARKodeMem and ARKodeMRIStepMem structures */
+  retval = mriStep_AccessARKODEStepMem(arkode_mem, __func__, &ark_mem, &step_mem);
   if (retval != ARK_SUCCESS) { return (retval); }
 
   /* retrieve nonlinear solver iteration from module */
@@ -462,8 +464,8 @@ int mriStep_NlsResidual(N_Vector zcor, N_Vector r, void* arkode_mem)
   sunrealtype c[3];
   N_Vector X[3];
 
-  /* access ARKodeMRIStepMem structure */
-  retval = mriStep_AccessStepMem(arkode_mem, __func__, &ark_mem, &step_mem);
+  /* access ARKodeMem and ARKodeMRIStepMem structures */
+  retval = mriStep_AccessARKODEStepMem(arkode_mem, __func__, &ark_mem, &step_mem);
   if (retval != ARK_SUCCESS) { return (retval); }
 
   /* update 'ycur' value as stored predictor + current corrector */
@@ -517,8 +519,8 @@ int mriStep_NlsFPFunction(N_Vector zcor, N_Vector g, void* arkode_mem)
   ARKodeMRIStepMem step_mem;
   int retval;
 
-  /* access ARKodeMRIStepMem structure */
-  retval = mriStep_AccessStepMem(arkode_mem, __func__, &ark_mem, &step_mem);
+  /* access ARKodeMem and ARKodeMRIStepMem structures */
+  retval = mriStep_AccessARKODEStepMem(arkode_mem, __func__, &ark_mem, &step_mem);
   if (retval != ARK_SUCCESS) { return (retval); }
 
   /* update 'ycur' value as stored predictor + current corrector */
@@ -559,7 +561,8 @@ int mriStep_NlsFPFunction(N_Vector zcor, N_Vector g, void* arkode_mem)
       implicit, then we just declare 'success' no matter what
       is provided.
   ---------------------------------------------------------------*/
-int mriStep_NlsConvTest(SUNNonlinearSolver NLS, N_Vector y, N_Vector del,
+int mriStep_NlsConvTest(SUNNonlinearSolver NLS,
+                        SUNDIALS_MAYBE_UNUSED N_Vector y, N_Vector del,
                         sunrealtype tol, N_Vector ewt, void* arkode_mem)
 {
   /* temporary variables */
@@ -568,8 +571,8 @@ int mriStep_NlsConvTest(SUNNonlinearSolver NLS, N_Vector y, N_Vector del,
   sunrealtype delnrm, dcon;
   int m, retval;
 
-  /* access ARKodeMRIStepMem structure */
-  retval = mriStep_AccessStepMem(arkode_mem, __func__, &ark_mem, &step_mem);
+  /* access ARKodeMem and ARKodeMRIStepMem structures */
+  retval = mriStep_AccessARKODEStepMem(arkode_mem, __func__, &ark_mem, &step_mem);
   if (retval != ARK_SUCCESS) { return (retval); }
 
   /* if the problem is linearly implicit, just return success */

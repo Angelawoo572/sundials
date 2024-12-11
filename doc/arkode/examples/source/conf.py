@@ -11,8 +11,8 @@
 # -----------------------------------------------------------------------------
 
 import sys, os
-sys.path.append(os.path.dirname(os.path.abspath('../../../shared/versions.py')))
-from versions import *
+sys.path.append(os.path.dirname(os.path.abspath('../../../shared/sundials_vars.py')))
+from sundials_vars import *
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -442,7 +442,7 @@ man_pages = [
 texinfo_documents = [
   ('index', 'ARKODE_example', u'ARKODE Example Documentation',
    u'Daniel R. Reynolds', 'ARKODE_example',
-   'Example programs for the ARKODE time integration package for multi-rate systems of ordinary differntial equations.',
+   'Example programs for the ARKODE time integration package for multi-rate systems of ordinary differential equations.',
    'Miscellaneous'),
 ]
 

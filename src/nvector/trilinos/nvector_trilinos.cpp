@@ -18,11 +18,14 @@
  * of the NVECTOR package.
  * -----------------------------------------------------------------*/
 
+#include <stdio.h>
+#include <stdlib.h>
+
 #include <nvector/nvector_trilinos.h>
 #include <nvector/trilinos/SundialsTpetraVectorInterface.hpp>
 #include <nvector/trilinos/SundialsTpetraVectorKernels.hpp>
-#include <stdio.h>
-#include <stdlib.h>
+
+#include "sundials_macros.h"
 
 #define ZERO   SUN_RCONST(0.0)
 #define HALF   SUN_RCONST(0.5)
@@ -55,7 +58,7 @@ typedef TpetraVectorInterface::vector_type vector_type;
  * Returns vector type ID. Used to identify vector implementation
  * from abstract N_Vector interface.
  */
-N_Vector_ID N_VGetVectorID_Trilinos(N_Vector v)
+N_Vector_ID N_VGetVectorID_Trilinos(SUNDIALS_MAYBE_UNUSED N_Vector v)
 {
   return SUNDIALS_NVEC_TRILINOS;
 }
@@ -235,7 +238,7 @@ void N_VSpace_Trilinos(N_Vector x, sunindextype* lrw, sunindextype* liw)
 /*
  * MPI communicator accessor
  */
-SUNComm N_VGetCommunicator_Trilinos(N_Vector x)
+SUNComm N_VGetCommunicator_Trilinos(SUNDIALS_MAYBE_UNUSED N_Vector x)
 {
 #ifdef SUNDIALS_TRILINOS_HAVE_MPI
   Teuchos::RCP<const vector_type> xv = N_VGetVector_Trilinos(x);

@@ -266,7 +266,7 @@ int SetIC(N_Vector y, UserData& udata);
 // -----------------------------------------------------------------------------
 
 // Check function return flag
-int check_flag(int flag, const string funcname)
+static int check_flag(int flag, const string funcname)
 {
   if (flag < 0)
   {
@@ -277,7 +277,7 @@ int check_flag(int flag, const string funcname)
 }
 
 // Check if a function returned a NULL pointer
-int check_ptr(void* ptr, const string funcname)
+static int check_ptr(void* ptr, const string funcname)
 {
   if (ptr) { return 0; }
   cerr << "ERROR: " << funcname << " returned NULL" << endl;
@@ -285,20 +285,20 @@ int check_ptr(void* ptr, const string funcname)
 }
 
 // Print ERK integrator statistics
-int OutputStatsERK(void* arkode_mem, UserData& udata)
+static int OutputStatsERK(void* arkode_mem, UserData& udata)
 {
   int flag;
 
   // Get integrator and solver stats
   long int nst, nst_a, netf, nfe;
-  flag = ERKStepGetNumSteps(arkode_mem, &nst);
-  if (check_flag(flag, "ERKStepGetNumSteps")) { return -1; }
-  flag = ERKStepGetNumStepAttempts(arkode_mem, &nst_a);
-  if (check_flag(flag, "ERKStepGetNumStepAttempts")) { return -1; }
-  flag = ERKStepGetNumErrTestFails(arkode_mem, &netf);
-  if (check_flag(flag, "ERKStepGetNumErrTestFails")) { return -1; }
-  flag = ERKStepGetNumRhsEvals(arkode_mem, &nfe);
-  if (check_flag(flag, "ERKStepGetNumRhsEvals")) { return -1; }
+  flag = ARKodeGetNumSteps(arkode_mem, &nst);
+  if (check_flag(flag, "ARKodeGetNumSteps")) { return -1; }
+  flag = ARKodeGetNumStepAttempts(arkode_mem, &nst_a);
+  if (check_flag(flag, "ARKodeGetNumStepAttempts")) { return -1; }
+  flag = ARKodeGetNumErrTestFails(arkode_mem, &netf);
+  if (check_flag(flag, "ARKodeGetNumErrTestFails")) { return -1; }
+  flag = ARKodeGetNumRhsEvals(arkode_mem, 0, &nfe);
+  if (check_flag(flag, "ARKodeGetNumRhsEvals")) { return -1; }
 
   cout << "  Steps            = " << nst << endl;
   cout << "  Step attempts    = " << nst_a << endl;
@@ -309,20 +309,22 @@ int OutputStatsERK(void* arkode_mem, UserData& udata)
 }
 
 // Print ARK integrator statistics
-int OutputStatsARK(void* arkode_mem, UserData& udata)
+static int OutputStatsARK(void* arkode_mem, UserData& udata)
 {
   int flag;
 
   // Get integrator and solver stats
   long int nst, nst_a, netf, nfe, nfi;
-  flag = ARKStepGetNumSteps(arkode_mem, &nst);
-  if (check_flag(flag, "ARKStepGetNumSteps")) { return -1; }
-  flag = ARKStepGetNumStepAttempts(arkode_mem, &nst_a);
-  if (check_flag(flag, "ARKStepGetNumStepAttempts")) { return -1; }
-  flag = ARKStepGetNumErrTestFails(arkode_mem, &netf);
-  if (check_flag(flag, "ARKStepGetNumErrTestFails")) { return -1; }
-  flag = ARKStepGetNumRhsEvals(arkode_mem, &nfe, &nfi);
-  if (check_flag(flag, "ARKStepGetNumRhsEvals")) { return -1; }
+  flag = ARKodeGetNumSteps(arkode_mem, &nst);
+  if (check_flag(flag, "ARKodeGetNumSteps")) { return -1; }
+  flag = ARKodeGetNumStepAttempts(arkode_mem, &nst_a);
+  if (check_flag(flag, "ARKodeGetNumStepAttempts")) { return -1; }
+  flag = ARKodeGetNumErrTestFails(arkode_mem, &netf);
+  if (check_flag(flag, "ARKodeGetNumErrTestFails")) { return -1; }
+  flag = ARKodeGetNumRhsEvals(arkode_mem, 0, &nfe);
+  if (check_flag(flag, "ARKodeGetNumRhsEvals")) { return -1; }
+  flag = ARKodeGetNumRhsEvals(arkode_mem, 1, &nfi);
+  if (check_flag(flag, "ARKodeGetNumRhsEvals")) { return -1; }
 
   cout << fixed << setprecision(6);
   cout << "  Steps              = " << nst << endl;
@@ -334,16 +336,16 @@ int OutputStatsARK(void* arkode_mem, UserData& udata)
   if (udata.splitting)
   {
     long int nni, ncfn;
-    flag = ARKStepGetNumNonlinSolvIters(arkode_mem, &nni);
-    if (check_flag(flag, "ARKStepGetNumNonlinSolvIters")) { return -1; }
-    flag = ARKStepGetNumNonlinSolvConvFails(arkode_mem, &ncfn);
-    if (check_flag(flag, "ARKStepGetNumNonlinSolvConvFails")) { return -1; }
+    flag = ARKodeGetNumNonlinSolvIters(arkode_mem, &nni);
+    if (check_flag(flag, "ARKodeGetNumNonlinSolvIters")) { return -1; }
+    flag = ARKodeGetNumNonlinSolvConvFails(arkode_mem, &ncfn);
+    if (check_flag(flag, "ARKodeGetNumNonlinSolvConvFails")) { return -1; }
 
     long int nsetups, nje;
-    flag = ARKStepGetNumLinSolvSetups(arkode_mem, &nsetups);
-    if (check_flag(flag, "ARKStepGetNumLinSolvSetups")) { return -1; }
-    flag = ARKStepGetNumJacEvals(arkode_mem, &nje);
-    if (check_flag(flag, "ARKStepGetNumJacEvals")) { return -1; }
+    flag = ARKodeGetNumLinSolvSetups(arkode_mem, &nsetups);
+    if (check_flag(flag, "ARKodeGetNumLinSolvSetups")) { return -1; }
+    flag = ARKodeGetNumJacEvals(arkode_mem, &nje);
+    if (check_flag(flag, "ARKodeGetNumJacEvals")) { return -1; }
 
     cout << "  NLS iters          = " << nni << endl;
     cout << "  NLS fails          = " << ncfn << endl;
@@ -362,17 +364,19 @@ int OutputStatsARK(void* arkode_mem, UserData& udata)
 }
 
 // Print MRI integrator statistics
-int OutputStatsMRIARK(void* arkode_mem, MRIStepInnerStepper fast_mem,
-                      UserData& udata)
+static int OutputStatsMRIARK(void* arkode_mem, MRIStepInnerStepper fast_mem,
+                             UserData& udata)
 {
   int flag;
 
   // Get slow integrator and solver stats
   long int nst, nst_a, netf, nfe, nfi;
-  flag = MRIStepGetNumSteps(arkode_mem, &nst);
-  if (check_flag(flag, "MRIStepGetNumSteps")) { return -1; }
-  flag = MRIStepGetNumRhsEvals(arkode_mem, &nfe, &nfi);
-  if (check_flag(flag, "MRIStepGetNumRhsEvals")) { return -1; }
+  flag = ARKodeGetNumSteps(arkode_mem, &nst);
+  if (check_flag(flag, "ARKodeGetNumSteps")) { return -1; }
+  flag = ARKodeGetNumRhsEvals(arkode_mem, 0, &nfe);
+  if (check_flag(flag, "ARKodeGetNumRhsEvals")) { return -1; }
+  flag = ARKodeGetNumRhsEvals(arkode_mem, 1, &nfi);
+  if (check_flag(flag, "ARKodeGetNumRhsEvals")) { return -1; }
 
   cout << fixed << setprecision(6);
   cout << endl << "Slow Integrator:" << endl;
@@ -383,16 +387,16 @@ int OutputStatsMRIARK(void* arkode_mem, MRIStepInnerStepper fast_mem,
   if (udata.diffusion)
   {
     long int nni, ncfn;
-    flag = MRIStepGetNumNonlinSolvIters(arkode_mem, &nni);
-    if (check_flag(flag, "MRIStepGetNumNonlinSolvIters")) { return -1; }
-    flag = MRIStepGetNumNonlinSolvConvFails(arkode_mem, &ncfn);
-    if (check_flag(flag, "MRIStepGetNumNonlinSolvConvFails")) { return -1; }
+    flag = ARKodeGetNumNonlinSolvIters(arkode_mem, &nni);
+    if (check_flag(flag, "ARKodeGetNumNonlinSolvIters")) { return -1; }
+    flag = ARKodeGetNumNonlinSolvConvFails(arkode_mem, &ncfn);
+    if (check_flag(flag, "ARKodeGetNumNonlinSolvConvFails")) { return -1; }
 
     long int nsetups, nje;
-    flag = MRIStepGetNumLinSolvSetups(arkode_mem, &nsetups);
-    if (check_flag(flag, "MRIStepGetNumLinSolvSetups")) { return -1; }
-    flag = MRIStepGetNumJacEvals(arkode_mem, &nje);
-    if (check_flag(flag, "MRIStepGetNumJacEvals")) { return -1; }
+    flag = ARKodeGetNumLinSolvSetups(arkode_mem, &nsetups);
+    if (check_flag(flag, "ARKodeGetNumLinSolvSetups")) { return -1; }
+    flag = ARKodeGetNumJacEvals(arkode_mem, &nje);
+    if (check_flag(flag, "ARKodeGetNumJacEvals")) { return -1; }
 
     cout << "  NLS iters               = " << nni << endl;
     cout << "  NLS fails               = " << ncfn << endl;
@@ -413,14 +417,16 @@ int OutputStatsMRIARK(void* arkode_mem, MRIStepInnerStepper fast_mem,
   MRIStepInnerStepper_GetContent(fast_mem, &fast_arkode_mem);
 
   // Get fast integrator and solver stats
-  flag = ARKStepGetNumSteps(fast_arkode_mem, &nst);
-  if (check_flag(flag, "ARKStepGetNumSteps")) { return -1; }
-  flag = ARKStepGetNumStepAttempts(fast_arkode_mem, &nst_a);
-  if (check_flag(flag, "ARKStepGetNumStepAttempts")) { return -1; }
-  flag = ARKStepGetNumErrTestFails(fast_arkode_mem, &netf);
-  if (check_flag(flag, "ARKStepGetNumErrTestFails")) { return -1; }
-  flag = ARKStepGetNumRhsEvals(fast_arkode_mem, &nfe, &nfi);
-  if (check_flag(flag, "ARKStepGetNumRhsEvals")) { return -1; }
+  flag = ARKodeGetNumSteps(fast_arkode_mem, &nst);
+  if (check_flag(flag, "ARKodeGetNumSteps")) { return -1; }
+  flag = ARKodeGetNumStepAttempts(fast_arkode_mem, &nst_a);
+  if (check_flag(flag, "ARKodeGetNumStepAttempts")) { return -1; }
+  flag = ARKodeGetNumErrTestFails(fast_arkode_mem, &netf);
+  if (check_flag(flag, "ARKodeGetNumErrTestFails")) { return -1; }
+  flag = ARKodeGetNumRhsEvals(fast_arkode_mem, 0, &nfe);
+  if (check_flag(flag, "ARKodeGetNumRhsEvals")) { return -1; }
+  flag = ARKodeGetNumRhsEvals(fast_arkode_mem, 1, &nfi);
+  if (check_flag(flag, "ARKodeGetNumRhsEvals")) { return -1; }
 
   cout << fixed << setprecision(6);
   cout << endl << "Fast Integrator:" << endl;
@@ -433,16 +439,16 @@ int OutputStatsMRIARK(void* arkode_mem, MRIStepInnerStepper fast_mem,
   if (udata.splitting)
   {
     long int nni, ncfn;
-    flag = ARKStepGetNumNonlinSolvIters(fast_arkode_mem, &nni);
-    if (check_flag(flag, "ARKStepGetNumNonlinSolvIters")) { return -1; }
-    flag = ARKStepGetNumNonlinSolvConvFails(fast_arkode_mem, &ncfn);
-    if (check_flag(flag, "ARKStepGetNumNonlinSolvConvFails")) { return -1; }
+    flag = ARKodeGetNumNonlinSolvIters(fast_arkode_mem, &nni);
+    if (check_flag(flag, "ARKodeGetNumNonlinSolvIters")) { return -1; }
+    flag = ARKodeGetNumNonlinSolvConvFails(fast_arkode_mem, &ncfn);
+    if (check_flag(flag, "ARKodeGetNumNonlinSolvConvFails")) { return -1; }
 
     long int nsetups, nje;
-    flag = ARKStepGetNumLinSolvSetups(fast_arkode_mem, &nsetups);
-    if (check_flag(flag, "ARKStepGetNumLinSolvSetups")) { return -1; }
-    flag = ARKStepGetNumJacEvals(fast_arkode_mem, &nje);
-    if (check_flag(flag, "ARKStepGetNumJacEvals")) { return -1; }
+    flag = ARKodeGetNumLinSolvSetups(fast_arkode_mem, &nsetups);
+    if (check_flag(flag, "ARKodeGetNumLinSolvSetups")) { return -1; }
+    flag = ARKodeGetNumJacEvals(fast_arkode_mem, &nje);
+    if (check_flag(flag, "ARKodeGetNumJacEvals")) { return -1; }
 
     cout << "  NLS iters               = " << nni << endl;
     cout << "  NLS fails               = " << ncfn << endl;
@@ -461,7 +467,7 @@ int OutputStatsMRIARK(void* arkode_mem, MRIStepInnerStepper fast_mem,
 }
 
 // Save current stats
-int UpdateCVodeStats(CVodeInnerStepperContent* content)
+static int UpdateCVodeStats(CVodeInnerStepperContent* content)
 {
   int flag;
   long int nst, netf, nfe, nni, nncf, nsetups, nje;
@@ -498,29 +504,31 @@ int UpdateCVodeStats(CVodeInnerStepperContent* content)
 }
 
 // Print MRI integrator statistics
-int OutputStatsMRICVODE(void* arkode_mem, MRIStepInnerStepper fast_mem,
-                        UserData& udata)
+static int OutputStatsMRICVODE(void* arkode_mem, MRIStepInnerStepper fast_mem,
+                               UserData& udata)
 {
   int flag;
 
   // Get slow integrator and solver stats
   long int nsts, nfse, nfsi;
-  flag = MRIStepGetNumSteps(arkode_mem, &nsts);
-  if (check_flag(flag, "MRIStepGetNumSteps")) { return -1; }
-  flag = MRIStepGetNumRhsEvals(arkode_mem, &nfse, &nfsi);
-  if (check_flag(flag, "MRIStepGetNumRhsEvals")) { return -1; }
+  flag = ARKodeGetNumSteps(arkode_mem, &nsts);
+  if (check_flag(flag, "ARKodeGetNumSteps")) { return -1; }
+  flag = ARKodeGetNumRhsEvals(arkode_mem, 0, &nfse);
+  if (check_flag(flag, "ARKodeGetNumRhsEvals")) { return -1; }
+  flag = ARKodeGetNumRhsEvals(arkode_mem, 1, &nfsi);
+  if (check_flag(flag, "ARKodeGetNumRhsEvals")) { return -1; }
 
   long int nni, ncfn;
-  flag = MRIStepGetNumNonlinSolvIters(arkode_mem, &nni);
-  if (check_flag(flag, "MRIStepGetNumNonlinSolvIters")) { return -1; }
-  flag = MRIStepGetNumNonlinSolvConvFails(arkode_mem, &ncfn);
-  if (check_flag(flag, "MRIStepGetNumNonlinSolvConvFails")) { return -1; }
+  flag = ARKodeGetNumNonlinSolvIters(arkode_mem, &nni);
+  if (check_flag(flag, "ARKodeGetNumNonlinSolvIters")) { return -1; }
+  flag = ARKodeGetNumNonlinSolvConvFails(arkode_mem, &ncfn);
+  if (check_flag(flag, "ARKodeGetNumNonlinSolvConvFails")) { return -1; }
 
   long int nsetups, nje;
-  flag = MRIStepGetNumLinSolvSetups(arkode_mem, &nsetups);
-  if (check_flag(flag, "MRIStepGetNumLinSolvSetups")) { return -1; }
-  flag = MRIStepGetNumJacEvals(arkode_mem, &nje);
-  if (check_flag(flag, "MRIStepGetNumJacEvals")) { return -1; }
+  flag = ARKodeGetNumLinSolvSetups(arkode_mem, &nsetups);
+  if (check_flag(flag, "ARKodeGetNumLinSolvSetups")) { return -1; }
+  flag = ARKodeGetNumJacEvals(arkode_mem, &nje);
+  if (check_flag(flag, "ARKodeGetNumJacEvals")) { return -1; }
 
   cout << fixed << setprecision(6);
   cout << endl << "Slow Integrator:" << endl;
@@ -570,7 +578,7 @@ int OutputStatsMRICVODE(void* arkode_mem, MRIStepInnerStepper fast_mem,
 }
 
 // Print command line options
-void InputHelp()
+static void InputHelp()
 {
   cout << endl;
   cout << "Command line options:" << endl;
@@ -591,7 +599,7 @@ void InputHelp()
   cout << "  --order_fast <int>       : MRI fast method order\n";
   cout << "  --ark_dirk               : Use DIRK method from ARK method\n";
   cout << "  --rtol <real>            : relative tolerance\n";
-  cout << "  --atol <real>            : absoltue tolerance\n";
+  cout << "  --atol <real>            : absolute tolerance\n";
   cout << "  --rtol_fast <real>       : MRI fast relative tolerance\n";
   cout << "  --atol_fast <real>       : MRI fast absolute tolerance\n";
   cout << "  --fixed_h <real>         : fixed step size\n";
@@ -662,8 +670,8 @@ inline void find_arg(vector<string>& args, const string key, bool& dest,
   }
 }
 
-int ReadInputs(vector<string>& args, UserData& udata, UserOptions& uopts,
-               SUNContext ctx)
+static int ReadInputs(vector<string>& args, UserData& udata, UserOptions& uopts,
+                      SUNContext ctx)
 {
   if (find(args.begin(), args.end(), "--help") != args.end())
   {
@@ -785,7 +793,7 @@ int ReadInputs(vector<string>& args, UserData& udata, UserOptions& uopts,
 }
 
 // Print user data
-int PrintSetup(UserData& udata, UserOptions& uopts)
+static int PrintSetup(UserData& udata, UserOptions& uopts)
 {
   cout << endl;
   cout << "Problem parameters and options:" << endl;
@@ -1147,7 +1155,7 @@ int PrintSetup(UserData& udata, UserOptions& uopts)
 }
 
 // Initialize output
-int OpenOutput(UserData& udata, UserOptions& uopts)
+static int OpenOutput(UserData& udata, UserOptions& uopts)
 {
   // Header for status output
   if (uopts.output)
@@ -1183,7 +1191,8 @@ int OpenOutput(UserData& udata, UserOptions& uopts)
 }
 
 // Write output
-int WriteOutput(sunrealtype t, N_Vector y, UserData& udata, UserOptions& uopts)
+static int WriteOutput(sunrealtype t, N_Vector y, UserData& udata,
+                       UserOptions& uopts)
 {
   if (uopts.output)
   {
@@ -1212,7 +1221,7 @@ int WriteOutput(sunrealtype t, N_Vector y, UserData& udata, UserOptions& uopts)
 }
 
 // Finalize output
-int CloseOutput(UserOptions& uopts)
+static int CloseOutput(UserOptions& uopts)
 {
   // Footer for status output
   if (uopts.output)

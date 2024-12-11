@@ -30,7 +30,7 @@
 #include "arkode_sprkstep_impl.h"
 
 /*===============================================================
-  SPRKStep Exported functions -- Required
+  Exported functions
   ===============================================================*/
 
 void* SPRKStepCreate(ARKRhsFn f1, ARKRhsFn f2, sunrealtype t0, N_Vector y0,
@@ -103,7 +103,7 @@ void* SPRKStepCreate(ARKRhsFn f1, ARKRhsFn f2, sunrealtype t0, N_Vector y0,
   /* Allocate vectors in stepper mem */
   if (!arkAllocVec(ark_mem, y0, &(step_mem->sdata)))
   {
-    SPRKStepFree((void**)&ark_mem);
+    ARKodeFree((void**)&ark_mem);
     return (NULL);
   }
 
@@ -111,23 +111,32 @@ void* SPRKStepCreate(ARKRhsFn f1, ARKRhsFn f2, sunrealtype t0, N_Vector y0,
   {
     if (!arkAllocVec(ark_mem, y0, &(step_mem->yerr)))
     {
-      SPRKStepFree((void**)&ark_mem);
+      ARKodeFree((void**)&ark_mem);
       return (NULL);
     }
+    /* Zero yerr for compensated summation */
+    N_VConst(ZERO, step_mem->yerr);
   }
   else { step_mem->yerr = NULL; }
-  ark_mem->step_init    = sprkStep_Init;
-  ark_mem->step_fullrhs = sprkStep_FullRHS;
-  ark_mem->step         = sprkStep_TakeStep;
-  ark_mem->step_mem     = (void*)step_mem;
+  ark_mem->step_init            = sprkStep_Init;
+  ark_mem->step_fullrhs         = sprkStep_FullRHS;
+  ark_mem->step                 = sprkStep_TakeStep;
+  ark_mem->step_printallstats   = sprkStep_PrintAllStats;
+  ark_mem->step_writeparameters = sprkStep_WriteParameters;
+  ark_mem->step_resize          = sprkStep_Resize;
+  ark_mem->step_free            = sprkStep_Free;
+  ark_mem->step_setdefaults     = sprkStep_SetDefaults;
+  ark_mem->step_setorder        = sprkStep_SetOrder;
+  ark_mem->step_getnumrhsevals  = sprkStep_GetNumRhsEvals;
+  ark_mem->step_mem             = (void*)step_mem;
 
-  /* Set default values for SPRKStep optional inputs */
-  retval = SPRKStepSetDefaults((void*)ark_mem);
+  /* Set default values for optional inputs */
+  retval = sprkStep_SetDefaults((void*)ark_mem);
   if (retval != ARK_SUCCESS)
   {
     arkProcessError(ark_mem, retval, __LINE__, __func__, __FILE__,
                     "Error setting default solver options");
-    SPRKStepFree((void**)&ark_mem);
+    ARKodeFree((void**)&ark_mem);
     return (NULL);
   }
 
@@ -140,12 +149,9 @@ void* SPRKStepCreate(ARKRhsFn f1, ARKRhsFn f2, sunrealtype t0, N_Vector y0,
   step_mem->nf2    = 0;
   step_mem->istage = 0;
 
-  /* Zero yerr for compensated summation */
-  if (ark_mem->use_compensated_sums) { N_VConst(ZERO, step_mem->yerr); }
-
   /* SPRKStep uses Lagrange interpolation by default, since Hermite is
      less compatible with these methods. */
-  arkSetInterpolantType(ark_mem, ARK_INTERP_LAGRANGE);
+  ARKodeSetInterpolantType(ark_mem, ARK_INTERP_LAGRANGE);
 
   /* Initialize main ARKODE infrastructure */
   retval = arkInit(ark_mem, t0, y0, FIRST_INIT);
@@ -153,7 +159,7 @@ void* SPRKStepCreate(ARKRhsFn f1, ARKRhsFn f2, sunrealtype t0, N_Vector y0,
   {
     arkProcessError(ark_mem, retval, __LINE__, __func__, __FILE__,
                     "Unable to initialize main ARKODE infrastructure");
-    SPRKStepFree((void**)&ark_mem);
+    ARKodeFree((void**)&ark_mem);
     return (NULL);
   }
 
@@ -178,8 +184,9 @@ int SPRKStepReInit(void* arkode_mem, ARKRhsFn f1, ARKRhsFn f2, sunrealtype t0,
   ARKodeSPRKStepMem step_mem = NULL;
   int retval                 = 0;
 
-  /* access ARKodeSPRKStepMem structure */
-  retval = sprkStep_AccessStepMem(arkode_mem, __func__, &ark_mem, &step_mem);
+  /* access ARKodeMem and ARKodeSPRKStepMem structures */
+  retval = sprkStep_AccessARKODEStepMem(arkode_mem, __func__, &ark_mem,
+                                        &step_mem);
   if (retval != ARK_SUCCESS) { return (retval); }
 
   /* Check if ark_mem was allocated */
@@ -230,102 +237,93 @@ int SPRKStepReInit(void* arkode_mem, ARKRhsFn f1, ARKRhsFn f2, sunrealtype t0,
   return (ARK_SUCCESS);
 }
 
-/*---------------------------------------------------------------
-  SPRKStepReset:
+/*===============================================================
+  Interface routines supplied to ARKODE
+  ===============================================================*/
 
-  This routine resets the SPRKStep module state to solve the same
-  problem from the given time with the input state (all counter
-  values are retained).
+/*---------------------------------------------------------------
+  sprkStep_Resize:
+
+  This routine resizes the memory within the SPRKStep module.
   ---------------------------------------------------------------*/
-int SPRKStepReset(void* arkode_mem, sunrealtype tR, N_Vector yR)
+int sprkStep_Resize(ARKodeMem ark_mem, N_Vector y0,
+                    SUNDIALS_MAYBE_UNUSED sunrealtype hscale,
+                    SUNDIALS_MAYBE_UNUSED sunrealtype t0, ARKVecResizeFn resize,
+                    void* resize_data)
 {
-  ARKodeMem ark_mem          = NULL;
   ARKodeSPRKStepMem step_mem = NULL;
-  int retval                 = 0;
+  sunindextype lrw1, liw1, lrw_diff, liw_diff;
+  int retval;
 
   /* access ARKodeSPRKStepMem structure */
-  retval = sprkStep_AccessStepMem(arkode_mem, __func__, &ark_mem, &step_mem);
+  retval = sprkStep_AccessStepMem(ark_mem, __func__, &step_mem);
   if (retval != ARK_SUCCESS) { return (retval); }
 
-  /* Initialize main ARKODE infrastructure */
-  retval = arkInit(ark_mem, tR, yR, RESET_INIT);
+  /* Determine change in vector sizes */
+  lrw1 = liw1 = 0;
+  if (y0->ops->nvspace != NULL) { N_VSpace(y0, &lrw1, &liw1); }
+  lrw_diff      = lrw1 - ark_mem->lrw1;
+  liw_diff      = liw1 - ark_mem->liw1;
+  ark_mem->lrw1 = lrw1;
+  ark_mem->liw1 = liw1;
 
-  if (retval != ARK_SUCCESS)
+  /* Resize the local vectors */
+  if (!arkResizeVec(ark_mem, resize, resize_data, lrw_diff, liw_diff, y0,
+                    &step_mem->sdata))
   {
-    arkProcessError(ark_mem, retval, __LINE__, __func__, __FILE__,
-                    "Unable to initialize main ARKODE infrastructure");
-    return (retval);
+    arkProcessError(ark_mem, ARK_MEM_FAIL, __LINE__, __func__, __FILE__,
+                    "Unable to resize vector");
+    return (ARK_MEM_FAIL);
   }
 
-  N_VConst(SUN_RCONST(0.0), step_mem->yerr);
+  if (step_mem->yerr)
+  {
+    if (!arkResizeVec(ark_mem, resize, resize_data, lrw_diff, liw_diff, y0,
+                      &step_mem->yerr))
+    {
+      arkProcessError(ark_mem, ARK_MEM_FAIL, __LINE__, __func__, __FILE__,
+                      "Unable to resize vector");
+      return (ARK_MEM_FAIL);
+    }
+    /* Zero yerr for compensated summation */
+    N_VConst(ZERO, step_mem->yerr);
+  }
 
   return (ARK_SUCCESS);
 }
 
 /*---------------------------------------------------------------
-  SPRKStepEvolve:
+  sprkStep_Reset:
 
-  This is the main time-integration driver (wrappers for general
-  ARKODE utility routine)
+  This routine resets the SPRKStep module state to solve the same
+  problem from the given time with the input state (all counter
+  values are retained).
   ---------------------------------------------------------------*/
-int SPRKStepEvolve(void* arkode_mem, sunrealtype tout, N_Vector yout,
-                   sunrealtype* tret, int itask)
+int sprkStep_Reset(ARKodeMem ark_mem, SUNDIALS_MAYBE_UNUSED sunrealtype tR,
+                   SUNDIALS_MAYBE_UNUSED N_Vector yR)
 {
-  /* unpack ark_mem, call arkEvolve, and return */
-  ARKodeMem ark_mem = NULL;
-  int retval        = 0;
-  if (arkode_mem == NULL)
-  {
-    arkProcessError(NULL, ARK_MEM_NULL, __LINE__, __func__, __FILE__,
-                    MSG_ARK_NO_MEM);
-    return (ARK_MEM_NULL);
-  }
-  ark_mem = (ARKodeMem)arkode_mem;
-  SUNDIALS_MARK_FUNCTION_BEGIN(ARK_PROFILER);
-  retval = arkEvolve(ark_mem, tout, yout, tret, itask);
-  SUNDIALS_MARK_FUNCTION_END(ARK_PROFILER);
-  return (retval);
+  ARKodeSPRKStepMem step_mem = NULL;
+  int retval                 = 0;
+
+  /* access ARKodeSPRKStepMem structure */
+  retval = sprkStep_AccessStepMem(ark_mem, __func__, &step_mem);
+  if (retval != ARK_SUCCESS) { return (retval); }
+
+  N_VConst(SUN_RCONST(0.0), step_mem->yerr);
+  return (ARK_SUCCESS);
 }
 
 /*---------------------------------------------------------------
-  SPRKStepGetDky:
-
-  This returns interpolated output of the solution or its
-  derivatives over the most-recently-computed step (wrapper for
-  generic ARKODE utility routine)
+  sprkStep_Free frees all SPRKStep memory.
   ---------------------------------------------------------------*/
-int SPRKStepGetDky(void* arkode_mem, sunrealtype t, int k, N_Vector dky)
+void sprkStep_Free(ARKodeMem ark_mem)
 {
-  /* unpack ark_mem, call arkGetDky, and return */
-  ARKodeMem ark_mem = NULL;
-  int retval        = 0;
-  if (arkode_mem == NULL)
-  {
-    arkProcessError(NULL, ARK_MEM_NULL, __LINE__, __func__, __FILE__,
-                    MSG_ARK_NO_MEM);
-    return (ARK_MEM_NULL);
-  }
-  ark_mem = (ARKodeMem)arkode_mem;
-  SUNDIALS_MARK_FUNCTION_BEGIN(ARK_PROFILER);
-  retval = arkGetDky(ark_mem, t, k, dky);
-  SUNDIALS_MARK_FUNCTION_END(ARK_PROFILER);
-  return (retval);
-}
-
-/*---------------------------------------------------------------
-  SPRKStepFree frees all SPRKStep memory, and then calls an ARKODE
-  utility routine to free the ARKODE infrastructure memory.
-  ---------------------------------------------------------------*/
-void SPRKStepFree(void** arkode_mem)
-{
-  ARKodeMem ark_mem          = NULL;
   ARKodeSPRKStepMem step_mem = NULL;
 
-  /* nothing to do if arkode_mem is already NULL */
-  if (*arkode_mem == NULL) { return; }
+  /* nothing to do if ark_mem is already NULL */
+  if (ark_mem == NULL) { return; }
 
   /* conditional frees on non-NULL SPRKStep module */
-  ark_mem = (ARKodeMem)(*arkode_mem);
   if (ark_mem->step_mem != NULL)
   {
     step_mem = (ARKodeSPRKStepMem)ark_mem->step_mem;
@@ -347,18 +345,7 @@ void SPRKStepFree(void** arkode_mem)
     free(ark_mem->step_mem);
     ark_mem->step_mem = NULL;
   }
-
-  /* free memory for overall ARKODE infrastructure */
-  arkFree(arkode_mem);
 }
-
-/*===============================================================
-  SPRKStep Private functions
-  ===============================================================*/
-
-/*---------------------------------------------------------------
-  Interface routines supplied to ARKODE
-  ---------------------------------------------------------------*/
 
 /*---------------------------------------------------------------
   sprkStep_Init:
@@ -376,14 +363,14 @@ void SPRKStepFree(void** arkode_mem)
 
   With initialization type RESET_INIT, this routine does nothing.
   ---------------------------------------------------------------*/
-int sprkStep_Init(void* arkode_mem, int init_type)
+int sprkStep_Init(ARKodeMem ark_mem, SUNDIALS_MAYBE_UNUSED sunrealtype tout,
+                  int init_type)
 {
-  ARKodeMem ark_mem          = NULL;
   ARKodeSPRKStepMem step_mem = NULL;
   int retval                 = 0;
 
   /* access ARKodeSPRKStepMem structure */
-  retval = sprkStep_AccessStepMem(arkode_mem, __func__, &ark_mem, &step_mem);
+  retval = sprkStep_AccessStepMem(ark_mem, __func__, &step_mem);
   if (retval != ARK_SUCCESS) { return (retval); }
 
   /* immediately return if reset */
@@ -423,53 +410,32 @@ int sprkStep_Init(void* arkode_mem, int init_type)
         step_mem->method = ARKodeSPRKTable_Load(SPRKSTEP_DEFAULT_10);
         break;
       default:
+        arkProcessError(ark_mem, ARK_WARNING, __LINE__, __func__, __FILE__,
+                        "No SPRK method at requested order, using q=4.");
         step_mem->method = ARKodeSPRKTable_Load(SPRKSTEP_DEFAULT_4);
         break;
       }
     }
   }
 
-  /* Limit max interpolant degree (negative input only overwrites the current
-     interpolant degree if it is greater than abs(input). */
-  if (ark_mem->interp != NULL)
+  /* Override the interpolant degree (if needed), used in arkInitialSetup */
+  if (step_mem->method->q > 1 &&
+      ark_mem->interp_degree > (step_mem->method->q - 1))
   {
-    if (step_mem->method->q > 1)
-    {
-      /* Limit max degree to at most one less than the method global order */
-      retval = arkInterpSetDegree(ark_mem, ark_mem->interp,
-                                  -(step_mem->method->q - 1));
-    }
-    else
-    {
-      /* Allow for linear interpolant with first order methods to ensure
-         solution values are returned at the time interval end points */
-      retval = arkInterpSetDegree(ark_mem, ark_mem->interp,
-                                  -(step_mem->method->q));
-    }
-
-    if (retval != ARK_SUCCESS)
-    {
-      arkProcessError(ark_mem, ARK_ILL_INPUT, __LINE__, __func__, __FILE__,
-                      "Unable to update interpolation polynomial degree");
-      return (ARK_ILL_INPUT);
-    }
+    /* Limit max degree to at most one less than the method global order */
+    ark_mem->interp_degree = step_mem->method->q - 1;
   }
+  else if (step_mem->method->q == 1 && ark_mem->interp_degree > 1)
+  {
+    /* Allow for linear interpolant with first order methods to ensure
+       solution values are returned at the time interval end points */
+    ark_mem->interp_degree = 1;
+  }
+
+  /* Zero yerr for compensated summation */
+  if (ark_mem->use_compensated_sums) { N_VConst(ZERO, step_mem->yerr); }
 
   return (ARK_SUCCESS);
-}
-
-int SPRKStepRootInit(void* arkode_mem, int nrtfn, ARKRootFn g)
-{
-  /* unpack ark_mem, call arkRootInit, and return */
-  ARKodeMem ark_mem = NULL;
-  if (arkode_mem == NULL)
-  {
-    arkProcessError(NULL, ARK_MEM_NULL, __LINE__, __func__, __FILE__,
-                    MSG_ARK_NO_MEM);
-    return (ARK_MEM_NULL);
-  }
-  ark_mem = (ARKodeMem)arkode_mem;
-  return (arkRootInit(ark_mem, nrtfn, g));
 }
 
 /* Utility to call f1 and increment the counter */
@@ -511,15 +477,14 @@ inline int sprkStep_f2(ARKodeSPRKStepMem step_mem, sunrealtype tcur,
   Since RHS values are not stored in SPRKStep we evaluate the RHS functions for
   all modes.
   ----------------------------------------------------------------------------*/
-int sprkStep_FullRHS(void* arkode_mem, sunrealtype t, N_Vector y, N_Vector f,
+int sprkStep_FullRHS(ARKodeMem ark_mem, sunrealtype t, N_Vector y, N_Vector f,
                      int mode)
 {
   int retval                 = 0;
-  ARKodeMem ark_mem          = NULL;
   ARKodeSPRKStepMem step_mem = NULL;
 
   /* access ARKodeSPRKStepMem structure */
-  retval = sprkStep_AccessStepMem(arkode_mem, __func__, &ark_mem, &step_mem);
+  retval = sprkStep_AccessStepMem(ark_mem, __func__, &step_mem);
   if (retval != ARK_SUCCESS) { return (retval); }
 
   /* perform RHS functions contingent on 'mode' argument */
@@ -564,9 +529,8 @@ int sprkStep_FullRHS(void* arkode_mem, sunrealtype t, N_Vector y, N_Vector f,
    This requires only 2 vectors in principle, but we use three
    since we persist the stage data. Only the stage data vector
    belongs to SPRKStep, the other two are reused from the ARKODE core. */
-int sprkStep_TakeStep(void* arkode_mem, sunrealtype* dsmPtr, int* nflagPtr)
+int sprkStep_TakeStep(ARKodeMem ark_mem, sunrealtype* dsmPtr, int* nflagPtr)
 {
-  ARKodeMem ark_mem          = NULL;
   ARKodeSPRKStepMem step_mem = NULL;
   N_Vector prev_stage        = NULL;
   N_Vector curr_stage        = NULL;
@@ -576,7 +540,7 @@ int sprkStep_TakeStep(void* arkode_mem, sunrealtype* dsmPtr, int* nflagPtr)
   int retval                 = 0;
 
   /* access ARKodeSPRKStepMem structure */
-  retval = sprkStep_AccessStepMem(arkode_mem, __func__, &ark_mem, &step_mem);
+  retval = sprkStep_AccessStepMem(ark_mem, __func__, &step_mem);
   if (retval != ARK_SUCCESS) { return (retval); }
 
   prev_stage = ark_mem->yn;
@@ -593,12 +557,26 @@ int sprkStep_TakeStep(void* arkode_mem, sunrealtype* dsmPtr, int* nflagPtr)
     /* store current stage index */
     step_mem->istage = is;
 
+    SUNLogInfo(ARK_LOGGER, "begin-stage",
+               "stage = %i, t = %" RSYM ", that = %" RSYM, is,
+               ark_mem->tn + ci * ark_mem->h, ark_mem->tn + chati * ark_mem->h);
+    SUNLogExtraDebugVec(ARK_LOGGER, "stage", prev_stage, "z2_%i(:) =", is);
+
     /* evaluate p' with the previous velocity */
     N_VConst(ZERO, step_mem->sdata); /* either have to do this or ask user to
                                         set other outputs to zero */
     retval = sprkStep_f1(step_mem, ark_mem->tn + chati * ark_mem->h, prev_stage,
                          step_mem->sdata, ark_mem->user_data);
-    if (retval != 0) { return ARK_RHSFUNC_FAIL; }
+
+    SUNLogExtraDebugVec(ARK_LOGGER, "stage RHS", step_mem->sdata,
+                        "f1_%i(:) =", is);
+
+    if (retval != 0)
+    {
+      SUNLogInfo(ARK_LOGGER, "end-stage",
+                 "status = failed rhs eval, retval = %i", retval);
+      return ARK_RHSFUNC_FAIL;
+    }
 
     /* position update */
     N_VLinearSum(ONE, prev_stage, ark_mem->h * ahati, step_mem->sdata,
@@ -607,12 +585,23 @@ int sprkStep_TakeStep(void* arkode_mem, sunrealtype* dsmPtr, int* nflagPtr)
     /* set current stage time(s) */
     ark_mem->tcur = ark_mem->tn + chati * ark_mem->h;
 
+    SUNLogExtraDebugVec(ARK_LOGGER, "stage", curr_stage, "z1_%i(:) =", is);
+
     /* evaluate q' with the current positions */
     N_VConst(ZERO, step_mem->sdata); /* either have to do this or ask user to
                                         set other outputs to zero */
     retval = sprkStep_f2(step_mem, ark_mem->tn + ci * ark_mem->h, curr_stage,
                          step_mem->sdata, ark_mem->user_data);
-    if (retval != 0) { return ARK_RHSFUNC_FAIL; }
+
+    SUNLogExtraDebugVec(ARK_LOGGER, "stage RHS", step_mem->sdata,
+                        "f2_%i(:) =", is);
+
+    if (retval != 0)
+    {
+      SUNLogInfo(ARK_LOGGER, "end-stage",
+                 "status = failed rhs eval, retval = %i", retval);
+      return ARK_RHSFUNC_FAIL;
+    }
 
     /* velocity update */
     N_VLinearSum(ONE, curr_stage, ark_mem->h * ai, step_mem->sdata, curr_stage);
@@ -622,17 +611,26 @@ int sprkStep_TakeStep(void* arkode_mem, sunrealtype* dsmPtr, int* nflagPtr)
     {
       retval = ark_mem->ProcessStage(ark_mem->tcur, ark_mem->ycur,
                                      ark_mem->user_data);
-      if (retval != 0) { return (ARK_POSTPROCESS_STAGE_FAIL); }
+      if (retval != 0)
+      {
+        SUNLogInfo(ARK_LOGGER, "end-stage",
+                   "status = failed postprocess stage, retval = %i", retval);
+        return (ARK_POSTPROCESS_STAGE_FAIL);
+      }
     }
 
     /* keep track of the stage number */
     step_mem->istage++;
 
     prev_stage = curr_stage;
+
+    SUNLogInfo(ARK_LOGGER, "end-stage", "status = success");
   }
 
   *nflagPtr = 0;
   *dsmPtr   = 0;
+
+  SUNLogExtraDebugVec(ARK_LOGGER, "updated solution", ark_mem->ycur, "ycur(:) =");
 
   return ARK_SUCCESS;
 }
@@ -640,10 +638,9 @@ int sprkStep_TakeStep(void* arkode_mem, sunrealtype* dsmPtr, int* nflagPtr)
 /* Increment SPRK algorithm with compensated summation.
    This algorithm requires 6 vectors, but 5 of them are reused
    from the ARKODE core. */
-int sprkStep_TakeStep_Compensated(void* arkode_mem, sunrealtype* dsmPtr,
+int sprkStep_TakeStep_Compensated(ARKodeMem ark_mem, sunrealtype* dsmPtr,
                                   int* nflagPtr)
 {
-  ARKodeMem ark_mem          = NULL;
   ARKodeSPRKStepMem step_mem = NULL;
   N_Vector delta_Yi          = NULL;
   N_Vector yn_plus_delta_Yi  = NULL;
@@ -654,7 +651,7 @@ int sprkStep_TakeStep_Compensated(void* arkode_mem, sunrealtype* dsmPtr,
   int retval                 = 0;
 
   /* access ARKodeSPRKStepMem structure */
-  retval = sprkStep_AccessStepMem(arkode_mem, __func__, &ark_mem, &step_mem);
+  retval = sprkStep_AccessStepMem(ark_mem, __func__, &step_mem);
   if (retval != ARK_SUCCESS) { return (retval); }
 
   /* Vector shortcuts */
@@ -679,16 +676,31 @@ int sprkStep_TakeStep_Compensated(void* arkode_mem, sunrealtype* dsmPtr,
     /* store current stage index */
     step_mem->istage = is;
 
+    SUNLogInfo(ARK_LOGGER, "begin-stage",
+               "stage = %i, t = %" RSYM ", that = %" RSYM, is,
+               ark_mem->tn + ci * ark_mem->h, ark_mem->tn + chati * ark_mem->h);
+
     /* [     ] + [            ]
        [ q_n ] + [ \Delta Q_i ] */
     N_VLinearSum(ONE, ark_mem->yn, ONE, delta_Yi, yn_plus_delta_Yi);
+
+    SUNLogExtraDebugVec(ARK_LOGGER, "stage", yn_plus_delta_Yi, "z2_%i(:) =", is);
 
     /* Evaluate p' with the previous velocity */
     N_VConst(ZERO, step_mem->sdata); /* either have to do this or ask user to
                                         set other outputs to zero */
     retval = sprkStep_f1(step_mem, ark_mem->tn + chati * ark_mem->h,
                          yn_plus_delta_Yi, step_mem->sdata, ark_mem->user_data);
-    if (retval != 0) { return (ARK_RHSFUNC_FAIL); }
+
+    SUNLogExtraDebugVec(ARK_LOGGER, "stage RHS", step_mem->sdata,
+                        "f1_%i(:) =", is);
+
+    if (retval != 0)
+    {
+      SUNLogInfo(ARK_LOGGER, "end-stage",
+                 "status = failed rhs eval, retval = %i", retval);
+      return (ARK_RHSFUNC_FAIL);
+    }
 
     /* Incremental position update:
        [ \Delta P_i ] = [ \Delta P_{i-1} ] + [ sdata ]
@@ -699,6 +711,8 @@ int sprkStep_TakeStep_Compensated(void* arkode_mem, sunrealtype* dsmPtr,
        [     ] + [            ] */
     N_VLinearSum(ONE, ark_mem->yn, ONE, delta_Yi, yn_plus_delta_Yi);
 
+    SUNLogExtraDebugVec(ARK_LOGGER, "stage", yn_plus_delta_Yi, "z1_%i(:) =", is);
+
     /* set current stage time(s) */
     ark_mem->tcur = ark_mem->tn + chati * ark_mem->h;
 
@@ -707,7 +721,16 @@ int sprkStep_TakeStep_Compensated(void* arkode_mem, sunrealtype* dsmPtr,
                                         set other outputs to zero */
     retval = sprkStep_f2(step_mem, ark_mem->tn + ci * ark_mem->h,
                          yn_plus_delta_Yi, step_mem->sdata, ark_mem->user_data);
-    if (retval != 0) { return (ARK_RHSFUNC_FAIL); }
+
+    SUNLogExtraDebugVec(ARK_LOGGER, "stage RHS", step_mem->sdata,
+                        "f2_%i(:) =", is);
+
+    if (retval != 0)
+    {
+      SUNLogInfo(ARK_LOGGER, "end-stage",
+                 "status = failed rhs eval, retval = %i", retval);
+      return (ARK_RHSFUNC_FAIL);
+    }
 
     /* Incremental velocity update:
        [            ] = [                ] + [       ]
@@ -715,15 +738,19 @@ int sprkStep_TakeStep_Compensated(void* arkode_mem, sunrealtype* dsmPtr,
     N_VLinearSum(ONE, delta_Yi, ark_mem->h * ai, step_mem->sdata, delta_Yi);
 
     /* if user-supplied stage postprocessing function, we error out since it
-     * wont work with the increment form */
+     * won't work with the increment form */
     if (ark_mem->ProcessStage != NULL)
     {
+      SUNLogInfo(ARK_LOGGER, "end-stage",
+                 "status = failed postprocess stage, retval = %i", retval);
       arkProcessError(ark_mem, ARK_POSTPROCESS_STAGE_FAIL, __LINE__, __func__,
                       __FILE__,
                       "Compensated summation is not compatible with stage "
                       "PostProcessing!\n");
       return (ARK_POSTPROCESS_STAGE_FAIL);
     }
+
+    SUNLogInfo(ARK_LOGGER, "end-stage", "status = success");
   }
 
   /*
@@ -738,21 +765,23 @@ int sprkStep_TakeStep_Compensated(void* arkode_mem, sunrealtype* dsmPtr,
   *nflagPtr = 0;
   *dsmPtr   = SUN_RCONST(0.0);
 
+  SUNLogExtraDebugVec(ARK_LOGGER, "updated solution", ark_mem->ycur, "ycur(:) =");
+
   return 0;
 }
 
-/*---------------------------------------------------------------
+/*===============================================================
   Internal utility routines
-  ---------------------------------------------------------------*/
+  ===============================================================*/
 
 /*---------------------------------------------------------------
-  sprkStep_AccessStepMem:
+  sprkStep_AccessARKODEStepMem:
 
   Shortcut routine to unpack ark_mem and step_mem structures from
   void* pointer.  If either is missing it returns ARK_MEM_NULL.
   ---------------------------------------------------------------*/
-int sprkStep_AccessStepMem(void* arkode_mem, const char* fname,
-                           ARKodeMem* ark_mem, ARKodeSPRKStepMem* step_mem)
+int sprkStep_AccessARKODEStepMem(void* arkode_mem, const char* fname,
+                                 ARKodeMem* ark_mem, ARKodeSPRKStepMem* step_mem)
 {
   /* access ARKodeMem structure */
   if (arkode_mem == NULL)
@@ -762,6 +791,8 @@ int sprkStep_AccessStepMem(void* arkode_mem, const char* fname,
     return (ARK_MEM_NULL);
   }
   *ark_mem = (ARKodeMem)arkode_mem;
+
+  /* access ARKodeSPRKStepMem structure */
   if ((*ark_mem)->step_mem == NULL)
   {
     arkProcessError(*ark_mem, ARK_MEM_NULL, __LINE__, fname, __FILE__,
@@ -769,6 +800,26 @@ int sprkStep_AccessStepMem(void* arkode_mem, const char* fname,
     return (ARK_MEM_NULL);
   }
   *step_mem = (ARKodeSPRKStepMem)(*ark_mem)->step_mem;
+  return (ARK_SUCCESS);
+}
+
+/*---------------------------------------------------------------
+  sprkStep_AccessStepMem:
+
+  Shortcut routine to unpack step_mem structure from ark_mem.
+  If missing it returns ARK_MEM_NULL.
+  ---------------------------------------------------------------*/
+int sprkStep_AccessStepMem(ARKodeMem ark_mem, const char* fname,
+                           ARKodeSPRKStepMem* step_mem)
+{
+  /* access ARKodeSPRKStepMem structure */
+  if (ark_mem->step_mem == NULL)
+  {
+    arkProcessError(ark_mem, ARK_MEM_NULL, __LINE__, fname, __FILE__,
+                    MSG_SPRKSTEP_NO_MEM);
+    return (ARK_MEM_NULL);
+  }
+  *step_mem = (ARKodeSPRKStepMem)ark_mem->step_mem;
   return (ARK_SUCCESS);
 }
 
@@ -788,3 +839,7 @@ sunbooleantype sprkStep_CheckNVector(N_Vector tmpl)
   }
   return (SUNTRUE);
 }
+
+/*===============================================================
+  EOF
+  ===============================================================*/

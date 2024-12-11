@@ -26,24 +26,30 @@ add_subdirectory(serial)
 # Build the nvector test utilities
 add_library(test_nvector_obj OBJECT test_nvector.c)
 if(BUILD_SHARED_LIBS)
-  # need PIC when shared libs are used since the example executables will link to the shared lib
+  # need PIC when shared libs are used since the example executables will link
+  # to the shared lib
   set_property(TARGET test_nvector_obj PROPERTY POSITION_INDEPENDENT_CODE TRUE)
 endif()
 target_link_libraries(test_nvector_obj PRIVATE sundials_nvecserial)
 
-
 if(ENABLE_MPI AND MPI_C_FOUND)
   add_subdirectory(parallel)
-  add_subdirectory(mpimanyvector)
+  if(BUILD_NVECTOR_MPIMANYVECTOR)
+    add_subdirectory(mpimanyvector)
+  endif()
   add_subdirectory(mpiplusx)
   # Build the mpi nvector test utilities
   add_library(test_nvectormpi_obj OBJECT test_mpinvector.c)
   if(BUILD_SHARED_LIBS)
-    set_property(TARGET test_nvectormpi_obj PROPERTY POSITION_INDEPENDENT_CODE TRUE)
+    set_property(TARGET test_nvectormpi_obj PROPERTY POSITION_INDEPENDENT_CODE
+                                                     TRUE)
   endif()
-  target_link_libraries(test_nvectormpi_obj PRIVATE MPI::MPI_C sundials_nvecparallel)
+  target_link_libraries(test_nvectormpi_obj PRIVATE MPI::MPI_C
+                                                    sundials_nvecparallel)
 endif()
-add_subdirectory(manyvector)
+if(BUILD_NVECTOR_MANYVECTOR)
+  add_subdirectory(manyvector)
+endif()
 
 if(BUILD_NVECTOR_PARHYP)
   add_subdirectory(parhyp)

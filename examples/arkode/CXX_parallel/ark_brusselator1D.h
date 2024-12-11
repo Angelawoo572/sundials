@@ -12,6 +12,9 @@
  * SUNDIALS Copyright End
  * ---------------------------------------------------------------------------*/
 
+#ifndef _ARK_BRUSSELATOR1D_H
+#define _ARK_BRUSSELATOR1D_H
+
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
@@ -115,7 +118,7 @@ struct UserOptions
   int nout;      /* number of outputs            */
   int monitor;   /* print solution to screen     */
   int printtime; /* print timing information     */
-  char* outputdir;
+  const char* outputdir;
 };
 
 /*
@@ -145,7 +148,7 @@ struct UserData
   N_Vector vmask;
   N_Vector wmask;
 
-  /* problem paramaters */
+  /* problem parameters */
   int nvar;    /* number of species            */
   long int nx; /* number of intervals globally */
   int nxl;     /* number of intervals locally  */
@@ -194,7 +197,7 @@ typedef struct
   SUNNonlinearSolver local_nls;
 }* TaskLocalNewton_Content;
 
-/* Content accessor macors */
+/* Content accessor macros */
 #define GET_NLS_CONTENT(NLS) ((TaskLocalNewton_Content)(NLS->content))
 #define LOCAL_NLS(NLS)       (GET_NLS_CONTENT(NLS)->local_nls)
 
@@ -265,4 +268,6 @@ static int check_retval(void* returnvalue, const char* funcname, int opt);
 #ifdef USE_CUDA_OR_HIP
 static void gpuAssert(GPU_PREFIX(Error_t) code, const char* file, int line,
                       int abort);
+#endif
+
 #endif

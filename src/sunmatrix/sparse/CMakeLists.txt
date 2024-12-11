@@ -18,27 +18,20 @@
 install(CODE "MESSAGE(\"\nInstall SUNMATRIX_SPARSE\n\")")
 
 # Add the sunmatrix_sparse library
-sundials_add_library(sundials_sunmatrixsparse
-  SOURCES
-    sunmatrix_sparse.c
-  HEADERS
-    ${SUNDIALS_SOURCE_DIR}/include/sunmatrix/sunmatrix_sparse.h
-  INCLUDE_SUBDIR
-    sunmatrix
-  LINK_LIBRARIES
-    PUBLIC sundials_core
+sundials_add_library(
+  sundials_sunmatrixsparse
+  SOURCES sunmatrix_sparse.c
+  HEADERS ${SUNDIALS_SOURCE_DIR}/include/sunmatrix/sunmatrix_sparse.h
+  INCLUDE_SUBDIR sunmatrix
+  LINK_LIBRARIES PUBLIC sundials_core
   OBJECT_LIBRARIES
-  OUTPUT_NAME
-    sundials_sunmatrixsparse
-  VERSION
-    ${sunmatrixlib_VERSION}
-  SOVERSION
-    ${sunmatrixlib_SOVERSION}
-)
+  OUTPUT_NAME sundials_sunmatrixsparse
+  VERSION ${sunmatrixlib_VERSION}
+  SOVERSION ${sunmatrixlib_SOVERSION})
 
 message(STATUS "Added SUNMATRIX_SPARSE module")
 
 # Add F2003 module if the interface is enabled
 if(BUILD_FORTRAN_MODULE_INTERFACE)
-  add_subdirectory(fmod)
+  add_subdirectory("fmod_int${SUNDIALS_INDEX_SIZE}")
 endif()
