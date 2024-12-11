@@ -37,7 +37,7 @@ LLNL to support the ordinary differential equation (ODE) solvers CVODE
 nonlinear system solver KINSOL :cite:p:`kinsol_ug`.
 
 At present, IDA may utilize a variety of Krylov methods provided in SUNDIALS
-that can be used in conjuction with Newton iteration: these include the GMRES
+that can be used in conjunction with Newton iteration: these include the GMRES
 (Generalized Minimal RESidual) :cite:p:`SaSc:86`, FGMRES (Flexible Generalized
 Minimum RESidual) :cite:p:`Saa:93`, Bi-CGStab (Bi-Conjugate Gradient Stabilized)
 :cite:p:`Van:92`, TFQMR (Transpose-Free Quasi-Minimal Residual)
@@ -69,7 +69,7 @@ systems.
    the greater ease of interfacing the solver to applications written in extended
    Fortran.
 
-Changes to SUNDIALS in release 7.1.0
+Changes to SUNDIALS in release 7.2.0
 ====================================
 
 .. include:: ../../../shared/RecentChanges.rst
