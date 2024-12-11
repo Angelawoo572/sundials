@@ -1,6 +1,6 @@
 # ------------------------------------------------------------------------------
 # SUNDIALS Copyright Start
-# Copyright (c) 2002-2022, Lawrence Livermore National Security
+# Copyright (c) 2002-2024, Lawrence Livermore National Security
 # and Southern Methodist University.
 # All rights reserved.
 #
@@ -11,16 +11,9 @@
 # ------------------------------------------------------------------------------
 
 import sys, os
-sys.path.append(os.path.dirname(os.path.abspath('../../../shared/versions.py')))
-from versions import *
-
-# -- Create new object types --------------------------------------------------
-
-from sphinx.application import Sphinx
-
-def setup(app: Sphinx):
-    app.add_object_type('cmakeoption', 'cmakeop', 'single: %s (CMake option)')
-    app.add_config_value('package_name', '', 'env', types=[str])
+sys.path.append(os.path.dirname(os.path.abspath('../../../shared/sundials_vars.py')))
+from sundials_vars import *
+sys.path.append(os.path.dirname(os.path.abspath('../../../shared')))
 
 # -- General configuration ----------------------------------------------------
 
@@ -33,14 +26,19 @@ needs_sphinx = '4.0'
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ['sphinx_rtd_theme', 'sphinx.ext.ifconfig', 'sphinx.ext.mathjax',
-              'sphinxfortran.fortran_domain', 'sphinxcontrib.bibtex', 'sphinx_copybutton']
+extensions = ['sphinx_rtd_theme', 'sphinx.ext.ifconfig',
+              'sphinx.ext.intersphinx', 'sphinx.ext.mathjax',
+              'sphinxfortran.fortran_domain', 'sphinxcontrib.bibtex',
+              'sphinx_copybutton', 'sphinx_sundials']
+
+intersphinx_mapping = {'sundials': (f'https://sundials.readthedocs.io/en/{doc_version}',
+                                    ('../../../superbuild/build/html/objects.inv', None))}
 
 # References
 bibtex_bibfiles = ['../../../shared/sundials.bib']
 
 # Add any paths that contain templates here, relative to this directory.
-templates_path = ['_templates']
+templates_path = ['../../../shared/_templates']
 
 # The suffix of source filenames.
 source_suffix = '.rst'
@@ -293,7 +291,7 @@ man_pages = [
 texinfo_documents = [
   ('index', 'CVODES', u'CVODES Documentation',
    u'Alan C. Hindmarsh, Radu Serban, Cody J. Balos, David J. Gardner, Daniel R. Reynolds, and Carol S. Woodward', 'CVODES',
-   'Time integration package for multi-rate systems of ordinary differntial equations.',
+   'Time integration package for multi-rate systems of ordinary differential equations.',
    'Miscellaneous'),
 ]
 

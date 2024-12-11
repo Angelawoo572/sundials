@@ -3,7 +3,7 @@
 #                and Cody J. Balos @ LLNL
 # ---------------------------------------------------------------
 # SUNDIALS Copyright Start
-# Copyright (c) 2002-2022, Lawrence Livermore National Security
+# Copyright (c) 2002-2024, Lawrence Livermore National Security
 # and Southern Methodist University.
 # All rights reserved.
 #
@@ -18,26 +18,20 @@
 install(CODE "MESSAGE(\"\nInstall SUNLINSOL_PCG\n\")")
 
 # Add the sunlinsol_pcg library
-sundials_add_library(sundials_sunlinsolpcg
-  SOURCES
-    sunlinsol_pcg.c
-  HEADERS
-    ${SUNDIALS_SOURCE_DIR}/include/sunlinsol/sunlinsol_pcg.h
-  INCLUDE_SUBDIR
-    sunlinsol
+sundials_add_library(
+  sundials_sunlinsolpcg
+  SOURCES sunlinsol_pcg.c
+  HEADERS ${SUNDIALS_SOURCE_DIR}/include/sunlinsol/sunlinsol_pcg.h
+  INCLUDE_SUBDIR sunlinsol
+  LINK_LIBRARIES PUBLIC sundials_core
   OBJECT_LIBRARIES
-    sundials_generic_obj
-  OUTPUT_NAME
-    sundials_sunlinsolpcg
-  VERSION
-    ${sunlinsollib_VERSION}
-  SOVERSION
-    ${sunlinsollib_VERSION}
-)
+  OUTPUT_NAME sundials_sunlinsolpcg
+  VERSION ${sunlinsollib_VERSION}
+  SOVERSION ${sunlinsollib_SOVERSION})
 
 message(STATUS "Added SUNLINSOL_PCG module")
 
 # Add F90 module if F2003 interface is enabled
 if(BUILD_FORTRAN_MODULE_INTERFACE)
-  add_subdirectory(fmod)
+  add_subdirectory("fmod_int${SUNDIALS_INDEX_SIZE}")
 endif()

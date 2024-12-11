@@ -2,7 +2,7 @@
 # Programmer(s): David J. Gardner @ LLNL
 # -----------------------------------------------------------------------------
 # SUNDIALS Copyright Start
-# Copyright (c) 2002-2022, Lawrence Livermore National Security
+# Copyright (c) 2002-2024, Lawrence Livermore National Security
 # and Southern Methodist University.
 # All rights reserved.
 #
@@ -38,25 +38,39 @@ endif()
 
 # oneMKL does not support extended precision
 if(SUNDIALS_PRECISION MATCHES "EXTENDED")
-  message(FATAL_ERROR
-    "oneMKL is not compatible with ${SUNDIALS_PRECISION} precision")
+  message(
+    FATAL_ERROR "oneMKL is not compatible with ${SUNDIALS_PRECISION} precision")
 endif()
 
 # oneMKL does not support 32-bit index sizes
 if(SUNDIALS_INDEX_SIZE MATCHES "32")
-  message(FATAL_ERROR
-    "oneMKL is not compatible with ${SUNDIALS_INDEX_SIZE}-bit indices")
+  message(
+    FATAL_ERROR
+      "oneMKL is not compatible with ${SUNDIALS_INDEX_SIZE}-bit indices")
 endif()
 
 # -----------------------------------------------------------------------------
 # Section 3: Find the TPL
 # -----------------------------------------------------------------------------
 
+# Workaround bug in MKLConfig.cmake when using icpx -fsycl instead of dpcpp as
+# the C++ compiler
+if(ENABLE_SYCL)
+  set(DPCPP_COMPILER ON)
+endif()
+
 # Look for CMake configuration file in oneMKL installation
-find_package(MKL CONFIG
-             PATHS "${ONEMKL_DIR}" "${ONEMKL_DIR}/lib/cmake/mkl"
-             NO_DEFAULT_PATH
-             REQUIRED)
+find_package(
+  MKL
+  CONFIG
+  PATHS
+  "${ONEMKL_DIR}"
+  "${ONEMKL_DIR}/lib/cmake/mkl"
+  NO_DEFAULT_PATH
+  REQUIRED)
+
+message(STATUS "MKL Version: ${MKL_VERSION}")
+message(STATUS "MKL Targets: ${MKL_IMPORTED_TARGETS}")
 
 # -----------------------------------------------------------------------------
 # Section 4: Test the TPL
@@ -64,7 +78,9 @@ find_package(MKL CONFIG
 
 if(MKL_FOUND AND (NOT ONEMKL_WORKS))
   message(STATUS "Checking if oneMKL works... OK")
-  set(ONEMKL_WORKS TRUE CACHE BOOL "oneMKL works with SUNDIALS as configured" FORCE)
+  set(ONEMKL_WORKS
+      TRUE
+      CACHE BOOL "oneMKL works with SUNDIALS as configured" FORCE)
 else()
   message(STATUS "Skipped oneMKL tests, assuming oneMKL works with SUNDIALS.")
 endif()

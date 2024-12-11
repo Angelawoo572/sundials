@@ -3,7 +3,7 @@
 #                Radu Serban, Cody J. Balos @ LLNL
 # ---------------------------------------------------------------
 # SUNDIALS Copyright Start
-# Copyright (c) 2002-2022, Lawrence Livermore National Security
+# Copyright (c) 2002-2024, Lawrence Livermore National Security
 # and Southern Methodist University.
 # All rights reserved.
 #
@@ -19,49 +19,31 @@ install(CODE "MESSAGE(\"\nInstall IDAS\n\")")
 
 # Add variable idas_SOURCES with the sources for the IDAS library
 set(idas_SOURCES
-  idas.c
-  idaa.c
-  idas_direct.c
-  idas_io.c
-  idas_ic.c
-  idaa_io.c
-  idas_ls.c
-  idas_bbdpre.c
-  idas_nls.c
-  idas_nls_sim.c
-  idas_nls_stg.c
-  idas_spils.c
-  )
+    idas.c
+    idaa.c
+    idas_io.c
+    idas_ic.c
+    idaa_io.c
+    idas_ls.c
+    idas_bbdpre.c
+    idas_nls.c
+    idas_nls_sim.c
+    idas_nls_stg.c)
 
 # Add variable idas_HEADERS with the exported IDAS header files
-set(idas_HEADERS
-  idas.h
-  idas_bbdpre.h
-  idas_direct.h
-  idas_ls.h
-  idas_spils.h
-  )
+set(idas_HEADERS idas.h idas_bbdpre.h idas_ls.h)
 
 # Add prefix with complete path to the IDAS header files
 add_prefix(${SUNDIALS_SOURCE_DIR}/include/idas/ idas_HEADERS)
 
-if(ENABLE_CALIPER AND SUNDIALS_BUILD_WITH_PROFILING)
-  set(_include_caliper_if_needed PUBLIC ${caliper_INCLUDE_DIR})
-  set(_link_caliper_if_needed PUBLIC caliper)
-endif()
-
 # Create the library
-sundials_add_library(sundials_idas
-  SOURCES
-    ${idas_SOURCES}
-  HEADERS
-    ${idas_HEADERS}
-  INCLUDE_SUBDIR
-    idas
-  INCLUDE_DIRECTORIES
-    ${_include_caliper_if_needed}
+sundials_add_library(
+  sundials_idas
+  SOURCES ${idas_SOURCES}
+  HEADERS ${idas_HEADERS}
+  INCLUDE_SUBDIR idas
+  LINK_LIBRARIES PUBLIC sundials_core
   OBJECT_LIBRARIES
-    sundials_generic_obj
     sundials_sunmemsys_obj
     sundials_nvecserial_obj
     sundials_sunmatrixband_obj
@@ -76,21 +58,14 @@ sundials_add_library(sundials_idas
     sundials_sunlinsolpcg_obj
     sundials_sunnonlinsolnewton_obj
     sundials_sunnonlinsolfixedpoint_obj
-  LINK_LIBRARIES
-    # Link to caliper if conditions are met.
-    ${_link_caliper_if_needed}
-  OUTPUT_NAME
-    sundials_idas
-  VERSION
-    ${idaslib_VERSION}
-  SOVERSION
-    ${idaslib_SOVERSION}
-)
+  OUTPUT_NAME sundials_idas
+  VERSION ${idaslib_VERSION}
+  SOVERSION ${idaslib_SOVERSION})
 
 # Finished IDAS
 message(STATUS "Added IDAS module")
 
 # Add F2003 module if the interface is enabled
 if(BUILD_FORTRAN_MODULE_INTERFACE)
-  add_subdirectory(fmod)
+  add_subdirectory("fmod_int${SUNDIALS_INDEX_SIZE}")
 endif()

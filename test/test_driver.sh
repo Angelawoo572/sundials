@@ -3,7 +3,7 @@
 # Programmer(s): David J. Gardner @ LLNL
 # ------------------------------------------------------------------------------
 # SUNDIALS Copyright Start
-# Copyright (c) 2002-2022, Lawrence Livermore National Security
+# Copyright (c) 2002-2024, Lawrence Livermore National Security
 # and Southern Methodist University.
 # All rights reserved.
 #
@@ -63,8 +63,8 @@ help ()
             kinsol   -- create tarball containing KINSOL only
             all      -- create all possible tarballs
 
-        --realtype TYPE
-            Real type precision to use in a custom test. TYPE must be one of:
+        --sunrealtype TYPE
+            Precision to use in a custom test. TYPE must be one of:
 
             double   -- (default) use double precision
             single   -- use single precision
@@ -83,8 +83,8 @@ help ()
             shared -- build shared libraries
             both   -- build static and shared libraries
 
-        --tpls
-            Enable external third-party libraries in a custom test.
+        --tpls ON/OFF
+            Enable or disable external third-party libraries in a custom test.
 
         --suntesttype TYPE
             SUNDIALS test type for a custom test. TYPE must be one of:
@@ -126,7 +126,7 @@ help ()
 
         $0
         $0 --testtype release --buildjobs 4
-        $0 --phase CONFIG --indexsize 32 --tpls --env env/default.sh
+        $0 --phase CONFIG --indexsize 32 --tpls ON --env env/default.sh
 
 EOF
 }
@@ -142,7 +142,7 @@ buildjobs=0
 testjobs=0
 testtype="CUSTOM"
 tarball="NONE"
-realtype="double"
+sunrealtype="double"
 indexsize="64"
 libtype="both"
 tpls="OFF"
@@ -183,7 +183,7 @@ while [[ $# -gt 0 ]]; do
                     testtype=CUSTOM
                     ;;
                 *)
-                    echo "ERROR: Invaid test type $testtype"
+                    echo "ERROR: Invalid test type $testtype"
                     help
                     exit 1;;
             esac
@@ -213,26 +213,26 @@ while [[ $# -gt 0 ]]; do
                 sundials|arkode|cvode|cvodes|ida|idas|kinsol|all)
                 ;;
                 *)
-                    echo "ERROR: Invaid tarball option $tarball"
+                    echo "ERROR: Invalid tarball option $tarball"
                     help
                     exit 1;;
             esac
             shift 2;;
 
-        --realtype)
-            realtype=$2
-            case "$realtype" in
+        --sunrealtype)
+            sunrealtype=$2
+            case "$sunrealtype" in
                 SINGLE|Single|single)
-                    realtype=single
+                    sunrealtype=single
                     ;;
                 DOUBLE|Double|double)
-                    realtype=double
+                    sunrealtype=double
                     ;;
                 EXTENDED|Extended|extended)
-                    realtype=extended
+                    sunrealtype=extended
                     ;;
                 *)
-                    echo "ERROR: Invaid real type option $realtype"
+                    echo "ERROR: Invalid real type option $sunrealtype"
                     help
                     exit 1;;
             esac
@@ -244,7 +244,7 @@ while [[ $# -gt 0 ]]; do
                 32|64)
                 ;;
                 *)
-                    echo "ERROR: Invaid index size option $indexsize"
+                    echo "ERROR: Invalid index size option $indexsize"
                     help
                     exit 1;;
             esac
@@ -263,15 +263,27 @@ while [[ $# -gt 0 ]]; do
                     libtype=both
                     ;;
                 *)
-                    echo "ERROR: Invaid library type option $libtype"
+                    echo "ERROR: Invalid library type option $libtype"
                     help
                     exit 1;;
             esac
             shift 2;;
 
         --tpls)
-            tpls="ON"
-            shift;;
+            tpls=$2
+            case "$tpls" in
+                ON|On|on)
+                    tpls=ON
+                    ;;
+                OFF|Off|off)
+                    tpls=OFF
+                    ;;
+                *)
+                    echo "ERROR: Invalid tpl option $tpl"
+                    help
+                    exit 1;;
+            esac
+            shift 2;;
 
         --suntesttype)
             suntesttype=$2
@@ -286,7 +298,7 @@ while [[ $# -gt 0 ]]; do
                     suntesttype=NONE
                     ;;
                 *)
-                    echo "ERROR: Invaid SUNDIALS test type option $suntesttype"
+                    echo "ERROR: Invalid SUNDIALS test type option $suntesttype"
                     help
                     exit 1;;
             esac
@@ -317,7 +329,7 @@ while [[ $# -gt 0 ]]; do
                     phase=TEST_INSTALL_ALL
                     ;;
                 *)
-                    echo "ERROR: Invaid phase option $phase"
+                    echo "ERROR: Invalid phase option $phase"
                     help
                     exit 1;;
             esac
@@ -374,17 +386,17 @@ args_phase=()
 case "$testtype" in
 
     BRANCH)
-        # Don't creat tarballs
+        # Don't create tarballs
         tarball=NONE
 
-        # C90 compile test and sanitizer tests
+        # Address sanitizer tests (TPLs OFF)
         for is in 32 64; do
             args_realtypes+=("double")
             args_indexsizes+=("${is}")
             args_libtypes+=("static")
             args_tpls+=("OFF")
             args_suntests+=("DEV")
-            args_phase+=("BUILD")
+            args_phase+=("TEST")
         done
 
         # Basic development tests
@@ -402,14 +414,14 @@ case "$testtype" in
         # Create sundials tarball
         tarball=sundials
 
-        # C90 compile test and sanitizer tests
+        # Address sanitizer tests (TPLs OFF)
         for is in 32 64; do
             args_realtypes+=("double")
             args_indexsizes+=("${is}")
             args_libtypes+=("static")
             args_tpls+=("OFF")
             args_suntests+=("DEV")
-            args_phase+=("BUILD")
+            args_phase+=("TEST")
         done
 
         # More development tests
@@ -434,14 +446,14 @@ case "$testtype" in
         # Create sundials tarball
         tarball=sundials
 
-        # C90 compile test and sanitizer tests
+        # Address sanitizer tests (TPLs OFF)
         for is in 32 64; do
             args_realtypes+=("double")
             args_indexsizes+=("${is}")
             args_libtypes+=("static")
             args_tpls+=("OFF")
             args_suntests+=("DEV")
-            args_phase+=("BUILD")
+            args_phase+=("TEST")
         done
 
         # Even more development tests
@@ -466,14 +478,14 @@ case "$testtype" in
 
     CUSTOM)
         # Use default or user defined values
-        args_realtypes+=("${realtype}")
+        args_realtypes+=("${sunrealtype}")
         args_indexsizes+=("${indexsize}")
         args_libtypes+=("${libtype}")
         args_tpls+=("${tpls}")
         args_suntests+=("${suntesttype}")
         args_phase+=("${phase}")
-        if [ "${realtype}" != "double" ] && [ "${suntesttype}" == "DEV" ]; then
-            echo "WARNING: DEV tests may fail with ${realtype} precision"
+        if [ "${sunrealtype}" != "double" ] && [ "${suntesttype}" == "DEV" ]; then
+            echo "WARNING: DEV tests may fail with ${sunrealtype} precision"
         fi
         ;;
 
@@ -670,6 +682,10 @@ for ((j=0;j<ntestdirs;j++)); do
             --readenv \
             --install-prefix "${installdir}" | tee -a configure.log
 
+        rc=${PIPESTATUS[0]}
+        echo -e "\nconfig_cmake.py returned $rc\n" | tee -a configure.log
+        if [ "$rc" -ne 0 ]; then passfail=1; break; fi
+
         # ---------
         # Configure
         # ---------
@@ -718,7 +734,15 @@ for ((j=0;j<ntestdirs;j++)); do
 
         rc=${PIPESTATUS[0]}
         echo -e "\nmake test returned $rc\n" | tee -a test.log
-        if [ "$rc" -ne 0 ]; then passfail=1; break; fi
+
+        # Re-attempt failed tests in case they are unstable
+        if [ "$rc" -ne 0 ]; then
+            echo "START TEST"
+            time ctest --rerun-failed --output-on-failure -j "$testjobs" test 2>&1 | tee -a test.log
+            rc=${PIPESTATUS[0]}
+            echo -e "\nmake test returned $rc\n" | tee -a test.log
+            if [ "$rc" -ne 0 ]; then passfail=1; break; fi
+        fi
 
         # Check if this is the last phase
         if [ "${args_phase[i]}" == "TEST" ]; then

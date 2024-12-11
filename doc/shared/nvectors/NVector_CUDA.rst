@@ -2,7 +2,7 @@
    Programmer(s): Daniel R. Reynolds @ SMU
    ----------------------------------------------------------------
    SUNDIALS Copyright Start
-   Copyright (c) 2002-2022, Lawrence Livermore National Security
+   Copyright (c) 2002-2024, Lawrence Livermore National Security
    and Southern Methodist University.
    All rights reserved.
 
@@ -28,7 +28,7 @@ is as follows:
    struct _N_VectorContent_Cuda
    {
       sunindextype       length;
-      booleantype        own_helper;
+      sunbooleantype     own_helper;
       SUNMemory          host_data;
       SUNMemory          device_data;
       SUNCudaExecPolicy* stream_exec_policy;
@@ -45,7 +45,7 @@ if the vector owns the execution policies and memory helper objects (i.e., it is
 in change of freeing the objects), :c:type:`SUNMemory` objects for the vector data on
 the host and device, pointers to execution policies that control how streaming
 and reduction kernels are launched, a :c:type:`SUNMemoryHelper` for performing memory
-operations, and a private data structure which holds additonal members that
+operations, and a private data structure which holds additional members that
 should not be accessed directly.
 
 When instantiated with :c:func:`N_VNew_Cuda`, the underlying data will be
@@ -72,19 +72,19 @@ provide macros to access its member variables. Instead, user should use the
 accessor functions:
 
 
-.. c:function:: realtype* N_VGetHostArrayPointer_Cuda(N_Vector v)
+.. c:function:: sunrealtype* N_VGetHostArrayPointer_Cuda(N_Vector v)
 
    This function returns pointer to the vector data on the host.
 
 
-.. c:function:: realtype* N_VGetDeviceArrayPointer_Cuda(N_Vector v)
+.. c:function:: sunrealtype* N_VGetDeviceArrayPointer_Cuda(N_Vector v)
 
    This function returns pointer to the vector data on the device.
 
 
-.. c:function:: booleantype N_VIsManagedMemory_Cuda(N_Vector v)
+.. c:function:: sunbooleantype N_VIsManagedMemory_Cuda(N_Vector v)
 
-   This function returns a boolean flag indiciating if the vector
+   This function returns a boolean flag indicating if the vector
    data array is in managed memory or not.
 
 
@@ -119,7 +119,7 @@ following additional user-callable routines:
    ``N_Vector``. The vector data array is allocated in managed memory.
 
 
-.. c:function:: N_Vector N_VNewWithMemHelp_Cuda(sunindextype length, booleantype use_managed_mem, SUNMemoryHelper helper, SUNContext sunctx)
+.. c:function:: N_Vector N_VNewWithMemHelp_Cuda(sunindextype length, sunbooleantype use_managed_mem, SUNMemoryHelper helper, SUNContext sunctx)
 
    This function creates a new CUDA ``N_Vector`` with a user-supplied
    SUNMemoryHelper for allocating/freeing memory.
@@ -132,14 +132,14 @@ following additional user-callable routines:
    the other constructors to create a new vector.
 
 
-.. c:function:: N_Vector N_VMake_Cuda(sunindextype vec_length, realtype *h_vdata, realtype *d_vdata, SUNContext sunctx)
+.. c:function:: N_Vector N_VMake_Cuda(sunindextype vec_length, sunrealtype *h_vdata, sunrealtype *d_vdata, SUNContext sunctx)
 
 
    This function creates a CUDA ``N_Vector`` with user-supplied vector data arrays
    for the host and the device.
 
 
-.. c:function:: N_Vector N_VMakeManaged_Cuda(sunindextype vec_length, realtype *vdata, SUNContext sunctx)
+.. c:function:: N_Vector N_VMakeManaged_Cuda(sunindextype vec_length, sunrealtype *vdata, SUNContext sunctx)
 
    This function creates a CUDA ``N_Vector`` with a user-supplied
    managed memory data array.
@@ -159,8 +159,8 @@ The module NVECTOR_CUDA also provides the following user-callable routines:
 
    This function sets the execution policies which control the kernel parameters
    utilized when launching the streaming and reduction CUDA kernels. By default
-   the vector is setup to use the :cpp:func:`SUNCudaThreadDirectExecPolicy` and
-   :cpp:func:`SUNCudaBlockReduceAtomicExecPolicy`. Any custom execution policy
+   the vector is setup to use the ``SUNCudaThreadDirectExecPolicy`` and
+   ``SUNCudaBlockReduceAtomicExecPolicy``. Any custom execution policy
    for reductions must ensure that the grid dimensions (number of thread blocks)
    is a multiple of the CUDA warp size (32). See
    :numref:`NVectors.CUDA.SUNCudaExecPolicy` below for more information about
@@ -180,12 +180,12 @@ The module NVECTOR_CUDA also provides the following user-callable routines:
       policies across vectors
 
 
-.. c:function:: realtype* N_VCopyToDevice_Cuda(N_Vector v)
+.. c:function:: sunrealtype* N_VCopyToDevice_Cuda(N_Vector v)
 
    This function copies host vector data to the device.
 
 
-.. c:function:: realtype* N_VCopyFromDevice_Cuda(N_Vector v)
+.. c:function:: sunrealtype* N_VCopyFromDevice_Cuda(N_Vector v)
 
    This function copies vector data from the device to the host.
 
@@ -211,82 +211,68 @@ operations enabled/disabled as cloned vectors inherit the same enable/disable
 options as the vector they are cloned from while vectors created with
 :c:func:`N_VNew_Cuda` will have the default settings for the NVECTOR_CUDA module.
 
-.. c:function:: int N_VEnableFusedOps_Cuda(N_Vector v, booleantype tf)
+.. c:function:: SUNErrCode N_VEnableFusedOps_Cuda(N_Vector v, sunbooleantype tf)
 
    This function enables (``SUNTRUE``) or disables (``SUNFALSE``) all fused and
-   vector array operations in the CUDA vector. The return value is ``0`` for
-   success and ``-1`` if the input vector or its ``ops`` structure are ``NULL``.
+   vector array operations in the CUDA vector. The return value is a :c:type:`SUNErrCode`.
 
-.. c:function:: int N_VEnableLinearCombination_Cuda(N_Vector v, booleantype tf)
+.. c:function:: SUNErrCode N_VEnableLinearCombination_Cuda(N_Vector v, sunbooleantype tf)
 
    This function enables (``SUNTRUE``) or disables (``SUNFALSE``) the linear
-   combination fused operation in the CUDA vector. The return value is ``0`` for
-   success and ``-1`` if the input vector or its ``ops`` structure are ``NULL``.
+   combination fused operation in the CUDA vector. The return value is a :c:type:`SUNErrCode`.
 
-.. c:function:: int N_VEnableScaleAddMulti_Cuda(N_Vector v, booleantype tf)
+.. c:function:: SUNErrCode N_VEnableScaleAddMulti_Cuda(N_Vector v, sunbooleantype tf)
 
    This function enables (``SUNTRUE``) or disables (``SUNFALSE``) the scale and
    add a vector to multiple vectors fused operation in the CUDA vector. The
-   return value is ``0`` for success and ``-1`` if the input vector or its
-   ``ops`` structure are ``NULL``.
+   return value is a :c:type:`SUNErrCode`.
 
-.. c:function:: int N_VEnableDotProdMulti_Cuda(N_Vector v, booleantype tf)
+.. c:function:: SUNErrCode N_VEnableDotProdMulti_Cuda(N_Vector v, sunbooleantype tf)
 
    This function enables (``SUNTRUE``) or disables (``SUNFALSE``) the multiple
-   dot products fused operation in the CUDA vector. The return value is ``0``
-   for success and ``-1`` if the input vector or its ``ops`` structure are
-   ``NULL``.
+   dot products fused operation in the CUDA vector. The return value is a :c:type:`SUNErrCode`.
 
-.. c:function:: int N_VEnableLinearSumVectorArray_Cuda(N_Vector v, booleantype tf)
+.. c:function:: SUNErrCode N_VEnableLinearSumVectorArray_Cuda(N_Vector v, sunbooleantype tf)
 
    This function enables (``SUNTRUE``) or disables (``SUNFALSE``) the linear sum
-   operation for vector arrays in the CUDA vector. The return value is ``0`` for
-   success and ``-1`` if the input vector or its ``ops`` structure are ``NULL``.
+   operation for vector arrays in the CUDA vector. The return value is a :c:type:`SUNErrCode`.
 
-.. c:function:: int N_VEnableScaleVectorArray_Cuda(N_Vector v, booleantype tf)
+.. c:function:: SUNErrCode N_VEnableScaleVectorArray_Cuda(N_Vector v, sunbooleantype tf)
 
    This function enables (``SUNTRUE``) or disables (``SUNFALSE``) the scale
-   operation for vector arrays in the CUDA vector. The return value is ``0`` for
-   success and ``-1`` if the input vector or its ``ops`` structure are ``NULL``.
+   operation for vector arrays in the CUDA vector. The return value is a :c:type:`SUNErrCode`.
 
-.. c:function:: int N_VEnableConstVectorArray_Cuda(N_Vector v, booleantype tf)
+.. c:function:: SUNErrCode N_VEnableConstVectorArray_Cuda(N_Vector v, sunbooleantype tf)
 
    This function enables (``SUNTRUE``) or disables (``SUNFALSE``) the const
-   operation for vector arrays in the CUDA vector. The return value is ``0`` for
-   success and ``-1`` if the input vector or its ``ops`` structure are ``NULL``.
+   operation for vector arrays in the CUDA vector. The return value is a :c:type:`SUNErrCode`.
 
-.. c:function:: int N_VEnableWrmsNormVectorArray_Cuda(N_Vector v, booleantype tf)
+.. c:function:: SUNErrCode N_VEnableWrmsNormVectorArray_Cuda(N_Vector v, sunbooleantype tf)
 
    This function enables (``SUNTRUE``) or disables (``SUNFALSE``) the WRMS norm
-   operation for vector arrays in the CUDA vector. The return value is ``0`` for
-   success and ``-1`` if the input vector or its ``ops`` structure are ``NULL``.
+   operation for vector arrays in the CUDA vector. The return value is a :c:type:`SUNErrCode`.
 
-.. c:function:: int N_VEnableWrmsNormMaskVectorArray_Cuda(N_Vector v, booleantype tf)
+.. c:function:: SUNErrCode N_VEnableWrmsNormMaskVectorArray_Cuda(N_Vector v, sunbooleantype tf)
 
    This function enables (``SUNTRUE``) or disables (``SUNFALSE``) the masked WRMS
-   norm operation for vector arrays in the CUDA vector. The return value is
-   ``0`` for success and ``-1`` if the input vector or its ``ops`` structure are
-   ``NULL``.
+   norm operation for vector arrays in the CUDA vector. The return value is a :c:type:`SUNErrCode`.
 
-.. c:function:: int N_VEnableScaleAddMultiVectorArray_Cuda(N_Vector v, booleantype tf)
+.. c:function:: SUNErrCode N_VEnableScaleAddMultiVectorArray_Cuda(N_Vector v, sunbooleantype tf)
 
    This function enables (``SUNTRUE``) or disables (``SUNFALSE``) the scale and
    add a vector array to multiple vector arrays operation in the CUDA vector. The
-   return value is ``0`` for success and ``-1`` if the input vector or its
-   ``ops`` structure are ``NULL``.
+   return value is a :c:type:`SUNErrCode`.
 
-.. c:function:: int N_VEnableLinearCombinationVectorArray_Cuda(N_Vector v, booleantype tf)
+.. c:function:: SUNErrCode N_VEnableLinearCombinationVectorArray_Cuda(N_Vector v, sunbooleantype tf)
 
    This function enables (``SUNTRUE``) or disables (``SUNFALSE``) the linear
-   combination operation for vector arrays in the CUDA vector. The return value
-   is ``0`` for success and ``-1`` if the input vector or its ``ops`` structure
-   are ``NULL``.
+   combination operation for vector arrays in the CUDA vector. The return value is a :c:type:`SUNErrCode`.
 
 
 **Notes**
 
 * When there is a need to access components of an ``N_Vector_Cuda``, ``v``,
-  it is recommeded to use functions :c:func:`N_VGetDeviceArrayPointer_Cuda()` or
+  it is recommended to use functions :c:func:`N_VGetDeviceArrayPointer_Cuda()` or
   :c:func:`N_VGetHostArrayPointer_Cuda()`. However, when using managed memory,
   the function :c:func:`N_VGetArrayPointer` may also be used.
 
@@ -302,7 +288,6 @@ options as the vector they are cloned from while vectors created with
 The ``SUNCudaExecPolicy`` Class
 --------------------------------
 
-
 In order to provide maximum flexibility to users, the CUDA kernel execution parameters used
 by kernels within SUNDIALS are defined by objects of the ``sundials::cuda::ExecPolicy``
 abstract class type (this class can be accessed in the global namespace as ``SUNCudaExecPolicy``).
@@ -314,27 +299,23 @@ Thus, users may provide custom execution policies that fit the needs of their pr
 where the ``sundials::cuda::ExecPolicy`` class is defined in the header file
 ``sundials_cuda_policies.hpp``, as follows:
 
-.. code-block:: c++
+.. cpp:class:: sundials::cuda::ExecPolicy
 
-   class ExecPolicy
-   {
-   public:
-      ExecPolicy(cudaStream_t stream = 0) : stream_(stream) { }
-      virtual size_t gridSize(size_t numWorkUnits = 0, size_t blockDim = 0) const = 0;
-      virtual size_t blockSize(size_t numWorkUnits = 0, size_t gridDim = 0) const = 0;
-      virtual const cudaStream_t* stream() const { return (&stream_); }
-      virtual ExecPolicy* clone() const = 0;
-      ExecPolicy* clone_new_stream(cudaStream_t stream) const {
-         ExecPolicy* ex = clone();
-         ex->stream_ = stream;
-         return ex;
-      }
-      virtual bool atomic() const { return false; }
-      virtual ~ExecPolicy() {}
-   protected:
-      cudaStream_t stream_;
-   };
+   .. cpp:function:: ExecPolicy(cudaStream_t stream = 0)
 
+   .. cpp:function:: virtual size_t gridSize(size_t numWorkUnits = 0, size_t blockDim = 0)
+
+   .. cpp:function:: virtual size_t blockSize(size_t numWorkUnits = 0, size_t gridDim = 0)
+
+   .. cpp:function:: virtual const cudaStream_t* stream() const
+
+   .. cpp:function:: virtual ExecPolicy* clone() const
+
+   .. cpp:function:: ExecPolicy* clone_new_stream(cudaStream_t stream) const
+
+   .. cpp:function:: virtual bool atomic() const
+
+   .. cpp:function:: virtual ~ExecPolicy()
 
 To define a custom execution policy, a user simply needs to create a class that
 inherits from the abstract class and implements the methods. The SUNDIALS
@@ -394,7 +375,7 @@ In total, SUNDIALS provides 3 execution policies:
 
    .. cpp:function:: SUNCudaBlockReduceExecPolicy(const size_t blockDim, const cudaStream_t stream = 0)
 
-      Is for kernels performing a reduction across indvidual thread blocks. The
+      Is for kernels performing a reduction across individual thread blocks. The
       number of threads per block (blockDim) can be set to any valid multiple of
       the CUDA warp size. The grid size (gridDim) can be set to any value
       greater than 0. If it is set to 0, then the grid size will be chosen so
@@ -403,7 +384,7 @@ In total, SUNDIALS provides 3 execution policies:
 
    .. cpp:function:: SUNCudaBlockReduceAtomicExecPolicy(const size_t blockDim, const cudaStream_t stream = 0)
 
-      Is for kernels performing a reduction across indvidual thread blocks using
+      Is for kernels performing a reduction across individual thread blocks using
       atomic operations. The number of threads per block (blockDim) can be set
       to any valid multiple of the CUDA warp size. The grid size (gridDim) can be
       set to any value greater than 0. If it is set to 0, then the grid size

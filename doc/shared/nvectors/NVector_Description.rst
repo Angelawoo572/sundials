@@ -2,7 +2,7 @@
    Programmer(s): Daniel R. Reynolds @ SMU
    ----------------------------------------------------------------
    SUNDIALS Copyright Start
-   Copyright (c) 2002-2022, Lawrence Livermore National Security
+   Copyright (c) 2002-2024, Lawrence Livermore National Security
    and Southern Methodist University.
    All rights reserved.
 
@@ -17,97 +17,266 @@
 Description of the NVECTOR Modules
 ==================================
 
-The SUNDIALS solvers are written in a data-independent manner. They
-all operate on generic vectors (of type ``N_Vector``) through a set of
-operations defined by, and specific to, the particular NVECTOR
-implementation. Users can provide a custom implementation of the
-NVECTOR module or use one provided within SUNDIALS.  The generic
-operations are described below.  In the sections following, the
-implementations provided with SUNDIALS are described.
+SUNDIALS solvers are written in a data-independent manner. They all operate on
+generic vectors (of type :c:type:`N_Vector`) through a set of operations defined
+by, and specific to, the particular vector implementation. Users can provide a
+custom vector implementation or use one provided with SUNDIALS. The generic
+operations are described below. In the sections following, the implementations
+provided with SUNDIALS are described.
 
-The generic ``N_Vector`` type is a pointer to a structure that has an
-implementation-dependent *content* field containing the description
-and actual data of the vector, and an *ops* field pointing to a
-structure with generic vector operations. The type ``N_Vector`` is
-defined as
+An :c:type:`N_Vector` is a pointer to the :c:struct:`_generic_N_Vector`
+structure:
 
 .. c:type:: struct _generic_N_Vector *N_Vector
 
-and the generic structure is defined as
+.. c:struct:: _generic_N_Vector
 
-.. code-block:: c
+   The structure defining the SUNDIALS vector class.
 
-   struct _generic_N_Vector {
-      void *content;
-      struct _generic_N_Vector_Ops *ops;
-   };
+   .. c:member:: void *content
 
-Here, the ``_generic_N_Vector_Op`` structure is essentially a list of
-function pointers to the various actual vector operations, and is
-defined as
+      Pointer to vector-specific member data.
 
-.. code-block:: c
+   .. c:member:: N_Vector_Ops ops
 
-   struct _generic_N_Vector_Ops {
-      N_Vector_ID  (*nvgetvectorid)(N_Vector);
-      N_Vector     (*nvclone)(N_Vector);
-      N_Vector     (*nvcloneempty)(N_Vector);
-      void         (*nvdestroy)(N_Vector);
-      void         (*nvspace)(N_Vector, sunindextype *, sunindextype *);
-      realtype*    (*nvgetarraypointer)(N_Vector);
-      realtype*    (*nvgetdevicearraypointer)(N_Vector);
-      void         (*nvsetarraypointer)(realtype *, N_Vector);
-      void*        (*nvgetcommunicator)(N_Vector);
-      sunindextype (*nvgetlength)(N_Vector);
-      void         (*nvlinearsum)(realtype, N_Vector, realtype, N_Vector, N_Vector);
-      void         (*nvconst)(realtype, N_Vector);
-      void         (*nvprod)(N_Vector, N_Vector, N_Vector);
-      void         (*nvdiv)(N_Vector, N_Vector, N_Vector);
-      void         (*nvscale)(realtype, N_Vector, N_Vector);
-      void         (*nvabs)(N_Vector, N_Vector);
-      void         (*nvinv)(N_Vector, N_Vector);
-      void         (*nvaddconst)(N_Vector, realtype, N_Vector);
-      realtype     (*nvdotprod)(N_Vector, N_Vector);
-      realtype     (*nvmaxnorm)(N_Vector);
-      realtype     (*nvwrmsnorm)(N_Vector, N_Vector);
-      realtype     (*nvwrmsnormmask)(N_Vector, N_Vector, N_Vector);
-      realtype     (*nvmin)(N_Vector);
-      realtype     (*nvwl2norm)(N_Vector, N_Vector);
-      realtype     (*nvl1norm)(N_Vector);
-      void         (*nvcompare)(realtype, N_Vector, N_Vector);
-      booleantype  (*nvinvtest)(N_Vector, N_Vector);
-      booleantype  (*nvconstrmask)(N_Vector, N_Vector, N_Vector);
-      realtype     (*nvminquotient)(N_Vector, N_Vector);
-      int          (*nvlinearcombination)(int, realtype *, N_Vector *, N_Vector);
-      int          (*nvscaleaddmulti)(int, realtype *, N_Vector, N_Vector *, N_Vector *);
-      int          (*nvdotprodmulti)(int, N_Vector, N_Vector *,  realtype *);
-      int          (*nvlinearsumvectorarray)(int, realtype, N_Vector *, realtype,
-                                             N_Vector *, N_Vector *);
-      int          (*nvscalevectorarray)(int, realtype *,  N_Vector *, N_Vector *);
-      int          (*nvconstvectorarray)(int, realtype, N_Vector *);
-      int          (*nvwrmsnomrvectorarray)(int, N_Vector *, N_Vector *, realtype *);
-      int          (*nvwrmsnomrmaskvectorarray)(int, N_Vector *, N_Vector *, N_Vector,
-                                                realtype *);
-      int          (*nvscaleaddmultivectorarray)(int, int, realtype *, N_Vector *,
-                                                 N_Vector **, N_Vector **);
-      int          (*nvlinearcombinationvectorarray)(int, int, realtype *, N_Vector **,
-                                                     N_Vector *);
-      realtype     (*nvdotprodlocal)(N_Vector, N_Vector);
-      realtype     (*nvmaxnormlocal)(N_Vector);
-      realtype     (*nvminlocal)(N_Vector);
-      realtype     (*nvl1normlocal)(N_Vector);
-      booleantype  (*nvinvtestlocal)(N_Vector, N_Vector);
-      booleantype  (*nvconstrmasklocal)(N_Vector, N_Vector, N_Vector);
-      realtype     (*nvminquotientlocal)(N_Vector, N_Vector);
-      realtype     (*nvwsqrsumlocal)(N_Vector, N_Vector);
-      realtype     (*nvwsqrsummasklocal(N_Vector, N_Vector, N_Vector);
-      int          (*nvdotprodmultilocal)(int, N_Vector, N_Vector *, realtype *);
-      int          (*nvdotprodmultiallreduce)(int, N_Vector, realtype *);
-      int          (*nvbufsize)(N_Vector, sunindextype *);
-      int          (*nvbufpack)(N_Vector, void*);
-      int          (*nvbufunpack)(N_Vector, void*);
-   };
+      A virtual table of vector operations provided by a specific
+      implementation.
 
+   .. c:member:: SUNContext sunctx
+
+      The SUNDIALS simulation context
+
+The virtual table structure is defined as
+
+.. c:type:: _generic_N_Vector_Ops *N_Vector_Ops
+
+.. c:struct:: _generic_N_Vector_Ops
+
+   The structure defining :c:type:`N_Vector` operations.
+
+   .. c:member:: N_Vector_ID (*nvgetvectorid)(N_Vector)
+
+      The function implementing :c:func:`N_VGetVectorID`
+
+   .. c:member:: N_Vector (*nvclone)(N_Vector)
+
+      The function implementing :c:func:`N_VClone`
+
+   .. c:member:: N_Vector (*nvcloneempty)(N_Vector)
+
+      The function implementing :c:func:`N_VCloneEmpty`
+
+   .. c:member:: void (*nvdestroy)(N_Vector)
+
+      The function implementing :c:func:`N_VDestroy`
+
+   .. c:member:: void (*nvspace)(N_Vector, sunindextype*, sunindextype*)
+
+      The function implementing :c:func:`N_VSpace`
+
+   .. c:member:: sunrealtype* (*nvgetarraypointer)(N_Vector)
+
+      The function implementing :c:func:`N_VGetArrayPointer`
+
+   .. c:member:: sunrealtype* (*nvgetdevicearraypointer)(N_Vector)
+
+      The function implementing :c:func:`N_VGetDeviceArrayPointer`
+
+   .. c:member:: void (*nvsetarraypointer)(sunrealtype*, N_Vector)
+
+      The function implementing :c:func:`N_VSetArrayPointer`
+
+   .. c:member:: SUNComm (*nvgetcommunicator)(N_Vector)
+
+      The function implementing :c:func:`N_VGetCommunicator`
+
+   .. c:member:: sunindextype (*nvgetlength)(N_Vector)
+
+      The function implementing :c:func:`N_VGetLength`
+
+   .. c:member:: sunindextype (*nvgetlocallength)(N_Vector)
+
+      The function implementing :c:func:`N_VGetLocalLength`
+
+   .. c:member:: void (*nvlinearsum)(sunrealtype, N_Vector, sunrealtype, N_Vector, N_Vector)
+
+      The function implementing :c:func:`N_VLinearSum`
+
+   .. c:member:: void (*nvconst)(sunrealtype, N_Vector)
+
+      The function implementing :c:func:`N_VConst`
+
+   .. c:member:: void (*nvprod)(N_Vector, N_Vector, N_Vector)
+
+      The function implementing :c:func:`N_VProd`
+
+   .. c:member:: void (*nvdiv)(N_Vector, N_Vector, N_Vector)
+
+      The function implementing :c:func:`N_VDiv`
+
+   .. c:member:: void (*nvscale)(sunrealtype, N_Vector, N_Vector)
+
+      The function implementing :c:func:`N_VScale`
+
+   .. c:member:: void (*nvabs)(N_Vector, N_Vector)
+
+      The function implementing :c:func:`N_VAbs`
+
+   .. c:member:: void (*nvinv)(N_Vector, N_Vector)
+
+      The function implementing :c:func:`N_VInv`
+
+   .. c:member:: void (*nvaddconst)(N_Vector, sunrealtype, N_Vector)
+
+      The function implementing :c:func:`N_VAddConst`
+
+   .. c:member:: sunrealtype (*nvdotprod)(N_Vector, N_Vector)
+
+      The function implementing :c:func:`N_VDotProd`
+
+   .. c:member:: sunrealtype (*nvmaxnorm)(N_Vector)
+
+      The function implementing :c:func:`N_VMaxNorm`
+
+   .. c:member:: sunrealtype (*nvwrmsnorm)(N_Vector, N_Vector)
+
+      The function implementing :c:func:`N_VWrmsNorm`
+
+   .. c:member:: sunrealtype (*nvwrmsnormmask)(N_Vector, N_Vector, N_Vector)
+
+      The function implementing :c:func:`N_VWrmsNormMask`
+
+   .. c:member:: sunrealtype (*nvmin)(N_Vector)
+
+      The function implementing :c:func:`N_VMin`
+
+   .. c:member:: sunrealtype (*nvwl2norm)(N_Vector, N_Vector)
+
+      The function implementing :c:func:`N_VWL2Norm`
+
+   .. c:member:: sunrealtype (*nvl1norm)(N_Vector)
+
+      The function implementing :c:func:`N_VL1Norm`
+
+   .. c:member:: void (*nvcompare)(sunrealtype, N_Vector, N_Vector)
+
+      The function implementing :c:func:`N_VCompare`
+
+   .. c:member:: sunbooleantype (*nvinvtest)(N_Vector, N_Vector)
+
+      The function implementing :c:func:`N_VInvTest`
+
+   .. c:member:: sunbooleantype (*nvconstrmask)(N_Vector, N_Vector, N_Vector)
+
+      The function implementing :c:func:`N_VConstrMask`
+
+   .. c:member:: sunrealtype (*nvminquotient)(N_Vector, N_Vector)
+
+      The function implementing :c:func:`N_VMinQuotient`
+
+   .. c:member:: SUNErrCode (*nvlinearcombination)(int, sunrealtype*, N_Vector*, N_Vector)
+
+      The function implementing :c:func:`N_VLinearCombination`
+
+   .. c:member:: SUNErrCode (*nvscaleaddmulti)(int, sunrealtype*, N_Vector, N_Vector*, N_Vector*)
+
+      The function implementing :c:func:`N_VScaleAddMulti`
+
+   .. c:member:: SUNErrCode (*nvdotprodmulti)(int, N_Vector, N_Vector*, sunrealtype*)
+
+      The function implementing :c:func:`N_VDotProdMulti`
+
+   .. c:member:: SUNErrCode (*nvlinearsumvectorarray)(int, sunrealtype, N_Vector*, sunrealtype, N_Vector*, N_Vector*)
+
+      The function implementing :c:func:`N_VLinearSumVectorArray`
+
+   .. c:member:: SUNErrCode (*nvscalevectorarray)(int, sunrealtype*, N_Vector*, N_Vector*)
+
+      The function implementing :c:func:`N_VScaleVectorArray`
+
+   .. c:member:: SUNErrCode (*nvconstvectorarray)(int, sunrealtype, N_Vector*)
+
+      The function implementing :c:func:`N_VConstVectorArray`
+
+   .. c:member:: SUNErrCode (*nvwrmsnormvectorarray)(int, N_Vector*, N_Vector*, sunrealtype*)
+
+      The function implementing :c:func:`N_VWrmsNormVectorArray`
+
+   .. c:member:: SUNErrCode (*nvwrmsnormmaskvectorarray)(int, N_Vector*, N_Vector*, N_Vector, sunrealtype*)
+
+      The function implementing :c:func:`N_VWrmsNormMaskVectorArray`
+
+   .. c:member:: SUNErrCode (*nvscaleaddmultivectorarray)(int, int, sunrealtype*, N_Vector*, N_Vector**, N_Vector**)
+
+      The function implementing :c:func:`N_VScaleAddMultiVectorArray`
+
+   .. c:member:: SUNErrCode (*nvlinearcombinationvectorarray)(int, int, sunrealtype*, N_Vector**, N_Vector*)
+
+      The function implementing :c:func:`N_VLinearCombinationVectorArray`
+
+   .. c:member:: sunrealtype (*nvdotprodlocal)(N_Vector, N_Vector)
+
+      The function implementing :c:func:`N_VDotProdLocal`
+
+   .. c:member:: sunrealtype (*nvmaxnormlocal)(N_Vector)
+
+      The function implementing :c:func:`N_VMaxNormLocal`
+
+   .. c:member:: sunrealtype (*nvminlocal)(N_Vector)
+
+      The function implementing :c:func:`N_VMinLocal`
+
+   .. c:member:: sunrealtype (*nvl1normlocal)(N_Vector)
+
+      The function implementing :c:func:`N_VL1NormLocal`
+
+   .. c:member:: sunbooleantype (*nvinvtestlocal)(N_Vector, N_Vector)
+
+      The function implementing :c:func:`N_VInvTestLocal`
+
+   .. c:member:: sunbooleantype (*nvconstrmasklocal)(N_Vector, N_Vector, N_Vector)
+
+      The function implementing :c:func:`N_VConstrMaskLocal`
+
+   .. c:member:: sunrealtype (*nvminquotientlocal)(N_Vector, N_Vector)
+
+      The function implementing :c:func:`N_VMinQuotientLocal`
+
+   .. c:member:: sunrealtype (*nvwsqrsumlocal)(N_Vector, N_Vector)
+
+      The function implementing :c:func:`N_VWSqrSumLocal`
+
+   .. c:member:: sunrealtype (*nvwsqrsummasklocal)(N_Vector, N_Vector, N_Vector)
+
+      The function implementing :c:func:`N_VWSqrSumMaskLocal`
+
+   .. c:member:: SUNErrCode (*nvdotprodmultilocal)(int, N_Vector, N_Vector*, sunrealtype*)
+
+      The function implementing :c:func:`N_VDotProdMultiLocal`
+
+   .. c:member:: SUNErrCode (*nvdotprodmultiallreduce)(int, N_Vector, sunrealtype*)
+
+      The function implementing :c:func:`N_VDotProdMultiAllReduce`
+
+   .. c:member:: SUNErrCode (*nvbufsize)(N_Vector, sunindextype*)
+
+      The function implementing :c:func:`N_VBufSize`
+
+   .. c:member:: SUNErrCode (*nvbufpack)(N_Vector, void*)
+
+      The function implementing :c:func:`N_VBufPack`
+
+   .. c:member:: SUNErrCode (*nvbufunpack)(N_Vector, void*)
+
+      The function implementing :c:func:`N_VBufUnpack`
+
+   .. c:member:: void (*nvprint)(N_Vector)
+
+      The function implementing :c:func:`N_VPrint`
+
+   .. c:member:: void (*nvprintfile)(N_Vector, FILE*)
+
+      The function implementing :c:func:`N_VPrintFile`
 
 The generic NVECTOR module defines and implements the vector
 operations acting on a ``N_Vector``. These routines are nothing but
@@ -120,7 +289,7 @@ for vectors :math:`x` and :math:`z` and a scalar :math:`c`:
 
 .. code-block:: c
 
-   void N_VScale(realtype c, N_Vector x, N_Vector z) {
+   void N_VScale(sunrealtype c, N_Vector x, N_Vector z) {
       z->ops->nvscale(c, x, z);
    }
 
@@ -239,17 +408,22 @@ that are wrapped as ``FN_NewVectorArray``, ``FN_VGetVecAtIndexVectorArray``, and
 set a vector within this array:
 
 
-.. c:function:: N_Vector *N_VNewVectorArray(int count)
+.. c:function:: N_Vector *N_VNewVectorArray(int count, SUNContext sunctx)
 
    Creates an array of ``count``  ``N_Vector`` objects, the pointers to each
    are initialized as ``NULL``.
 
    **Arguments:**
       * ``count`` -- length of desired ``N_Vector`` array.
+      * ``sunctx`` -- a ``SUNContext`` object
 
    **Return value:**
       * pointer to a new ``N_Vector`` array on success.
       * ``NULL`` pointer on failure.
+
+   .. versionchanged:: 7.0.0
+
+      The function signature was updated to add the ``SUNContext`` argument.
 
 
 .. c:function:: N_Vector *N_VGetVecAtIndexVectorArray(N_Vector* vs, int index)
@@ -320,7 +494,7 @@ routines these functions will ease the introduction of any new optional vector
 operations to the NVECTOR API by ensuring that only required operations need
 to be set, and that all operations are copied when cloning a vector.
 
-.. c:function:: N_Vector N_VNewEmpty()
+.. c:function:: N_Vector N_VNewEmpty(SUNContext sunctx)
 
    This allocates a new generic ``N_Vector`` object and initializes its content
    pointer and the function pointers in the operations structure to ``NULL``.
@@ -339,7 +513,7 @@ to be set, and that all operations are copied when cloning a vector.
    **Arguments:**
       * *v* -- an N_Vector object
 
-.. c:function:: int N_VCopyOps(N_Vector w, N_Vector v)
+.. c:function:: SUNErrCode N_VCopyOps(N_Vector w, N_Vector v)
 
    This function copies the function pointers in the ``ops`` structure of ``w``
    into the ``ops`` structure of ``v``.
@@ -348,15 +522,15 @@ to be set, and that all operations are copied when cloning a vector.
       * *w* -- the vector to copy operations from
       * *v* -- the vector to copy operations to
 
-   **Return value:**  If successful, this function returns ``0``. If either of
-   the inputs are ``NULL`` or the ``ops`` structure of either input is ``NULL``,
-   then is function returns a non-zero value.
+   **Return value:**  Returns a :c:type:`SUNErrCode`.
 
-Each NVECTOR implementation included in SUNDIALS has a unique
-identifier specified in enumeration and shown in
-:numref:`NVectors.Description.vectorIDs`.
-It is recommended that a user supplied NVECTOR implementation use the
-``SUNDIALS_NVEC_CUSTOM`` identifier.
+
+.. c:enum:: N_Vector_ID
+
+   Each :c:type:`N_Vector` implementation included in SUNDIALS has a unique
+   identifier specified in enumeration and shown in
+   :numref:`NVectors.Description.vectorIDs`. It is recommended that a user
+   supplied NVECTOR implementation use the ``SUNDIALS_NVEC_CUSTOM`` identifier.
 
 
 .. _NVectors.Description.vectorIDs:
@@ -418,7 +592,7 @@ provide the following guidance:
 
 * :c:func:`N_VDotProd()` should mathematically return a complex number
   for complex-valued vectors; as this is not possible with
-  SUNDIALS' current ``realtype``, this routine should
+  SUNDIALS' current ``sunrealtype``, this routine should
   be set to ``NULL`` in the custom NVECTOR implementation.
 
 * :c:func:`N_VCompare()`, :c:func:`N_VConstrMask()`, :c:func:`N_VMinQuotient()`,

@@ -2,7 +2,7 @@
    Programmer(s): Daniel R. Reynolds @ SMU
    ----------------------------------------------------------------
    SUNDIALS Copyright Start
-   Copyright (c) 2002-2022, Lawrence Livermore National Security
+   Copyright (c) 2002-2024, Lawrence Livermore National Security
    and Southern Methodist University.
    All rights reserved.
 
@@ -58,20 +58,36 @@ In the sub-sections that follow, we elaborate on the numerical
 methods utilized in ARKODE.  We first discuss the "single-step" nature
 of the ARKODE infrastructure, including its usage modes and approaches
 for interpolated solution output.  We then discuss the current suite
-of time-stepping modules supplied with ARKODE, including the ARKStep
-module for :ref:`additive Runge--Kutta methods <ARKODE.Mathematics.ARK>`,
-the ERKStep module that is optimized for :ref:`explicit Runge--Kutta
-methods <ARKODE.Mathematics.ERK>`, and the MRIStep module for :ref:`multirate
-infinitesimal step (MIS), multirate infinitesimal GARK (MRI-GARK), and
-implicit-explicit MRI-GARK (IMEX-MRI-GARK) methods <ARKODE.Mathematics.MRIStep>`.
-We then discuss the :ref:`adaptive temporal error controllers
-<ARKODE.Mathematics.Adaptivity>` shared by the time-stepping modules, including
-discussion of our choice of norms for measuring errors within various components
-of the solver.
+of time-stepping modules supplied with ARKODE, including
+
+* ARKStep for :ref:`additive Runge--Kutta methods <ARKODE.Mathematics.ARK>`
+
+* ERKStep that is optimized for :ref:`explicit Runge--Kutta methods
+  <ARKODE.Mathematics.ERK>`
+
+* ForcingStep for :ref:`a forcing method <ARKODE.Mathematics.ForcingStep>`
+
+* LSRKStep that supports :ref:`low-storage Runge--Kutta methods
+  <ARKODE.Mathematics.LSRK>`
+
+* MRIStep for :ref:`multirate infinitesimal step (MIS), multirate infinitesimal
+  GARK (MRI-GARK), and implicit-explicit MRI-GARK (IMEX-MRI-GARK) methods
+  <ARKODE.Mathematics.MRIStep>`
+
+* SplittingStep for :ref:`operator splitting methods
+  <ARKODE.Mathematics.SplittingStep>`
+
+* SPRKStep for :ref:`symplectic partitioned Runge--Kutta methods
+  <ARKODE.Mathematics.SPRKStep>`
+
+We then discuss the :ref:`adaptive temporal
+error controllers <ARKODE.Mathematics.Adaptivity>` shared by the time-stepping
+modules, including discussion of our choice of norms for measuring errors within
+various components of the solver.
 
 We then discuss the nonlinear and linear solver strategies used by
-ARKODE's time-stepping modules for solving implicit algebraic systems
-that arise in computing each stage and/or step:
+ARKODE for solving implicit algebraic systems that arise in computing each
+stage and/or step:
 :ref:`nonlinear solvers <ARKODE.Mathematics.Nonlinear>`,
 :ref:`linear solvers <ARKODE.Mathematics.Linear>`,
 :ref:`preconditioners <ARKODE.Mathematics.Preconditioning>`,
@@ -109,7 +125,7 @@ The choice of step size :math:`h_n` is determined by the time-stepping
 method (based on user-provided inputs, typically accuracy requirements).
 However, users may place minimum/maximum bounds on :math:`h_n` if desired.
 
-ARKODE's time stepping modules may be run in a variety of "modes":
+ARKODE may be run in a variety of "modes":
 
 * **NORMAL** -- The solver will take internal steps until it has just
   overtaken a user-specified output time, :math:`t_\text{out}`, in the
@@ -151,7 +167,7 @@ may be used.
 Interpolation
 ===============
 
-As mentioned above, the time-stepping modules in ARKODE support
+As mentioned above, the ARKODE supports
 interpolation of solutions :math:`y(t_\text{out})` and derivatives
 :math:`y^{(d)}(t_\text{out})`, where :math:`t_\text{out}` occurs
 within a completed time step from :math:`t_{n-1} \to t_n`.
@@ -162,13 +178,12 @@ ARKODE currently supports construction of polynomial interpolants
 :math:`p_q(t)` of polynomial degree up to :math:`q=5`, although
 users may select interpolants of lower degree.
 
-ARKODE provides two complementary interpolation approaches,
-both of which are accessible from any of the
-time-stepping modules: "Hermite" and "Lagrange".  The former approach
+ARKODE provides two complementary interpolation approaches:
+"Hermite" and "Lagrange".  The former approach
 has been included with ARKODE since its inception, and is more
-suitable for non-stiff problems; the latter is a new approach that is
-designed to provide increased accuracy when integrating stiff problems.
-Both are described in detail below.
+suitable for non-stiff problems; the latter is a more recent approach
+that is designed to provide increased accuracy when integrating stiff
+problems. Both are described in detail below.
 
 
 .. _ARKODE.Mathematics.Interpolation.Hermite:
@@ -375,10 +390,11 @@ described in the section :numref:`Butcher`.
 For mixed stiff/nonstiff problems, a user should provide both of the
 functions :math:`f^E` and :math:`f^I` that define the IVP system.  For
 such problems, ARKStep currently implements the ARK methods proposed in
-:cite:p:`KenCarp:03`, allowing for methods having order of accuracy :math:`q =
-\{3,4,5\}` and embeddings with orders :math:`p = \{2, 3, 4\}`;
-the tables for these methods are given in section :numref:`Butcher.additive`.
-Additionally, user-defined ARK tables are supported.
+:cite:p:`KenCarp:03,KenCarp:19,giraldo2013implicit`, allowing for methods having
+order of accuracy :math:`q = \{2,3,4,5\}` and embeddings with orders :math:`p =
+\{1,2,3,4\}`; the tables for these methods are given in section
+:numref:`Butcher.additive`.  Additionally, user-defined ARK tables are
+supported.
 
 For nonstiff problems, a user may specify that :math:`f^I = 0`,
 i.e. the equation :eq:`ARKODE_IMEX_IVP` reduces to the non-split IVP
@@ -391,8 +407,8 @@ In this scenario, the coefficients :math:`A^I=0`, :math:`c^I=0`,
 :math:`b^I=0` and :math:`\tilde{b}^I=0` in :eq:`ARKODE_ARK`, and the ARK
 methods reduce to classical :index:`explicit Runge--Kutta methods`
 (ERK).  For these classes of methods, ARKODE provides coefficients
-with orders of accuracy :math:`q = \{2,3,4,5,6,8\}`, with embeddings
-of orders :math:`p = \{1,2,3,4,5,7\}`.  These default to the methods in
+with orders of accuracy :math:`q = \{2,3,4,5,6,7,8,9\}`, with embeddings
+of orders :math:`p = \{1,2,3,4,5,6,7,8\}`.  These default to the methods in
 sections
 :numref:`Butcher.Heun_Euler`,
 :numref:`Butcher.Bogacki_Shampine`, :numref:`Butcher.Zonneveld`,
@@ -460,6 +476,94 @@ simplified form admits a more efficient and memory-friendly implementation
 than the more general form :eq:`ARKODE_IVP_simple_explicit`.
 
 
+.. _ARKODE.Mathematics.ForcingStep:
+
+ForcingStep -- Forcing method
+=============================
+
+The ForcingStep time-stepping module in ARKODE is designed for IVPs of the form
+
+.. math::
+   \dot{y} = f_1(t,y) + f_2(t,y), \qquad y(t_0) = y_0,
+
+with two additive partitions. One step of the forcing method implemented in
+ForcingStep is given by
+
+.. math::
+   v_1(t_{n-1}) &= y_{n-1}, \\
+   \dot{v}_1 &= f_1(t, v_1), \\
+   f_1^* &= \frac{v_1(t_n) - y_{n-1}}{h_n}, \\
+   v_2(t_{n-1}) &= y_{n-1}, \\
+   \dot{v}_2 &= f_1^* + f_2(t, v_2), \\
+   y_n &= v_2(t_n).
+
+Like a Lie--Trotter method from
+:ref:`SplittingStep <ARKODE.Mathematics.SplittingStep>`, the partitions are
+evolved through a sequence of inner IVPs which can be solved with an arbitrary
+integrator or exact solution procedure. However, the IVP for partition two
+includes a "forcing" or "tendency" term :math:`f_1^*` to strengthen the
+coupling. This coupling leads to a first order method provided :math:`v_1` and
+:math:`v_2` are integrated to at least first order accuracy. Currently, a fixed
+time step must be specified for the overall ForcingStep integrator, but
+partition integrators are free to use adaptive time steps.
+
+
+.. _ARKODE.Mathematics.LSRK:
+
+LSRKStep -- Low-Storage Runge--Kutta methods
+============================================
+
+The LSRKStep time-stepping module in ARKODE supports a variety of so-called
+"low-storage" Runge--Kutta (LSRK) methods, :cite:p:`VSH:04, MBA:14, K:08, FCS:22`.  This category includes traditional explicit
+fixed-step and low-storage Runge--Kutta methods, adaptive
+low-storage Runge--Kutta methods, and others.  These are characterized by coefficient tables
+that have an exploitable structure, such that their implementation does not require
+that all stages be stored simultaneously.  At present, this module supports explicit,
+adaptive "super-time-stepping" (STS) and "strong-stability-preserving" (SSP) methods.
+
+The LSRK time-stepping module in ARKODE currently supports IVP
+of the form :eq:`ARKODE_IVP_simple_explicit`, i.e., unlike the more general problem form :eq:`ARKODE_IMEX_IVP`, LSRKStep
+requires that problems have an identity mass matrix (i.e., :math:`M(t)=I`)
+and that the right-hand side function is not split into separate
+components.
+
+LSRKStep currently supports two families of second-order, explicit, and temporally adaptive STS methods:
+Runge--Kutta--Chebyshev (RKC), :cite:p:`VSH:04` and Runge--Kutta--Legendre (RKL), :cite:p:`MBA:14`.   These methods have the form
+
+.. math::
+   z_0 &= y_n,\\
+   z_1 &= z_0 + h \tilde{\mu}_1 f(t_n,z_0),\\
+   z_j &= (1-\mu_j-\nu_j)z_0 + \mu_j z_{j-1} + \nu_jz_{j-2} + h \tilde{\gamma}_j f(t_n,z_0) + h \tilde{\mu}_j f(t_n + c_{j-1}h, z_{j-1}) \\
+   y_{n+1} &= z_s.
+   :label: ARKODE_RKC_RKL
+
+The corresponding coefficients can be found in :cite:p:`VSH:04` and :cite:p:`MBA:14`, respectively.
+
+LSRK methods of STS type are designed for stiff problems characterized by
+having Jacobians with eigenvalues that have large real and small imaginary parts.
+While those problems are traditionally treated using implicit methods, STS methods
+are explicit.  To achieve stability for these stiff problems, STS methods use more stages than
+conventional Runge-Kutta methods to extend the stability region along the negative
+real axis. The extent of this stability region is proportional to the square of the number
+of stages used.
+
+LSRK methods of the SSP type are designed to preserve the so-called "strong-stability" properties of advection-type equations.
+For details, see :cite:p:`K:08`.
+The SSPRK methods in ARKODE use the following Shu--Osher representation :cite:p:`SO:88` of explicit Runge--Kutta methods:
+
+.. math::
+   z_1 &= y_n,\\
+   z_i &= \sum_{j = 1}^{i-1} \left(\alpha_{i,j}y_j + \beta_{i,j}h f(t_n + c_jh, z_j)\right),\\
+   y_{n+1} &= z_s.
+   :label: ARKODE_SSP
+
+The coefficients of the Shu--Osher representation are not uniquely determined by the Butcher table :cite:p:`SR:02`.
+In particular, the methods SSP(s,2), SSP(s,3), and SSP(10,4) implemented herein and presented in
+:cite:p:`K:08` have "almost" all zero coefficients appearing in :math:`\alpha_{i,i-1}` and
+:math:`\beta_{i,i-1}`. This feature facilitates their implementation in a low-storage manner. The
+corresponding coefficients and embedding weights can be found in :cite:p:`K:08` and :cite:p:`FCS:22`, respectively.
+
+
 .. _ARKODE.Mathematics.MRIStep:
 
 MRIStep -- Multirate infinitesimal step methods
@@ -492,130 +596,467 @@ an identity mass matrix, :math:`M(t)=I`. The slow time scale may consist of only
 nonstiff terms (:math:`f^I \equiv 0`), only stiff terms (:math:`f^E \equiv 0`),
 or both nonstiff and stiff terms.
 
-For cases with only a single slow right-hand side function (i.e.,
-:math:`f^E \equiv 0` or :math:`f^I \equiv 0`), MRIStep provides fixed-slow-step
-multirate infinitesimal step (MIS) :cite:p:`Schlegel:09, Schlegel:12a,
-Schlegel:12b` and multirate infinitesimal GARK (MRI-GARK) :cite:p:`Sandu:19`
-methods. For problems with an additively split slow right-hand side MRIStep
-provides fixed-slow-step implicit-explicit MRI-GARK (IMEX-MRI-GARK)
-:cite:p:`ChiRen:21` methods.  The slow (outer) method derives from an :math:`s`
-stage Runge--Kutta method for MIS and MRI-GARK methods or an additive Runge--Kutta
-method for IMEX-MRI-GARK methods. In either case, the stage values and the new
-solution are computed by solving an auxiliary ODE with a fast (inner) time
-integration method. This corresponds to the following algorithm for a single
-step:
+For cases with only a single slow right-hand side function (i.e., :math:`f^E
+\equiv 0` or :math:`f^I \equiv 0`), MRIStep provides multirate infinitesimal
+step (MIS) :cite:p:`Schlegel:09, Schlegel:12a, Schlegel:12b`, first through
+fourth order multirate infinitesimal GARK (MRI-GARK) :cite:p:`Sandu:19`, and
+second through fifth order multirate exponential Runge--Kutta (MERK)
+:cite:p:`Luan:20` methods. For problems with an additively split slow right-hand
+side, MRIStep provides first through fourth order implicit-explicit MRI-GARK
+(IMEX-MRI-GARK) :cite:p:`ChiRen:21` and second through fourth order
+implicit-explicit multirate infinitesimal stage-restart (IMEX-MRI-SR)
+:cite:p:`Fish:24` methods. For a complete list of the methods available in
+MRIStep see :numref:`ARKODE.Usage.MRIStep.MRIStepCoupling.Tables`. Additionally,
+users may supply their own method by defining and attaching a coupling table,
+see :numref:`ARKODE.Usage.MRIStep.MRIStepCoupling` for more information.
+
+Generally, the slow (outer) method for each family derives from a single-rate
+method: MIS and MRI-GARK methods derive from explicit or
+diagonally-implicit Runge--Kutta methods, MERK methods derive from exponential
+Runge--Kutta methods, while IMEX-MRI-GARK and IMEX-MRI-SR methods derive from
+additive Runge--Kutta methods. In each case, the "infinitesimal" nature of the
+multirate methods derives from the fact that slow stages are computed by solving
+a set of auxiliary ODEs with a fast (inner) time integration method. Generally
+speaking, an :math:`s`-stage method from of each family adheres to the following
+algorithm for a single step:
 
 #. Set :math:`z_1 = y_{n-1}`.
 
-#. For :math:`i = 2,\ldots,s+1` do:
+#. For :math:`i = 2,\ldots,s`, compute the stage solutions, :math:`z_i`, by
+   evolving the fast IVP
 
-   #. Let :math:`t_{n,i-1}^S = t_{n-1} + c_{i-1}^S h^S` and
-      :math:`v(t_{n,i-1}^S) = z_{i-1}`.
+   .. math::
+      {v}_i'(t) = f^F(t, v_i) + r_i(t) \quad\text{for}\quad t \in [t_{0,i},t_{F,i}] \quad\text{with}\quad v_i(t_{0,i}) = v_{0,i}
+      :label: MRI_fast_IVP
 
-   #. Let :math:`r_i(t) =
-      \frac{1}{\Delta c_i^S}
-      \sum\limits_{j=1}^{i-1} \omega_{i,j}(\tau) f^E(t_{n,j}^I, z_j) +
-      \frac{1}{\Delta c_i^S}
-      \sum\limits_{j=1}^i \gamma_{i,j}(\tau) f^I(t_{n,j}^I, z_j)`
-      where :math:`\Delta c_i^S=\left(c^S_i - c^S_{i-1}\right)` and the
-      normalized time is :math:`\tau = (t - t_{n,i-1}^S)/(h^S \Delta c_i^S)`.
+   and setting :math:`z_i = v(t_{F,i})`, and/or performing a standard explicit,
+   diagonally-implicit, or additive Runge--Kutta stage update,
 
-   #. For :math:`t \in [t_{n,i-1}^S, t_{n,i}^S]` solve
-      :math:`\dot{v}(t) = f^F(t, v) + r_i(t)`.
+   .. math::
+      z_i - \theta_{i,i} h^S f^I(t_{n,i}^S, z_i) = a_i.
+      :label: MRI_implicit_solve
 
-   #. Set :math:`z_i = v(t_{n,i}^S)`.
+   where :math:`t_{n,j}^S = t_{n-1} + h^S c^S_j`.
 
-#. Set :math:`y_{n} = z_{s+1}`.
+#. Set :math:`y_{n} = z_{s}`.
 
-The fast (inner) IVP solve can be carried out using either the ARKStep module
-(allowing for explicit, implicit, or ImEx treatments of the fast time scale with
-fixed or adaptive steps), or a user-defined integration method (see section
+#. If the method has an embedding, compute the embedded solution,
+   :math:`\tilde{y}`, by evolving the fast IVP
+
+   .. math::
+      \tilde{v}'(t) = f^F(t, \tilde{v}) + \tilde{r}(t) \quad\text{for}\quad t \in [\tilde{t}_{0},\tilde{t}_{F}] \quad\text{with}\quad \tilde{v}(\tilde{t}_{0}) = \tilde{v}_{0}
+      :label: MRI_embedding_fast_IVP
+
+   and setting :math:`\tilde{y}_{n} = \tilde{v}(\tilde{t}_{F})`, and/or
+   performing a standard explicit, diagonally-implicit, or additive Runge--Kutta
+   stage update,
+
+   .. math::
+      \tilde{y}_n - \tilde{\theta} h^S f^I(t_n, \tilde{y}_n) = \tilde{a}.
+      :label: MRI_embedding_implicit_solve
+
+Whether a fast IVP evolution or a stage update (or both) is needed depends on
+the method family (MRI-GARK, MERK, etc.). The specific aspects of the fast IVP
+forcing function (:math:`r_i(t)` or :math:`\tilde{r}(t)`), the interval over
+which the IVP must be evolved (:math:`[t_{0,i},t_{F,i}])`, the Runge--Kutta
+coefficients (:math:`\theta_{i,i}` and :math:`\tilde{\theta}`), and the
+Runge--Kutta data (:math:`a_i` and :math:`\tilde{a}`), are also determined by
+the method family. Generally, the forcing functions and data, are constructed
+using evaluations of the slow RHS functions, :math:`f^E` and :math:`f^I`, at
+preceding stages, :math:`z_j`. The fast IVP solves can be carried out using any
+valid ARKODE integrator or a user-defined integration method (see section
 :numref:`ARKODE.Usage.MRIStep.CustomInnerStepper`).
 
-The final abscissa is :math:`c^S_{s+1}=1` and the coefficients
-:math:`\omega_{i,j}` and :math:`\gamma_{i,j}` are polynomials in time that
-dictate the couplings from the slow to the fast time scale; these can be
-expressed as in :cite:p:`ChiRen:21` and :cite:p:`Sandu:19` as
+Below we summarize the details for each method family. For additional
+information, please see the references listed above.
+
+
+MIS, MRI-GARK, and IMEX-MRI-GARK Methods
+----------------------------------------
+
+The methods in IMEX-MRI-GARK family, which includes MIS and MRI-GARK methods,
+are defined by a vector of slow stage time abscissae, :math:`c^S \in
+\mathbb{R}^{s}`, and a set of coupling tensors,
+:math:`\Omega\in\mathbb{R}^{(s+1)\times s \times k}` and
+:math:`\Gamma\in\mathbb{R}^{(s+1)\times s \times k}`, that specify the
+slow-to-fast coupling for the explicit and implicit components, respectively.
+
+The fast stage IVPs, :eq:`MRI_fast_IVP`, are evolved over non-overlapping
+intervals :math:`[t_{0,i},t_{F,i}] = [t_{n,i-1}^S, t_{n,i}^S]` with
+the initial condition :math:`v_{0,i}=z_{i-1}`. The fast IVP forcing function is
+given by
 
 .. math::
-   \omega_{i,j}(\tau) = \sum_{k\geq 0} \omega_{i,j}^{\{k\}} \tau^k
+   r_i(t) = \frac{1}{\Delta c_i^S} \sum\limits_{j=1}^{i-1} \omega_{i,j}(\tau) f^E(t_{n,j}^S, z_j)
+   + \frac{1}{\Delta c_i^S} \sum\limits_{j=1}^i \gamma_{i,j}(\tau) f^I(t_{n,j}^S, z_j)
+
+where :math:`\Delta c_i^S=\left(c^S_i - c^S_{i-1}\right)`, :math:`\tau = (t -
+t_{n,i-1}^S)/(h^S \Delta c_i^S)` is the normalized time, the coefficients
+:math:`\omega_{i,j}` and :math:`\gamma_{i,j}` are polynomials in time of degree
+:math:`k-1` given by
+
+.. math::
+   \omega_{i,j}(\tau) = \sum_{\ell = 1}^{k} \Omega_{i,j,\ell} \, \tau^{\ell-1}
    \quad\text{and}\quad
-   \gamma_{i,j}(\tau) = \sum_{k\geq 0} \gamma_{i,j}^{\{k\}} \tau^k,
+   \gamma_{i,j}(\tau) = \sum_{\ell = 1}^{k} \Gamma_{i,j,\ell} \, \tau^{\ell-1}.
    :label: ARKODE_MRI_coupling
 
-and where the tables :math:`\Omega^{\{k\}}\in\mathbb{R}^{(s+1)\times(s+1)}` and
-:math:`\Gamma^{\{k\}}\in\mathbb{R}^{(s+1)\times(s+1)}` define the slow-to-fast
-coupling for the explicit and implicit components respectively.
-
-For traditional MIS methods, the coupling coefficients are uniquely defined
-based on a slow Butcher table :math:`(A^S,b^S,c^S)` having an explicit first
-stage (i.e., :math:`c^S_1=0` and :math:`A^S_{1,j}=0` for :math:`1\le j\le s`),
-sorted abscissae (i.e., :math:`c^S_{i} \ge c^S_{i-1}` for :math:`2\le i\le s`),
-and the final abscissa is :math:`c^S_s \leq 1`. With these properties met, the
-coupling coefficients for an explicit-slow method are given as
-
-.. math::
-   \omega_{i,j}^{\{0\}} = \begin{cases}
-   0, & \text{if}\; i=1,\\
-   A^S_{i,j} - A^S_{i-1,j}, & \text{if}\; 2\le i\le s,\\
-   b^S_j - A^S_{s,j}, & \text{if}\; i=s+1.
-   \end{cases}
-   :label: ARKODE_MIS_to_MRI
-
-For general slow tables :math:`(A^S,b^S,c^S)` with at least second-order
-accuracy, the corresponding MIS method will be second order. However, if this
-slow table is at least third order and satisfies the additional condition
-
-.. math::
-   \sum_{i=2}^{s} \left(c_i^S-c_{i-1}^S\right)
-   \left(\mathbf{e}_i+\mathbf{e}_{i-1}\right)^T A^S c^S
-   + \left(1-c_{s}^S\right) \left( \frac12+\mathbf{e}_{s}^T A^S c^S \right)
-   = \frac13,
-   :label: ARKODE_MIS_order3
-
-where :math:`\mathbf{e}_j` corresponds to the :math:`j`-th column from the
-:math:`s \times s` identity matrix, then the overall MIS method will be third
-order.
-
-In the above algorithm, when the slow (outer) method has repeated abscissa, i.e.
-:math:`\Delta c_i^S = 0` for stage :math:`i`, the fast (inner) IVP can be
-rescaled and integrated analytically. In this case the stage is computed as
+When the slow abscissa are repeated, i.e. :math:`\Delta c_i^S = 0`, the fast IVP
+can be rescaled and integrated analytically leading to the Runge--Kutta update
+:eq:`MRI_implicit_solve` instead of the fast IVP evolution. In this case the
+stage is computed as
 
 .. math::
    z_i = z_{i-1}
-   + h^S \sum_{j=1}^{i-1} \left(\sum_{k\geq 0}
-     \frac{\omega_{i,j}^{\{k\}}}{k+1}\right) f^E(t_{n,j}^S, z_j)
-   + h^S \sum_{j=1}^i \left(\sum_{k\geq 0}
-     \frac{\gamma_{i,j}^{\{k\}}}{k+1}\right) f^I(t_{n,j}^S, z_j),
+   + h^S \sum_{j=1}^{i-1} \left(\sum_{\ell = 1}^{k}
+     \frac{\Omega_{i,j,\ell}}{\ell}\right) f^E(t_{n,j}^S, z_j)
+   + h^S \sum_{j=1}^i \left(\sum_{\ell = 1}^{k}
+     \frac{\Gamma_{i,j,\ell}}{\ell}\right) f^I(t_{n,j}^S, z_j).
    :label: ARKODE_MRI_delta_c_zero
 
-which corresponds to a standard ARK, DIRK, or ERK stage computation depending on
-whether the summations over :math:`k` are zero or nonzero.
+Similarly, the embedded solution IVP, :eq:`MRI_embedding_fast_IVP`, is evolved
+over the interval :math:`[\tilde{t}_{0},\tilde{t}_{F}] = [t_{n,s-1}^S, t_{n}]`
+with the initial condition :math:`\tilde{v}_0=z_{s-1}`.
 
 As with standard ARK and DIRK methods, implicitness at the slow time scale is
-characterized by nonzero values on or above the diagonal of the matrices
-:math:`\Gamma^{\{k\}}`. Typically, MRI-GARK and IMEX-MRI-GARK methods are at
-most diagonally-implicit (i.e., :math:`\gamma_{i,j}^{\{k\}}=0` for all
+characterized by nonzero values on or above the diagonal of the :math:`k`
+matrices in :math:`\Gamma`. Typically, MRI-GARK and IMEX-MRI-GARK methods are at
+most diagonally-implicit (i.e., :math:`\Gamma_{i,j,\ell}=0` for all :math:`\ell` and
 :math:`j>i`). Furthermore, diagonally-implicit stages are characterized as being
-"solve-decoupled" if :math:`\Delta c_i^S = 0` when `\gamma_{i,i}^{\{k\}} \ne 0`,
-in which case the stage is computed as standard ARK or DIRK update. Alternately,
+"solve-decoupled" if :math:`\Delta c_i^S = 0` when :math:`\Gamma_{i,i,\ell} \ne 0`,
+in which case the stage is computed as a standard ARK or DIRK update. Alternately,
 a diagonally-implicit stage :math:`i` is considered "solve-coupled" if
-:math:`\Delta c^S_i \gamma_{i,j}^{\{k\}} \ne 0`, in which
-case the stage solution :math:`z_i` is *both* an input to :math:`r(t)` and the
+:math:`\Delta c^S_i \, \Gamma_{i,j,\ell} \ne 0`, in which
+case the stage solution :math:`z_i` is *both* an input to :math:`r_i(t)` and the
 result of time-evolution of the fast IVP, necessitating an implicit solve that
-is coupled to the fast (inner) solver. At present, only "solve-decoupled"
+is coupled to the fast evolution. At present, only "solve-decoupled"
 diagonally-implicit MRI-GARK and IMEX-MRI-GARK methods are supported.
 
-For problems with only a slow-nonstiff term (:math:`f^I \equiv 0`), MRIStep
-provides third and fourth order explicit MRI-GARK methods. In cases with only a
-slow-stiff term (:math:`f^E \equiv 0`), MRIStep supplies second, third, and
-fourth order implicit solve-decoupled MRI-GARK methods. For applications
-with both stiff and nonstiff slow terms, MRIStep implements third and fourth
-order IMEX-MRI-GARK methods. For a complete list of the methods available in
-MRIStep see :numref:`ARKODE.Usage.MRIStep.MRIStepCoupling.Tables`. Additionally, users
-may supply their own method by defining and attaching a coupling table, see
-:numref:`ARKODE.Usage.MRIStep.MRIStepCoupling` for more information.
 
+IMEX-MRI-SR Methods
+-------------------
+
+The IMEX-MRI-SR family of methods perform *both* the fast IVP evolution,
+:eq:`MRI_fast_IVP` or :eq:`MRI_embedding_fast_IVP`, *and* stage update,
+:eq:`MRI_implicit_solve` or :eq:`MRI_embedding_implicit_solve`, in every stage
+(but these methods typically have far fewer stages than implicit MRI-GARK or
+IMEX-MRI-GARK methods).  These methods are defined by a vector of slow stage
+time abscissae :math:`c^S \in \mathbb{R}^{s}`, a set of coupling tensors
+:math:`\Omega\in\mathbb{R}^{(s+1)\times s\times k}`, and a Butcher table of
+slow-implicit coefficients, :math:`\Gamma\in\mathbb{R}^{(s+1) \times s}`.
+
+The fast stage IVPs, :eq:`MRI_fast_IVP`, are evolved on overlapping
+intervals :math:`[t_{0,i},t_{F,i}] = [t_{n-1}, t_{n,i}^S]` with
+the initial condition :math:`v_{0,i}=y_{n-1}`. The fast IVP forcing function is
+given by
+
+.. math::
+   r_i(t) = \frac{1}{c_i^S} \sum\limits_{j=1}^{i-1} \omega_{i,j}(\tau) \left( f^E(t_{n,j}^S, z_j) + f^I(t_{n,j}^S, z_j)\right),
+   :label: IMEXMRISR_forcing
+
+where :math:`\tau = (t - t_n)/(h^S c_i^S)` is the normalized time, and the coefficients
+:math:`\omega_{i,j}` are polynomials in time of degree :math:`k-1` that are also given by
+:eq:`ARKODE_MRI_coupling`.  The solution of these fast IVPs defines an intermediate stage
+solution, :math:`\tilde{z}_i`.
+
+The implicit solve that follows each fast IVP must solve the algebraic equation for :math:`z_i`
+
+.. math::
+   z_i = \tilde{z}_i + h^S \sum_{j=1}^{i} \gamma_{i,j} f^I(t_{n,j}^S, z_j).
+   :label: ARKODE_MRISR_implicit
+
+We note that IMEX-MRI-SR methods are solve-decoupled by construction, and thus the structure
+of a given stage never needs to be deduced based on :math:`\Delta c_i^S`.  However, ARKODE
+still checks the value of :math:`\gamma_{i,i}`, since if it zero then the stage update
+equation :eq:`ARKODE_MRISR_implicit` simplifies to a simple explicit Runge--Kutta-like stage
+update.
+
+The overall time step solution is given by the final internal stage solution,
+i.e., :math:`y_{n} = z_{s}`.  The embedded solution is computing using the above
+algorithm for stage index :math:`s+1`, under the definition that :math:`c_{s+1}^S=1`
+(and thus the fast IVP portion is evolved over the full time step,
+:math:`[\tilde{t}_{0}, \tilde{t}_{F}] = [t_{n-1}, t_{n}]`).
+
+
+
+MERK Methods
+------------
+
+The MERK family of methods are only defined for multirate applications that
+are explicit at the slow time scale, i.e., :math:`f^I=0`, but otherwise they are
+nearly identical to IMEX-MRI-SR methods.  Specifically, like IMEX-MRI-SR methods,
+these evolve the fast IVPs
+:eq:`MRI_fast_IVP` and :eq:`MRI_embedding_fast_IVP` over the intervals
+:math:`[t_{0,i},t_{F,i}] = [t_{n-1}, t_{n,i}^S]` and
+:math:`[\tilde{t}_{0}, \tilde{t}_{F}] = [t_{n-1}, t_{n}]`, respectively, and begin
+with the initial condition :math:`v_{0,i}=y_{n-1}`.  Furthermore, the fast IVP
+forcing functions are given by :eq:`IMEXMRISR_forcing` with :math:`f^I=0`.
+As MERK-based applications lack the implicit slow operator, they do not require
+the solution of implicit algebraic equations.
+
+However, unlike other MRI families, MERK methods were designed to admit a useful
+efficiency improvement.  Since each fast IVP begins with the same initial condition,
+:math:`v_{0,i}=y_{n-1}`, if multiple stages share the same forcing function
+:math:`r_i(t)`, then they may be "grouped" together.  This is achieved by sorting the
+final IVP solution time for each stage, :math:`t_{n,i}^S`, and then evolving the inner
+solver to each of these stage times in order, storing the corresponding inner solver
+solutions at these times as the stages :math:`z_i`.  For example, the
+:index:`ARKODE_MERK54` method involves 11 stages, that may be combined into 5 distinct
+groups.  The fourth group contains stages 7, 8, 9, and the embedding, corresponding to
+the :math:`c_i^S` values :math:`7/10`, :math:`1/2`, :math:`2/3`, and :math:`1`.
+Sorting these, a single fast IVP for this group must be evolved over the interval
+:math:`[t_{0,i},t_{F,i}] = [t_{n-1}, t_{n}]`, first pausing at :math:`t_{n-1}+\frac12 h^S`
+to store :math:`z_8`, then pausing at :math:`t_{n-1}+\frac{2}{3} h^S` to store
+:math:`z_9`, then pausing at :math:`t_{n-1}+\frac{7}{10} h^S` to store :math:`z_7`,
+and finally finishing the IVP solve to :math:`t_{n-1}+h^S` to obtain :math:`\tilde{y}_n`.
+
+.. note::
+
+   Although all MERK methods were derived in :cite:p:`Luan:20` under an assumption that
+   the fast function :math:`f^F(t,y)` is linear in :math:`y`, in :cite:p:`Fish:24` it
+   was proven that MERK methods also satisfy all nonlinear order conditions up through
+   their linear order.  The lone exception is :index:`ARKODE_MERK54`, where it was only
+   proven to satisfy all nonlinear conditions up to order 4 (since :cite:p:`Fish:24` did
+   not establish the formulas for the order 5 conditions).  All our numerical tests to
+   date have shown :index:`ARKODE_MERK54` to achieve fifth order for nonlinear problems,
+   and so we conjecture that it also satisfies the nonlinear fifth order conditions.
+
+
+
+.. _ARKODE.Mathematics.SplittingStep:
+
+SplittingStep -- Operator splitting methods
+================================================
+
+The SplittingStep time-stepping module in ARKODE is designed for IVPs of the
+form
+
+.. math::
+   \dot{y} = f_1(t,y) + f_2(t,y) + \dots + f_P(t,y), \qquad y(t_0) = y_0,
+
+with :math:`P > 1` additive partitions. Operator splitting methods, such as
+those implemented in SplittingStep, allow each partition to be integrated
+separately, possibly with different numerical integrators or exact solution
+procedures. Coupling is only performed though initial conditions which are
+passed from the flow of one partition to the next.
+
+The following algorithmic procedure is used in the Splitting-Step module:
+
+#. For :math:`i = 1, \dots, r` do:
+
+   #. Set :math:`y_{n, i} = y_{n - 1}`.
+
+   #. For :math:`j = 1, \dots, s` do:
+
+      #. For :math:`k = 1, \dots, P` do:
+
+         #. Let :math:`t_{\text{start}} = t_{n-1} + \beta_{i,j,k} h_n` and
+            :math:`t_{\text{end}} = t_{n-1} + \beta_{i,j+1,k} h_n`.
+
+         #. Let :math:`v(t_{\text{start}}) = y_{n,i}`.
+
+         #. For :math:`t \in [t_{\text{start}}, t_{\text{end}}]` solve
+            :math:`\dot{v} = f_{k}(t, v)`.
+
+         #. Set :math:`y_{n, i} = v(t_{\text{end}})`.
+
+#. Set :math:`y_n = \sum_{i=1}^r \alpha_i y_{n,i}`
+
+Here, :math:`s` denotes the number of stages, while :math:`r` denotes the number
+of sequential methods within the overall operator splitting scheme. The
+sequential methods have independent flows which are linearly combined to produce
+the next step. The coefficients :math:`\alpha \in \mathbb{R}^{r}` and
+:math:`\beta \in \mathbb{R}^{r \times (s + 1) \times P}` determine the
+particular scheme and properties such as the order of accuracy.
+
+An alternative representation of the SplittingStep solution is
+
+.. math::
+   y_n = \sum_{i=1}^P \alpha_i \left(
+   \phi^P_{\gamma_{i,s,P} h_n} \circ
+   \phi^{P-1}_{\gamma_{i,s,P-1} h_n} \circ \dots \circ
+   \phi^{1}_{\gamma_{i,s,1} h_n} \circ
+   \phi^P_{\gamma_{i,s-1,P} h_n} \circ \dots \circ
+   \phi^1_{\gamma_{i,s-1,1} h_n} \circ \dots \circ
+   \phi^P_{\gamma_{i,1,P} h_n} \circ \dots \circ
+   \phi^1_{\gamma_{i,1,1} h_n}
+   \right)(y_{n-1})
+
+where :math:`\gamma_{i,j,k} = \beta_{i,j+1,k} - \beta_{i,j,k}` is the scaling
+factor for the step size, :math:`h_n`, and :math:`\phi^k_{h_n}` is the flow map
+for partition :math:`k`:
+
+.. math::
+   \phi^k_{h_n}(y_{n-1}) = v(t_n),
+   \quad \begin{cases}
+      v(t_{n-1}) = y_{n-1}, \\ \dot{v} = f_k(t, v).
+   \end{cases}
+
+For example, the Lie--Trotter splitting :cite:p:`BCM:24`, given by
+
+.. math::
+   y_n = L_{h_n}(y_{n-1}) = \left( \phi^P_{h_n} \circ \phi^{P-1}_{h_n}
+   \circ \dots \circ \phi^1_{h_n} \right) (y_{n-1}),
+   :label: ARKODE_Lie-Trotter
+
+is a first order, one-stage, sequential operator splitting method suitable for
+any number of partitions. Its coefficients are
+
+.. math::
+   \alpha_1 &= 1, \\
+   \beta_{1,j,k} &= \begin{cases}
+   0 & j = 1 \\
+   1 & j = 2
+   \end{cases}, \qquad
+   j = 1, 2 \quad \textrm{and} \quad
+   k = 1, \dots, P.
+
+Higher order operator splitting methods are often constructed by composing the
+Lie--Trotter splitting with its adjoint:
+
+.. math::
+   L^*_{h_n} = L^{-1}_{-h_n}
+   = \phi^1_{h_n} \circ \phi^{2}_{h_n} \circ \dots \circ \phi^{P}_{h_n}.
+   :label: ARKODE_Lie-Trotter_adjoint
+
+This is the case for the Strang splitting :cite:p:`Strang:68`
+
+.. math::
+   y_n = S_{h_n}(y_{n-1}) = \left( L^*_{h_n/2} \circ L_{h_n/2} \right)(y_{n-1}),
+   :label: ARKODE_Strang
+
+which has :math:`P` stages and coefficients
+
+.. math::
+   \alpha_1 &= 1, \\
+   \beta_{1,j,k} &= \begin{cases}
+   0 & j = 1 \\
+   1 & j + k > P + 1 \\
+   \frac{1}{2} & \text{otherwise}
+   \end{cases}, \qquad
+   j = 1, \dots, P+1 \quad \textrm{and} \quad
+   k = 1, \dots, P.
+
+SplittingStep provides standard operator splitting methods such as the
+Lie--Trotter and Strang splitting, as well as schemes of arbitrarily high order.
+Alternatively, users may provide their own coefficients (see
+:numref:`ARKODE.Usage.SplittingStep.SplittingStepCoefficients`). Generally,
+methods of order three and higher with real coefficients require backward
+integration, i.e., there exist negative :math:`\gamma_{i,j,k}` coefficients.
+Currently, a fixed time step must be specified for the overall SplittingStep
+integrator, but partition integrators are free to use adaptive time steps.
+
+
+.. _ARKODE.Mathematics.SPRKStep:
+
+SPRKStep -- Symplectic Partitioned Runge--Kutta methods
+=======================================================
+
+The SPRKStep time-stepping module in ARKODE is designed for problems where the
+state vector is partitioned as
+
+.. math::
+   y(t) =
+   \begin{bmatrix}
+     p(t) \\
+     q(t)
+   \end{bmatrix}
+
+and the component partitioned IVP is given by
+
+.. math::
+   \dot{p} &= f_1(t, q), \qquad p(t_0) = p_0 \\
+   \dot{q} &= f_2(t, p), \qquad q(t_0) = q_0.
+   :label: ARKODE_IVP_SPRK
+
+The right-hand side functions :math:`f_1(t,p)` and :math:`f_2(t,q)` typically
+arise from the **separable** Hamiltonian system
+
+.. math::
+   H(t, p, q) = T(t, p) + V(t, q)
+
+where
+
+.. math::
+   f_1(t, q) \equiv \frac{\partial V(t, q)}{\partial q}, \qquad
+   f_2(t, p) \equiv \frac{\partial T(t, p)}{\partial p}.
+
+When *H* is autonomous, then *H* is a conserved quantity. Often this corresponds
+to the conservation of energy (for example, in *n*-body problems). For
+non-autonomous *H*, the invariants are no longer directly obtainable from the
+Hamiltonian :cite:p:`Struckmeier:02`.
+
+In practice, the ordering of the variables does not matter and is determined by the user.
+SPRKStep utilizes Symplectic Partitioned Runge-Kutta (SPRK) methods represented by the pair
+of explicit and diagonally implicit Butcher tableaux,
+
+.. math::
+   \begin{array}{c|cccc}
+   c_1 & 0 & \cdots & 0 & 0 \\
+   c_2 & a_1 & 0 & \cdots & \vdots \\
+   \vdots & \vdots & \ddots & \ddots & \vdots \\
+   c_s & a_1 & \cdots & a_{s-1} & 0 \\
+   \hline
+   & a_1 & \cdots & a_{s-1} & a_s
+   \end{array}
+   \qquad \qquad
+   \begin{array}{c|cccc}
+   \hat{c}_1 & \hat{a}_1 & \cdots & 0 & 0 \\
+   \hat{c}_2 & \hat{a}_1 & \hat{a}_2 & \cdots & \vdots \\
+   \vdots & \vdots & \ddots & \ddots & \vdots \\
+   \hat{c}_s & \hat{a}_1 & \hat{a}_2 & \cdots & \hat{a}_{s} \\
+   \hline
+   & \hat{a}_1 & \hat{a}_2 & \cdots & \hat{a}_{s}
+   \end{array}.
+
+These methods approximately conserve a nearby Hamiltonian for exponentially long
+times :cite:p:`HaWa:06`. SPRKStep makes the assumption that the Hamiltonian is
+separable, in which case the resulting method is explicit. SPRKStep provides
+schemes with order of accuracy and conservation equal to
+:math:`q = \{1,2,3,4,5,6,8,10\}`. The references for these these methods and
+the default methods used are given in the section :numref:`Butcher.sprk`.
+
+In the default case, the algorithm for a single time-step is as follows
+(for autonomous Hamiltonian systems the times provided to :math:`f_1` and
+:math:`f_2`
+can be ignored).
+
+#. Set :math:`P_0 = p_{n-1}, Q_1 = q_{n-1}`
+
+#. For :math:`i = 1,\ldots,s` do:
+
+   #. :math:`P_i = P_{i-1} + h_n \hat{a}_i f_1(t_{n-1} + \hat{c}_i h_n, Q_i)`
+   #. :math:`Q_{i+1} = Q_i + h_n a_i f_2(t_{n-1} + c_i h_n, P_i)`
+
+#. Set :math:`p_n = P_s, q_n = Q_{s+1}`
+
+.. _ARKODE.Mathematics.SPRKStep.Compensated:
+
+Optionally, a different algorithm leveraging compensated summation can be used
+that is more robust to roundoff error at the expense of 2 extra vector operations
+per stage and an additional 5 per time step. It also requires one extra vector to
+be stored.  However, it is significantly more robust to roundoff error accumulation
+:cite:p:`Sof:02`. When compensated summation is enabled, the following incremental
+form is used to compute a time step:
+
+#. Set :math:`\Delta P_0 = 0, \Delta Q_1 = 0`
+
+#. For :math:`i = 1,\ldots,s` do:
+
+   #. :math:`\Delta P_i = \Delta P_{i-1} + h_n \hat{a}_i f_1(t_{n-1} + \hat{c}_i h_n, q_{n-1} + \Delta Q_i)`
+   #. :math:`\Delta Q_{i+1} = \Delta Q_i + h_n a_i f_2(t_{n-1} + c_i h_n, p_{n-1} + \Delta P_i)`
+
+#. Set :math:`\Delta p_n = \Delta P_s, \Delta q_n = \Delta Q_{s+1}`
+
+#. Using compensated summation, set :math:`p_n = p_{n-1} + \Delta p_n, q_n = q_{n-1} + \Delta q_n`
+
+Since temporal error based adaptive time-stepping is known to ruin the
+conservation property :cite:p:`HaWa:06`,  SPRKStep requires that ARKODE be run
+using a fixed time-step size.
+
+.. However, it is possible for a user to provide a
+.. problem-specific adaptivity controller such as the one described in :cite:p:`HaSo:05`.
+.. The `ark_kepler.c` example demonstrates an implementation of such controller.
 
 .. _ARKODE.Mathematics.Error.Norm:
 
@@ -678,13 +1119,14 @@ time-steppers) is their adaptive control of local truncation error (LTE).
 At every step, we estimate the local error, and ensure that it
 satisfies tolerance conditions.  If this local error test fails, then
 the step is recomputed with a reduced step size.  To this end, the
-Runge--Kutta methods packaged within both the ARKStep and ERKStep
-modules admit an embedded solution :math:`\tilde{y}_n`, as shown in
-equations :eq:`ARKODE_ARK` and :eq:`ARKODE_ERK`.  Generally, these embedded
-solutions attain a slightly lower order of accuracy than the computed
-solution :math:`y_n`.  Denoting the order of accuracy for :math:`y_n`
-as :math:`q` and for :math:`\tilde{y}_n` as :math:`p`, most of these
-embedded methods satisfy :math:`p = q-1`.  These values of :math:`q`
+majority of the Runge--Kutta methods and many of the MRI methods in ARKODE
+admit an embedded solution :math:`\tilde{y}_n`, as shown in
+equations :eq:`ARKODE_ARK`, :eq:`ARKODE_ERK`, and
+:eq:`MRI_embedding_fast_IVP`-:eq:`MRI_embedding_implicit_solve`.  Generally,
+these embedded solutions attain a slightly lower order of accuracy than the
+computed solution :math:`y_n`.  Denoting the order of accuracy for
+:math:`y_n` as :math:`q` and for :math:`\tilde{y}_n` as :math:`p`, most of
+these embedded methods satisfy :math:`p = q-1`.  These values of :math:`q`
 and :math:`p` correspond to the *global* orders of accuracy for the
 method and embedding, hence each admit local truncation errors
 satisfying :cite:p:`HWN:87`
@@ -794,149 +1236,258 @@ steps, :math:`t_{n-3} \to t_{n-2} \to t_{n-1} \to t_n`.  These local
 error history values are all initialized to 1 upon program
 initialization, to accommodate the few initial time steps of a
 calculation where some of these error estimates have not yet been
-computed.  With these estimates, ARKODE supports a variety of error
-control algorithms, as specified in the subsections below.
+computed.  With these estimates, ARKODE supports one of two approaches
+for temporal error control.
 
+First, any valid implementation of the SUNAdaptController class
+:numref:`SUNAdaptController.Description` may be used by ARKODE's adaptive
+time-stepping modules to provide a candidate error-based prospective step
+size :math:`h'`.
 
-.. _ARKODE.Mathematics.Adaptivity.ErrorControl.PID:
-
-PID controller
------------------
-
-This is the default time adaptivity controller used by the ARKStep and
-ERKStep modules.  It derives from those found in :cite:p:`KenCarp:03`, :cite:p:`Sod:98`, :cite:p:`Sod:03` and
-:cite:p:`Sod:06`, and uses all three of the local error estimates
-:math:`\varepsilon_n`, :math:`\varepsilon_{n-1}` and
-:math:`\varepsilon_{n-2}` in determination of a prospective step size,
-
-.. math::
-   h' \;=\; h_n\; \varepsilon_n^{-k_1/p}\; \varepsilon_{n-1}^{k_2/p}\;
-        \varepsilon_{n-2}^{-k_3/p},
-
-where the constants :math:`k_1`, :math:`k_2` and :math:`k_3` default
-to 0.58, 0.21 and 0.1, respectively, and may be modified by the user.
-In this estimate, a floor of :math:`\varepsilon > 10^{-10}` is
-enforced to avoid division-by-zero errors.
-
-
-
-.. _ARKODE.Mathematics.Adaptivity.ErrorControl.PI:
-
-PI controller
-----------------------
-
-Like with the previous method, the PI controller derives from those
-found in :cite:p:`KenCarp:03`, :cite:p:`Sod:98`, :cite:p:`Sod:03` and :cite:p:`Sod:06`, but it differs in
-that it only uses the two most recent step sizes in its adaptivity
-algorithm,
-
-.. math::
-   h' \;=\; h_n\; \varepsilon_n^{-k_1/p}\; \varepsilon_{n-1}^{k_2/p}.
-
-Here, the default values of :math:`k_1` and :math:`k_2` default
-to 0.8 and 0.31, respectively, though they may be changed by the user.
-
-
-
-.. _ARKODE.Mathematics.Adaptivity.ErrorControl.I:
-
-I controller
-----------------------
-
-This is the standard time adaptivity control algorithm in use by most
-publicly-available ODE solver codes.  It bases the prospective time step
-estimate entirely off of the current local error estimate,
-
-.. math::
-   h' \;=\; h_n\; \varepsilon_n^{-k_1/p}.
-
-By default, :math:`k_1=1`, but that may be modified by the user.
-
-
-
-
-.. _ARKODE.Mathematics.Adaptivity.ErrorControl.eGus:
-
-Explicit Gustafsson controller
----------------------------------
-
-This step adaptivity algorithm was proposed in :cite:p:`Gust:91`, and
-is primarily useful with explicit Runge--Kutta methods.
-In the notation of our earlier controllers, it has the form
-
-.. math::
-   h' \;=\; \begin{cases}
-      h_1\; \varepsilon_1^{-1/p}, &\quad\text{on the first step}, \\
-      h_n\; \varepsilon_n^{-k_1/p}\;
-        \left(\dfrac{\varepsilon_n}{\varepsilon_{n-1}}\right)^{k_2/p}, &
-      \quad\text{on subsequent steps}.
-   \end{cases}
-   :label: ARKODE_expGus
-
-The default values of :math:`k_1` and :math:`k_2` are 0.367 and 0.268,
-respectively, and may be modified by the user.
-
-
-
-
-.. _ARKODE.Mathematics.Adaptivity.ErrorControl.iGus:
-
-Implicit Gustafsson controller
----------------------------------
-
-A version of the above controller suitable for implicit Runge--Kutta
-methods was introduced in :cite:p:`Gust:94`, and has the form
-
-.. math::
-   h' = \begin{cases}
-      h_1 \varepsilon_1^{-1/p}, &\quad\text{on the first step}, \\
-      h_n \left(\dfrac{h_n}{h_{n-1}}\right) \varepsilon_n^{-k_1/p}
-        \left(\dfrac{\varepsilon_n}{\varepsilon_{n-1}}\right)^{-k_2/p}, &
-      \quad\text{on subsequent steps}.
-   \end{cases}
-   :label: ARKODE_impGus
-
-The algorithm parameters default to :math:`k_1 = 0.98` and
-:math:`k_2 = 0.95`, but may be modified by the user.
-
-
-
-
-.. _ARKODE.Mathematics.Adaptivity.ErrorControl.ieGus:
-
-ImEx Gustafsson controller
----------------------------------
-
-An ImEx version of these two preceding controllers is also available.
-This approach computes the estimates :math:`h'_1` arising from
-equation :eq:`ARKODE_expGus` and the estimate :math:`h'_2` arising from
-equation :eq:`ARKODE_impGus`, and selects
-
-.. math::
-   h' = \frac{h}{|h|}\min\left\{|h'_1|, |h'_2|\right\}.
-
-Here, equation :eq:`ARKODE_expGus` uses :math:`k_1` and
-:math:`k_2` with default values of 0.367 and 0.268, while equation
-:eq:`ARKODE_impGus` sets both parameters to the input :math:`k_3` that
-defaults to 0.95.  All of these values may be modified by the user.
-
-
-
-.. _ARKODE.Mathematics.Adaptivity.ErrorControl.User:
-
-User-supplied controller
----------------------------------
-
-Finally, ARKODE's time-stepping modules allow the user to define their
-own time step adaptivity function,
+Second, ARKODE's adaptive time-stepping modules currently still allow the
+user to define their own time step adaptivity function,
 
 .. math::
    h' = H(y, t, h_n, h_{n-1}, h_{n-2}, \varepsilon_n, \varepsilon_{n-1}, \varepsilon_{n-2}, q, p),
 
-to allow for problem-specific choices, or for continued
-experimentation with temporal error controllers.
+allowing for problem-specific choices, or for continued
+experimentation with temporal error controllers.  We note that this
+support has been deprecated in favor of the SUNAdaptController class,
+and will be removed in a future release.
 
 
+.. _ARKODE.Mathematics.MultirateAdaptivity:
+
+Multirate time step adaptivity (MRIStep)
+----------------------------------------
+
+Since multirate applications evolve on multiple time scales,
+MRIStep supports additional forms of temporal adaptivity.  Specifically,
+we consider time steps at two adjacent levels, :math:`h^S > h^F`, where
+:math:`h^S` is the step size used by MRIStep, and :math:`h^F` is the
+step size used to solve the corresponding fast-time-scale IVPs in
+MRIStep, :eq:`MRI_fast_IVP` and :eq:`MRI_embedding_fast_IVP`.
+
+
+.. _ARKODE.Mathematics.MultirateControllers:
+
+Multirate temporal controls
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+We consider two categories of temporal controllers that may be used within MRI
+methods.  The first (and simplest), are "decoupled" controllers, that consist of
+two separate single-rate temporal controllers: one that adapts the slow time scale
+step size, :math:`h^S`, and the other that adapts the fast time scale step size,
+:math:`h^F`.  As these ignore any coupling between the two time scales, these
+methods should work well for multirate problems where the time scales are somewhat
+decoupled, and that errors introduced at one scale do not "pollute" the other.
+
+The second category of controllers that we provide are :math:`h^S`-:math:`Tol` multirate
+controllers.  The basic idea is that an adaptive time integration method will
+attempt to adapt step sizes to control the *local error* within each step to
+achieve a requested tolerance.  However, MRI methods must ask an adaptive "inner"
+solver to produce the stage solutions :math:`v_i(t_{F,i})` and
+:math:`\tilde{v}(\tilde{t}_{F})`, that result from sub-stepping over intervals
+:math:`[t_{0,i},t_{F,i}]` or :math:`[\tilde{t}_{0},\tilde{t}_{F}]`, respectively.
+Local errors within the inner integrator may accumulate, resulting in an overall
+inner solver error :math:`\varepsilon^F_n` that exceeds the requested tolerance.
+If that inner solver can produce *both* :math:`v_i(t_{F,i})` and
+an estimation of the accumulated error, :math:`\varepsilon^F_{n,approx}`, then the
+tolerances provided to that inner solver can be adjusted accordingly to
+ensure stage solutions that are within the overall tolerances requested of the outer
+MRI method.
+
+To this end, we assume that the inner solver will provide accumulated errors
+over each fast interval having the form
+
+.. math::
+   \varepsilon^F_{n} = c(t_n) h^S_n \left(\text{RTOL}_n^F\right),
+   :label: fast_error_accumulation_assumption
+
+where :math:`c(t)` is independent of the tolerance or step size, but may vary in time.
+Single-scale adaptive controllers assume that the local error at a step :math:`n` with step
+size :math:`h_n` has order :math:`p`, i.e.,
+
+.. math::
+   LTE_n = c(t_n) (h_n)^{p+1},
+
+to predict candidate values :math:`h_{n+1}`.  We may therefore repurpose an existing
+single-scale controller to predict candidate values :math:`\text{RTOL}^F_{n+1}` by
+supplying an "order" :math:`p=0` and a "control parameter"
+:math:`h_n=\left(\text{RTOL}_n^F\right)`.
+
+Thus to construct an :math:`h^S`-:math:`Tol` controller, we require three separate single-rate
+adaptivity controllers:
+
+* scontrol-H -- this is a single-rate controller that adapts :math:`h^S_n` within the
+  slow integrator to achieve user-requested solution tolerances.
+
+* scontrol-Tol -- this is a single-rate controller that adapts :math:`\text{RTOL}^F_n`
+  using the strategy described above.
+
+* fcontrol -- this adapts time steps :math:`h^F` within the fast integrator to achieve
+  the current tolerance, :math:`\text{RTOL}^F_n`.
+
+We note that both the decoupled and :math:`h^S`-:math:`Tol` controller families may be used in
+multirate calculations with an arbitrary number of time scales, since these focus on only
+one scale at a time, or on how a given time scale relates to the next-faster scale.
+
+
+.. _ARKODE.Mathematics.MultirateFastError:
+
+Fast temporal error estimation
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+MRI temporal adaptivity requires estimation of the temporal errors that
+arise at *both* the slow and fast time scales, which we denote here as
+:math:`\varepsilon^S` and :math:`\varepsilon^F`, respectively.  While the
+slow error may be estimated as :math:`\varepsilon^S = \|y_n - \tilde{y}_n\|`,
+non-intrusive approaches for estimating :math:`\varepsilon^F` are more
+challenging.  ARKODE provides several strategies to help provide this estimate, all
+of which assume the fast integrator is temporally adaptive and, at each of its
+:math:`m` steps to reach :math:`t_n`, computes an estimate of the local
+temporal error, :math:`\varepsilon^F_{n,m}`. In this case, we assume that the
+fast integrator was run with the same absolute tolerances as the slow integrator, but
+that it may have used a potentially different relative solution tolerance,
+:math:`\text{RTOL}^F`.  The fast integrator then accumulates these local error
+estimates using either a "maximum accumulation" strategy,
+
+.. math::
+   \varepsilon^F_{max} = \text{RTOL}^F \max_{m\in \mathcal{S}} \|\varepsilon^F_{n,m}\|_{WRMS},
+   :label: maximum_accumulation
+
+an "additive accumulation" strategy,
+
+.. math::
+   \varepsilon^F_{sum} = \text{RTOL}^F \sum_{m\in \mathcal{S}} \|\varepsilon^F_{n,m}\|_{WRMS},
+   :label: additive_accumulation
+
+or using an "averaged accumulation" strategy,
+
+.. math::
+   \varepsilon^F_{avg} = \frac{\text{RTOL}^F}{\Delta t_{\mathcal{S}}} \sum_{m\in \mathcal{S}} h_{n,m} \|\varepsilon^F_{n,m}\|_{WRMS},
+   :label: average_accumulation
+
+where :math:`h_{n,m}` is the step size that gave rise to :math:`\varepsilon^F_{n,m}`,
+:math:`\Delta t_{\mathcal{S}}` denotes the elapsed time over which :math:`\mathcal{S}`
+is taken, and the norms are taken using the tolerance-informed error-weight vector.  In
+each case, the sum or the maximum is taken over the set of all steps :math:`\mathcal{S}`
+since the fast error accumulator has been reset.
+
+
+
+.. _ARKODE.Mathematics.InitialStep:
+
+Initial step size estimation
+==============================
+
+Before time step adaptivity can be accomplished, an initial step must be taken.  These
+values may always be provided by the user; however, if these are not provided then
+ARKODE will estimate a suitable choice.  Typically
+with adaptive methods, the first step should be chosen conservatively to ensure
+that it succeeds both in its internal solver algorithms, and its eventual temporal error
+test.  However, if this initial step is too conservative then its computational cost will
+essentially be wasted.  We thus strive to construct a conservative step that will succeed
+while also progressing toward the eventual solution.
+
+Before commenting on the specifics of ARKODE, we first summarize two common
+approaches to initial step size selection.  To this end, consider a simple
+single-time-scale ODE,
+
+.. math::
+   y'(t) = f(t,y), \quad y(t_0) = y_0
+   :label: IVP_single
+
+For this, we may consider two Taylor series expansions of :math:`y(t_0+h)` around the
+initial time,
+
+.. math::
+    y(t_0+h) = y_0 + h f(t_0,y_0) + \frac{h^2}{2} \frac{\mathrm d}{\mathrm dt} f(t_0+\tau,y_0+\eta),\\
+    :label: TSExp1
+
+and
+
+.. math::
+   y(t_0+h) = y_0 + h f(t_0+\tau,y_0+\eta),
+   :label: TSExp0
+
+where :math:`t_0+\tau` is between :math:`t_0` and :math:`t_0+h`, and :math:`y_0+\eta`
+is on the line segment connecting :math:`y_0` and :math:`y(t_0+h)`.
+
+Initial step size estimation based on the first-order Taylor expansion :eq:`TSExp1`
+typically attempts to determine a step size such that an explicit Euler method
+for :eq:`IVP_single` would be sufficiently accurate, i.e.,
+
+.. math::
+   \|y(t_0+h_0) - \left(y_0 + h_0 f(t_0,y_0)\right)\| \approx \left\|\frac{h^2}{2} \frac{\mathrm d}{\mathrm dt} f(t_0,y_0)\right\| < 1,
+
+where we have assumed that :math:`y(t)` is sufficiently differentiable, and that the
+norms include user-specified tolerances such that an error with norm less than one is
+deemed "acceptable."  Satisfying this inequality with a value of :math:`\frac12` and
+solving for :math:`h_0`, we have
+
+.. math::
+   |h_0| = \frac{1}{\left\|\frac{\mathrm d}{\mathrm dt} f(t_0,y_0)\right\|^{1/2}}.
+
+Finally, by estimating the time derivative with finite-differences,
+
+.. math::
+   \frac{\mathrm d}{\mathrm dt} f(t_0,y_0) \approx \frac{1}{\delta t} \left(f(t_0+\delta t,y_0+\delta t f(t_0,y_0)) - f(t_0,y_0)\right),
+
+we obtain
+
+.. math::
+   |h_0| = \frac{{\delta t}^{1/2}}{\|f(t_0+\delta t,y_0+\delta t f(t_0,y_0)) - f(t_0,y_0)\|^{1/2}}.
+   :label: H0_TSExp1
+
+Initial step size estimation based on the simpler Taylor expansion :eq:`TSExp0`
+instead assumes that the first calculated time step should be "close" to the
+initial state,
+
+.. math::
+   \|y(t_0+h_0) - y_0 \| \approx \left\|h_0 f(t_0,y_0)\right\| < 1,
+
+where we again satisfy the inequality with a value of :math:`\frac12` to obtain
+
+.. math::
+   |h_0| = \frac{1}{2\left\| f(t_0,y_0)\right\|}.
+   :label: H0_TSExp0
+
+
+
+Comparing the two estimates :eq:`H0_TSExp1` and :eq:`H0_TSExp0`, we see that the
+former has double the number of :math:`f` evaluations, but that it has a less
+conservative estimate of :math:`h_0`, particularly since we expect any valid
+time integration method to have at least :math:`\mathcal{O}(h)` accuracy.
+
+Of these two approaches, for calculations at a single time scale (e.g., using ARKStep),
+formula :eq:`H0_TSExp1` is used, due to its more aggressive estimate for :math:`h_0`.
+
+
+.. _ARKODE.Mathematics.MultirateInitialSteps:
+
+Initial multirate step sizes
+------------------------------
+
+In MRI methods, initial time step selection is complicated by the fact that not only must
+an initial slow step size, :math:`h_0^S`, be chosen, but a smaller initial step,
+:math:`h_0^F`, must also be selected.  Additionally, it is typically assumed that within
+MRI methods, evaluation of :math:`f^S` is significantly more costly than evaluation of
+:math:`f^F`, and thus we wish to construct these initial steps accordingly.
+
+Under an assumption that conservative steps will be selected for both time scales,
+the error arising from temporal coupling between the slow and fast methods may be
+negligible.  Thus, we estimate initial values of :math:`h^S_0` and :math:`h^F_0`
+independently.  Due to our assumed higher cost of :math:`f^S`, then for the slow
+time scale we employ the initial estimate :eq:`H0_TSExp0` for :math:`h^S_0` using
+:math:`f = f^S`.  Since the function :math:`f^F` is assumed to be cheaper, we
+instead apply the estimate :eq:`H0_TSExp1` for :math:`h^F_0` using :math:`f=f^F`,
+and enforce an upper bound :math:`|h^F_0| \le \frac{|h^S_0|}{10}`.
+
+.. note::
+
+   If the fast integrator does not supply its "full RHS function" :math:`f^F`
+   for the MRI method to call, then we simply initialize :math:`h^F_0 = \frac{h^S_0}{100}`.
 
 
 
@@ -1002,14 +1553,12 @@ Here the explicit stability step factor :math:`c>0` (often called the
 Fixed time stepping
 ===================
 
-While both the ARKStep and ERKStep time-stepping modules are designed
-for tolerance-based time step adaptivity, they additionally support a
-"fixed-step" mode (*note: fixed-step mode is currently required for
-the slow time scale in the MRIStep module*).  This mode is typically
-used for debugging purposes, for verification against hand-coded
-Runge--Kutta methods, or for problems where the time steps should be
-chosen based on other problem-specific information.  In this mode,
-all internal time step adaptivity is disabled:
+While most of the time-stepping modules are
+designed for tolerance-based time step adaptivity, they additionally support a
+"fixed-step" mode. This mode is typically used for debugging
+purposes, for verification against hand-coded methods, or for
+problems where the time steps should be chosen based on other problem-specific
+information.  In this mode, all internal time step adaptivity is disabled:
 
 * temporal error control is disabled,
 
@@ -1018,14 +1567,17 @@ all internal time step adaptivity is disabled:
 
 * no check against an explicit stability condition is performed.
 
+.. note::
+   Since temporal error based adaptive time-stepping is known to ruin the
+   conservation property of SPRK methods, SPRKStep employs a fixed time-step
+   size by default.
 
-Additional information on this mode is provided in the sections
-:ref:`ARKStep Optional Inputs <ARKODE.Usage.ARKStep.OptionalInputs>`,
-:ref:`ERKStep Optional Inputs <ARKODE.Usage.ERKStep.OptionalInputs>`, and
-:ref:`MRIStep Optional Inputs <ARKODE.Usage.MRIStep.OptionalInputs>`.
+.. note::
+   Any methods that do not provide an embedding are required to be run in fixed-step mode.
 
 
-
+Additional information on this mode is provided in the section
+:ref:`ARKODE Optional Inputs <ARKODE.Usage.OptionalInputs>`.
 
 
 .. _ARKODE.Mathematics.AlgebraicSolvers:
@@ -1057,17 +1609,14 @@ Nonlinear solver methods
 ------------------------------------
 
 
-For the DIRK and ARK methods corresponding to :eq:`ARKODE_IMEX_IVP` and
-:eq:`ARKODE_IVP_implicit` in ARKStep, and the solve-decoupled implicit slow
-stages :eq:`ARKODE_MRI_delta_c_zero` in MRIStep, an implicit system
+Methods with an implicit partition require solving implicit systems of the form
 
 .. math::
-   G(z_i) = 0
+   G(z_i) = 0.
    :label: ARKODE_Residual
 
-must be solved for each implicit stage :math:`z_i`.  In order to
-maximize solver efficiency, we define this root-finding problem differently
-based on the type of mass-matrix supplied by the user.
+In order to maximize solver efficiency, we define this root-finding problem
+differently based on the type of mass-matrix supplied by the user.
 
 * In the case that :math:`M=I` within ARKStep, we define the residual as
 
@@ -1123,18 +1672,30 @@ based on the type of mass-matrix supplied by the user.
      As above, this form of the residual is chosen to remove excessive
      mass-matrix solves from the nonlinear solve process.
 
-* Similarly, in MRIStep (that always assumes :math:`M=I`), we have the residual
+* Similarly, in MRIStep (that always assumes :math:`M=I`), MRI-GARK and IMEX-MRI-GARK methods
+  have the residual
 
   .. math::
-     G(z_i) \equiv z_i - h^S \left(\sum_{k\geq 0} \frac{\gamma_{i,i}^{\{k\}}}{k+1}\right)
+     G(z_i) \equiv z_i - h^S \left(\sum_{k\geq 1} \frac{\Gamma_{i,i,k}}{k}\right)
      f^I(t_{n,i}^S, z_i) - a_i = 0
-     :label: ARKODE_MRIStep_Residual
+     :label: ARKODE_IMEX-MRI-GARK_Residual
 
   where
 
   .. math::
-     a_i \equiv z_{i-1} + h^S \sum_{j=1}^{i-1} \left(\sum_{k\geq 0}
-     \frac{\gamma_{i,j}^{\{k\}}}{k+1}\right)f^I(t_{n,j}^S, z_j).
+     a_i \equiv z_{i-1} + h^S \sum_{j=1}^{i-1} \left(\sum_{k\geq 1}
+     \frac{\Gamma_{i,j,k}}{k}\right)f^I(t_{n,j}^S, z_j).
+
+  IMEX-MRI-SR methods have the residual
+
+  .. math::
+     G(z_i) \equiv z_i - h^S \Gamma_{i,i} f^I(t_{n,i}^S, z_i) - a_i = 0
+     :label: ARKODE_IMEX-MRI-SR_Residual
+
+  where
+
+  .. math::
+     a_i \equiv z_{i-1} + h^S \sum_{j=1}^{i-1} \Gamma_{i,j} f^I(t_{n,j}^S, z_j).
 
 
 Upon solving for :math:`z_i`, method stages must store
@@ -1147,8 +1708,7 @@ Consider, for example, :eq:`ARKODE_Residual_MeqI` which implies
      :label: ARKODE_Implicit_Stage_Eval
 
 when :math:`z_i` is the exact root, and similar relations hold for non-identity
-mass matrices.  This optimization can be enabled by
-:c:func:`ARKStepSetDeduceImplicitRhs` and :c:func:`MRIStepSetDeduceImplicitRhs`
+mass matrices.  This optimization can be enabled by :c:func:`ARKodeSetDeduceImplicitRhs`
 with the second argument in either function set to SUNTRUE. Another factor to
 consider when using this option is the amplification of errors from the
 nonlinear solver to the stages. In :eq:`ARKODE_Implicit_Stage_Eval`, nonlinear
@@ -1194,7 +1754,7 @@ within ARKStep, or
 .. math::
    {\mathcal A}(t,z) \approx I - \gamma J(t,z), \quad
    J(t,z) = \frac{\partial f^I(t,z)}{\partial z}, \quad\text{and}\quad
-   \gamma = h^S \sum_{k\geq 0} \frac{\gamma_{i,i}^{\{k\}}}{k+1}
+   \gamma = h^S \sum_{k\geq 1} \frac{\Gamma_{i,i,k}}{k}
    :label: ARKODE_NewtonMatrix_MRIStep
 
 within MRIStep.
@@ -1289,7 +1849,7 @@ or
 .. math::
    \tilde{\mathcal A}(\tilde{t},\tilde{z}) \approx I - \tilde{\gamma} J(\tilde{t},\tilde{z}),
    \quad\text{and}\quad
-   \tilde{\gamma} = \tilde{h} \sum_{k\geq 0} \frac{\gamma_{i,i}^{\{k\}}}{k+1}\quad\text{(MRIStep)}.
+   \tilde{\gamma} = \tilde{h} \sum_{k\geq 1} \frac{\Gamma_{i,i,k}}{k}\quad\text{(MRIStep)}.
    :label: ARKODE_modified_NewtonMatrix_MRI
 
 Here, the solution :math:`\tilde{z}`, time :math:`\tilde{t}`, and step
@@ -1303,7 +1863,7 @@ but may be modified by the user.
 
 When using the dense and band SUNMatrix objects for the linear systems
 :eq:`ARKODE_modified_Newton_system`, the Jacobian :math:`J` may be supplied
-by a user routine, or approximated internally by finite-differences.
+by a user routine, or approximated internally with finite-differences.
 In the case of differencing, we use the standard approximation
 
 .. math::
@@ -1390,23 +1950,21 @@ following circumstances:
 * if the problem is linearly implicit and :math:`\gamma` has
   changed by a factor larger than 100 times machine epsilon.
 
-When an update is forced due to a convergence failure, an update of
-:math:`\tilde{\mathcal A}` or :math:`P` may or may not involve a
-re-evaluation of :math:`J` (in :math:`\tilde{\mathcal A}`) or of
-Jacobian data (in :math:`P`), depending on whether errors in the
-Jacobian were the likely cause of the failure.  More generally, the
-decision is made to re-evaluate :math:`J` (or instruct the user to
-update :math:`P`) when:
+When an update of :math:`\tilde{\mathcal A}` or :math:`P` occurs, it may or may
+not involve a reevaluation of :math:`J` (in :math:`\tilde{\mathcal A}`) or of
+Jacobian data (in :math:`P`), depending on whether errors in the Jacobian were
+the likely cause for the update. Reevaluating :math:`J` (or instructing the
+user to update :math:`P`) occurs when:
 
 * starting the problem,
-* more than :math:`msbj=50` steps have been taken since the last evaluation,
+* more than :math:`msbj=50` steps have been taken since the last evaluation
+  (this value may be modified by the user),
 * a convergence failure occurred with an outdated matrix, and the
   value :math:`\tilde{\gamma}` of :math:`\gamma` at the last update
   satisfies :math:`\left|\gamma/\tilde{\gamma} - 1\right| > 0.2`,
 * a convergence failure occurred that forced a step size reduction, or
 * if the problem is linearly implicit and :math:`\gamma` has
   changed by a factor larger than 100 times machine epsilon.
-
 
 However, for linear solvers and preconditioners that do not
 rely on costly matrix construction and factorization operations
@@ -1957,10 +2515,9 @@ step (but zero linear solves with the system Jacobian).
 Rootfinding
 ===============
 
-All of the time-stepping modules in ARKODE also support a rootfinding
-feature.  This means that, while integrating the IVP :eq:`ARKODE_IVP`, these
-can also find the roots of a set of user-defined functions
-:math:`g_i(t,y)` that depend on :math:`t` and the solution vector
+ARKODE also supports a rootfinding feature, in that while integrating the
+IVP :eq:`ARKODE_IVP`, these can also find the roots of a set of user-defined
+functions :math:`g_i(t,y)` that depend on :math:`t` and the solution vector
 :math:`y = y(t)`. The number of these root functions is arbitrary, and
 if more than one :math:`g_i` is found to have a root in any given
 interval, the various root locations are found and reported in the
@@ -2074,5 +2631,69 @@ factor of 0.9 to cover the strict inequality case). If a step fails to satisfy
 the constraints 10 times (a value which may be modified by the user) within a
 step attempt, or fails with the minimum step size, then the integration is halted
 and an error is returned. In this case the user may need to employ other
-strategies as discussed in :numref:`ARKODE.Usage.ARKStep.Tolerances` and
-:numref:`ARKODE.Usage.ERKStep.Tolerances` to satisfy the inequality constraints.
+strategies as discussed in :numref:`ARKODE.Usage.Tolerances` to satisfy the
+inequality constraints.
+
+.. _ARKODE.Mathematics.Relaxation:
+
+Relaxation Methods
+==================
+
+When the solution of :eq:`ARKODE_IVP` is conservative or dissipative with
+respect to a smooth *convex* function :math:`\xi(y(t))`, it is desirable to have
+the numerical method preserve these properties. That is
+:math:`\xi(y_n) = \xi(y_{n-1}) = \ldots = \xi(y_{0})` for conservative systems
+and :math:`\xi(y_n) \leq \xi(y_{n-1})` for dissipative systems. For examples
+of such problems, see the references below and the citations there in.
+
+For such problems, ARKODE supports relaxation methods
+:cite:p:`ketcheson2019relaxation, kang2022entropy, ranocha2020relaxation, ranocha2020hamiltonian`
+applied to ERK, DIRK, or ARK methods to ensure dissipation or preservation of
+the global function. The relaxed solution is given by
+
+.. math::
+   y_r = y_{n-1} + r d = r y_n + (1 - r) y_{n - 1}
+   :label: ARKODE_RELAX_SOL
+
+where :math:`d` is the update to :math:`y_n` (i.e.,
+:math:`h_n \sum_{i=1}^{s}(b^E_i \hat{f}^E_i + b^I_i \hat{f}^I_i)` for ARKStep
+and :math:`h_n \sum_{i=1}^{s} b_i f_i` for ERKStep) and :math:`r` is the
+relaxation factor selected to ensure conservation or dissipation. Given an ERK,
+DIRK, or ARK method of at least second order with non-negative solution weights
+(i.e., :math:`b_i \geq 0` for ERKStep or :math:`b^E_i \geq 0` and
+:math:`b^I_i \geq 0` for ARKStep), the factor :math:`r` is computed by solving
+the auxiliary scalar nonlinear system
+
+.. math::
+   F(r) = \xi(y_{n-1} + r d) - \xi(y_{n-1}) - r e = 0
+   :label: ARKODE_RELAX_NLS
+
+at the end of each time step. The estimated change in :math:`\xi` is given by
+:math:`e \equiv h_n \sum_{i=1}^{s} \langle \xi'(z_i), b^E_i f^E_i + b^I_i f^I_i \rangle`
+where :math:`\xi'` is the Jacobian of :math:`\xi`.
+
+Two iterative methods are provided for solving :eq:`ARKODE_RELAX_NLS`, Newton's
+method and Brent's method. When using Newton's method (the default), the
+iteration is halted either when the residual tolerance is met,
+:math:`F(r^{(k)}) < \epsilon_{\mathrm{relax\_res}}`, or when the difference
+between successive iterates satisfies the relative and absolute tolerances,
+:math:`|\delta_r^{(k)}| = |r^{(k)} - r^{(k-1)}| < \epsilon_{\mathrm{relax\_rtol}} |r^{(k-1)}| + \epsilon_{\mathrm{relax\_atol}}`.
+Brent's method applies the same residual tolerance check and additionally halts
+when the bisection update satisfies the relative and absolute tolerances,
+:math:`|0.5 (r_c - r^{k})| < \epsilon_{\mathrm{relax\_rtol}} |r^{(k)}| + 0.5 \epsilon_{\mathrm{relax\_atol}}`
+where :math:`r_c` and :math:`r^{(k)}` bound the root.
+
+If the nonlinear solve fails to meet the specified tolerances within the maximum
+allowed number of iterations, the step size is reduced by the factor
+:math:`\eta_\mathrm{rf}` (default 0.25) and the step is repeated. Additionally,
+the solution of :eq:`ARKODE_RELAX_NLS` should be
+:math:`r = 1 + \mathcal{O}(h_n^{q - 1})` for a method of order :math:`q`
+:cite:p:`ranocha2020relaxation`. As such, limits are imposed on the range of
+relaxation values allowed (i.e., limiting the maximum change in step size due to
+relaxation). A relaxation value greater than :math:`r_\text{max}` (default 1.2)
+or less than :math:`r_\text{min}` (default 0.8), is considered as a failed
+relaxation application and the step will is repeated with the step size reduced
+by :math:`\eta_\text{rf}`.
+
+For more information on utilizing relaxation Runge--Kutta methods, see
+:numref:`ARKODE.Usage.Relaxation`.

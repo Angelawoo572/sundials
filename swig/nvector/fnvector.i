@@ -2,7 +2,7 @@
 // Programmer: Cody J. Balos @ LLNL
 // ---------------------------------------------------------------
 // SUNDIALS Copyright Start
-// Copyright (c) 2002-2022, Lawrence Livermore National Security
+// Copyright (c) 2002-2024, Lawrence Livermore National Security
 // and Southern Methodist University.
 // All rights reserved.
 //
@@ -22,7 +22,7 @@
 %}
 
 // Load the typedefs and generate "use" statements
-%import "../sundials/fsundials_nvector_mod.i"
+%import "../sundials/fsundials_core_mod.i"
 
 // Macro for creating an interface to an N_Vector
 %define %nvector_impl(TYPE)
@@ -32,5 +32,10 @@
   %ignore N_VLinearCombinationVectorArray_## TYPE ##;
   %ignore N_VEnableScaleAddMultiVectorArray_## TYPE ##;
   %ignore N_VEnableLinearCombinationVectorArray_## TYPE ##;
+  // Ignore GetArrayPointer functions because we manually insert them
+  %ignore N_VGetArrayPointer_## TYPE ##;
+  %ignore N_VGetDeviceArrayPointer_## TYPE ##;
+  %ignore N_VGetSubvectorArrayPointer_## TYPE ##;
+  %ignore N_VGeSubvectortDeviceArrayPointer_## TYPE ##;
 %enddef
 

@@ -2,7 +2,7 @@
 # Programmer(s): David J. Gardner @ LLNL
 # ---------------------------------------------------------------
 # SUNDIALS Copyright Start
-# Copyright (c) 2002-2022, Lawrence Livermore National Security
+# Copyright (c) 2002-2024, Lawrence Livermore National Security
 # and Southern Methodist University.
 # All rights reserved.
 #
@@ -15,6 +15,14 @@
 # ---------------------------------------------------------------
 
 message("Adding units tests")
+
+# Disable some warnings for tests
+if(ENABLE_ALL_WARNINGS)
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-unused-parameter")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-parameter")
+endif()
+
+add_subdirectory(sundials)
 
 if(BUILD_ARKODE)
   add_subdirectory(arkode)
@@ -41,5 +49,9 @@ if(BUILD_KINSOL)
 endif()
 
 if(CXX_FOUND)
-  add_subdirectory(reductions)
+  add_subdirectory(logging)
+  add_subdirectory(sunmemory)
+  if(SUNDIALS_BUILD_WITH_PROFILING)
+    add_subdirectory(profiling)
+  endif()
 endif()

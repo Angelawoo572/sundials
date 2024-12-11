@@ -2,7 +2,7 @@
 # Programmer(s): Steven Smith and Cody J. Balos @ LLNL
 # -----------------------------------------------------------------------------
 # SUNDIALS Copyright Start
-# Copyright (c) 2002-2022, Lawrence Livermore National Security
+# Copyright (c) 2002-2024, Lawrence Livermore National Security
 # and Southern Methodist University.
 # All rights reserved.
 #
@@ -38,7 +38,8 @@ endif()
 
 # KLU does not support single or extended precision
 if(SUNDIALS_PRECISION MATCHES "SINGLE" OR SUNDIALS_PRECISION MATCHES "EXTENDED")
-  print_error("KLU is not compatible with ${SUNDIALS_PRECISION} precision")
+  message(
+    FATAL_ERROR "KLU is not compatible with ${SUNDIALS_PRECISION} precision")
 endif()
 
 # -----------------------------------------------------------------------------
@@ -57,55 +58,78 @@ message(STATUS "KLU_INCLUDE_DIR: ${KLU_INCLUDE_DIR}")
 if(KLU_FOUND AND (NOT KLU_WORKS))
   # Do any checks which don't require compilation first.
 
+  if(SUNDIALS_INDEX_SIZE MATCHES "64")
+    # Check size of SuiteSparse_long
+    include(CheckTypeSize)
+    set(save_CMAKE_EXTRA_INCLUDE_FILES ${CMAKE_EXTRA_INCLUDE_FILES})
+    list(APPEND CMAKE_EXTRA_INCLUDE_FILES "klu.h")
+    set(save_CMAKE_REQUIRED_INCLUDES ${CMAKE_REQUIRED_INCLUDES})
+    list(APPEND CMAKE_REQUIRED_INCLUDES ${KLU_INCLUDE_DIR})
+    check_type_size("SuiteSparse_long" SIZEOF_SUITESPARSE_LONG)
+    set(CMAKE_EXTRA_INCLUDE_FILES ${save_CMAKE_EXTRA_INCLUDE_FILES})
+    set(CMAKE_REQUIRED_INCLUDES ${save_CMAKE_REQUIRED_INCLUDES})
+    message(STATUS "Size of SuiteSparse_long is ${SIZEOF_SUITESPARSE_LONG}")
+    if(NOT SIZEOF_SUITESPARSE_LONG EQUAL "8")
+      message(
+        FATAL_ERROR
+          "Size of 'sunindextype' is 8 but size of 'SuiteSparse_long' is ${SIZEOF_SUITESPARSE_LONG}. KLU cannot be used."
+      )
+    endif()
+  endif()
+
   # Create the KLU_TEST directory
   set(KLU_TEST_DIR ${PROJECT_BINARY_DIR}/KLU_TEST)
   file(MAKE_DIRECTORY ${KLU_TEST_DIR})
 
   # Create a CMakeLists.txt file
-  file(WRITE ${KLU_TEST_DIR}/CMakeLists.txt
-  "CMAKE_MINIMUM_REQUIRED(VERSION ${CMAKE_VERSION})\n"
-  "PROJECT(ltest C)\n"
-  "SET(CMAKE_VERBOSE_MAKEFILE ON)\n"
-  "SET(CMAKE_BUILD_TYPE \"${CMAKE_BUILD_TYPE}\")\n"
-  "SET(CMAKE_C_COMPILER \"${CMAKE_C_COMPILER}\")\n"
-  "SET(CMAKE_C_STANDARD \"${CMAKE_C_STANDARD}\")\n"
-  "SET(CMAKE_C_FLAGS \"${CMAKE_C_FLAGS}\")\n"
-  "SET(CMAKE_C_FLAGS_RELEASE \"${CMAKE_C_FLAGS_RELEASE}\")\n"
-  "SET(CMAKE_C_FLAGS_DEBUG \"${CMAKE_C_FLAGS_DEBUG}\")\n"
-  "SET(CMAKE_C_FLAGS_RELWITHDEBUGINFO \"${CMAKE_C_FLAGS_RELWITHDEBUGINFO}\")\n"
-  "SET(CMAKE_C_FLAGS_MINSIZE \"${CMAKE_C_FLAGS_MINSIZE}\")\n"
-  "INCLUDE_DIRECTORIES(${KLU_INCLUDE_DIR})\n"
-  "ADD_EXECUTABLE(ltest ltest.c)\n"
-  "TARGET_LINK_LIBRARIES(ltest ${KLU_LIBRARIES})\n")
+  file(
+    WRITE ${KLU_TEST_DIR}/CMakeLists.txt
+    "CMAKE_MINIMUM_REQUIRED(VERSION ${CMAKE_VERSION})\n"
+    "PROJECT(ltest C)\n"
+    "SET(CMAKE_VERBOSE_MAKEFILE ON)\n"
+    "SET(CMAKE_BUILD_TYPE \"${CMAKE_BUILD_TYPE}\")\n"
+    "SET(CMAKE_C_COMPILER \"${CMAKE_C_COMPILER}\")\n"
+    "SET(CMAKE_C_STANDARD \"${CMAKE_C_STANDARD}\")\n"
+    "SET(CMAKE_C_FLAGS \"${CMAKE_C_FLAGS}\")\n"
+    "SET(CMAKE_C_FLAGS_RELEASE \"${CMAKE_C_FLAGS_RELEASE}\")\n"
+    "SET(CMAKE_C_FLAGS_DEBUG \"${CMAKE_C_FLAGS_DEBUG}\")\n"
+    "SET(CMAKE_C_FLAGS_RELWITHDEBUGINFO \"${CMAKE_C_FLAGS_RELWITHDEBUGINFO}\")\n"
+    "SET(CMAKE_C_FLAGS_MINSIZE \"${CMAKE_C_FLAGS_MINSIZE}\")\n"
+    "INCLUDE_DIRECTORIES(${KLU_INCLUDE_DIR})\n"
+    "ADD_EXECUTABLE(ltest ltest.c)\n"
+    "TARGET_LINK_LIBRARIES(ltest ${KLU_LIBRARIES})\n")
 
   # Create a C source file which calls a KLU function
   file(WRITE ${KLU_TEST_DIR}/ltest.c
-  "\#include \"klu.h\"\n"
-  "int main(){\n"
-  "klu_common Common;\n"
-  "klu_defaults (&Common);\n"
-  "return(0);\n"
-  "}\n")
+       "\#include \"klu.h\"\n" "int main(void) {\n" "klu_common Common;\n"
+       "klu_defaults (&Common);\n" "return(0);\n" "}\n")
 
-  # To ensure we do not use stuff from the previous attempts,
-  # we must remove the CMakeFiles directory.
+  # To ensure we do not use stuff from the previous attempts, we must remove the
+  # CMakeFiles directory.
   file(REMOVE_RECURSE ${KLU_TEST_DIR}/CMakeFiles)
 
   # Attempt to build and link the "ltest" executable
-  try_compile(COMPILE_OK ${KLU_TEST_DIR} ${KLU_TEST_DIR} ltest
+  try_compile(
+    COMPILE_OK ${KLU_TEST_DIR}
+    ${KLU_TEST_DIR} ltest
     OUTPUT_VARIABLE COMPILE_OUTPUT)
 
   # Process test result
   if(COMPILE_OK)
     message(STATUS "Checking if KLU works... OK")
-    set(KLU_WORKS TRUE CACHE BOOL "KLU works with SUNDIALS as configured" FORCE)
+    set(KLU_WORKS
+        TRUE
+        CACHE BOOL "KLU works with SUNDIALS as configured" FORCE)
   else()
     message(STATUS "Checking if KLU works... FAILED")
     message(STATUS "Check output: ")
     message("${COMPILE_OUTPUT}")
-    print_error("SUNDIALS interface to KLU is not functional.")
+    message(FATAL_ERROR "SUNDIALS interface to KLU is not functional.")
   endif()
 
 elseif(KLU_FOUND AND KLU_WORKS)
-  message(STATUS "Skipped KLU tests, assuming KLU works with SUNDIALS. Set KLU_WORKS=FALSE to (re)run compatibility test.")
+  message(
+    STATUS
+      "Skipped KLU tests, assuming KLU works with SUNDIALS. Set KLU_WORKS=FALSE to (re)run compatibility test."
+  )
 endif()
