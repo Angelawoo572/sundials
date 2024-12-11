@@ -53,6 +53,12 @@ backends with Trilinos. As such, Trilinos 14 or newer is required and the
 
 Example programs using *hypre* have been updated to support v2.20 and newer.
 
+The information level logging output in ARKODE, CVODE(S), and IDA(S) has been
+updated to be more uniform across the packages and a new ``tools`` directory
+has been added with a Python module, ``suntools``, containing utilities for
+parsing logging output. The Python utilities for parsing CSV output have been
+relocated from the ``scripts`` directory to the Python module.
+
 The build system has been updated to utilize the CMake LAPACK imported target
 which should ease building SUNDIALS with LAPACK libraries that require setting
 specific linker flags e.g., MKL.
@@ -74,6 +80,9 @@ Added a utility routine to wrap any valid ARKODE integrator for use as an MRISte
 inner stepper object, :c:func:`ARKodeCreateMRIStepInnerStepper`.
 
 **Bug Fixes**
+
+Fixed a build failure with the SYCL NVector when using Intel oneAPI 2025.0
+compilers. See GitHub Issue `#596 <https://github.com/LLNL/sundials/issues/596>`__.
 
 Fixed a bug where :c:func:`CVodeSetProjFailEta` would ignore the `eta`
 parameter.
