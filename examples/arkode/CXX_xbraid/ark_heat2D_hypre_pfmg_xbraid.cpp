@@ -165,7 +165,7 @@ struct UserData
   sunrealtype* Ssend;
   sunrealtype* Nsend;
 
-  // Send requests for neighor exchange
+  // Send requests for neighbor exchange
   MPI_Request reqSW;
   MPI_Request reqSE;
   MPI_Request reqSS;
@@ -215,7 +215,7 @@ struct UserData
                          //   3 - nonsymmetric R/B Gauss-Seidel
   HYPRE_Int pfmg_nrelax; // number of pre and post relaxation sweeps (2)
 
-  // Ouput variables
+  // Output variables
   int output;    // output level
   int nout;      // number of output times
   ofstream uout; // output file stream
@@ -238,13 +238,13 @@ struct UserData
   int x_nt;            // number of fine grid time points
   int x_skip;          // skip all work on first down cycle
   int x_max_levels;    // max number of levels
-  int x_min_coarse;    // min possible coarse gird size
+  int x_min_coarse;    // min possible coarse grid size
   int x_nrelax;        // number of CF relaxation sweeps on all levels
   int x_nrelax0;       // number of CF relaxation sweeps on level 0
   int x_tnorm;         // temporal stopping norm
   int x_cfactor;       // coarsening factor
   int x_cfactor0;      // coarsening factor on level 0
-  int x_max_iter;      // max number of interations
+  int x_max_iter;      // max number of iterations
   int x_storage;       // Full storage on levels >= storage
   int x_print_level;   // xbraid output level
   int x_access_level;  // access level
@@ -375,6 +375,13 @@ int main(int argc, char* argv[])
   flag = SUNContext_Create(comm_w, &ctx);
   if (check_flag(&flag, "SUNContext_Create", 1)) { return 1; }
 
+  // Initialize hypre if v2.20.0 or newer
+#if HYPRE_RELEASE_NUMBER >= 22000 || SUN_HYPRE_VERSION_MAJOR > 2 || \
+  (SUN_HYPRE_VERSION_MAJOR == 2 && SUN_HYPRE_VERSION_MINOR >= 20)
+  flag = HYPRE_Init();
+  if (check_flag(&flag, "HYPRE_Init", 1)) { return 1; }
+#endif
+
   // Set output process flag
   bool outproc = (myid == 0);
 
@@ -448,7 +455,7 @@ int main(int argc, char* argv[])
   }
 
   // --------------
-  // Setup ARKStep
+  // Setup ARKODE
   // --------------
 
   // Create integrator
@@ -456,45 +463,45 @@ int main(int argc, char* argv[])
   if (check_flag((void*)arkode_mem, "ARKStepCreate", 0)) { return 1; }
 
   // Specify tolerances
-  flag = ARKStepSStolerances(arkode_mem, udata->rtol, udata->atol);
-  if (check_flag(&flag, "ARKStepSStolerances", 1)) { return 1; }
+  flag = ARKodeSStolerances(arkode_mem, udata->rtol, udata->atol);
+  if (check_flag(&flag, "ARKodeSStolerances", 1)) { return 1; }
 
   // Attach user data
-  flag = ARKStepSetUserData(arkode_mem, (void*)udata);
-  if (check_flag(&flag, "ARKStepSetUserData", 1)) { return 1; }
+  flag = ARKodeSetUserData(arkode_mem, (void*)udata);
+  if (check_flag(&flag, "ARKodeSetUserData", 1)) { return 1; }
 
   // Attach linear solver
-  flag = ARKStepSetLinearSolver(arkode_mem, LS, NULL);
-  if (check_flag(&flag, "ARKStepSetLinearSolver", 1)) { return 1; }
+  flag = ARKodeSetLinearSolver(arkode_mem, LS, NULL);
+  if (check_flag(&flag, "ARKodeSetLinearSolver", 1)) { return 1; }
 
   if (udata->matvec)
   {
     // Attach Jacobian-vector product function
-    flag = ARKStepSetJacTimes(arkode_mem, NULL, JTimes);
-    if (check_flag(&flag, "ARKStepSetJacTimes", 1)) { return 1; }
+    flag = ARKodeSetJacTimes(arkode_mem, NULL, JTimes);
+    if (check_flag(&flag, "ARKodeSetJacTimes", 1)) { return 1; }
   }
 
   if (udata->prec)
   {
     // Attach preconditioner
-    flag = ARKStepSetPreconditioner(arkode_mem, PSetup, PSolve);
-    if (check_flag(&flag, "ARKStepSetPreconditioner", 1)) { return 1; }
+    flag = ARKodeSetPreconditioner(arkode_mem, PSetup, PSolve);
+    if (check_flag(&flag, "ARKodeSetPreconditioner", 1)) { return 1; }
 
     // Set linear solver setup frequency (update preconditioner)
-    flag = ARKStepSetLSetupFrequency(arkode_mem, udata->msbp);
-    if (check_flag(&flag, "ARKStepSetLSetupFrequency", 1)) { return 1; }
+    flag = ARKodeSetLSetupFrequency(arkode_mem, udata->msbp);
+    if (check_flag(&flag, "ARKodeSetLSetupFrequency", 1)) { return 1; }
   }
 
   // Set linear solver tolerance factor
-  flag = ARKStepSetEpsLin(arkode_mem, udata->epslin);
-  if (check_flag(&flag, "ARKStepSetEpsLin", 1)) { return 1; }
+  flag = ARKodeSetEpsLin(arkode_mem, udata->epslin);
+  if (check_flag(&flag, "ARKodeSetEpsLin", 1)) { return 1; }
 
   // Select method order
   if (udata->order > 1)
   {
     // Use an ARKode provided table
-    flag = ARKStepSetOrder(arkode_mem, udata->order);
-    if (check_flag(&flag, "ARKStepSetOrder", 1)) { return 1; }
+    flag = ARKodeSetOrder(arkode_mem, udata->order);
+    if (check_flag(&flag, "ARKodeSetOrder", 1)) { return 1; }
   }
   else
   {
@@ -518,8 +525,8 @@ int main(int argc, char* argv[])
   // Specify linearly implicit non-time-dependent RHS
   if (udata->linear)
   {
-    flag = ARKStepSetLinear(arkode_mem, 0);
-    if (check_flag(&flag, "ARKStepSetLinear", 1)) { return 1; }
+    flag = ARKodeSetLinear(arkode_mem, 0);
+    if (check_flag(&flag, "ARKodeSetLinear", 1)) { return 1; }
   }
 
   // Set adaptive stepping (XBraid with temporal refinement) options
@@ -528,16 +535,16 @@ int main(int argc, char* argv[])
     // Use I controller with default parameters
     C = SUNAdaptController_I(ctx);
     if (check_flag((void*)C, "SUNAdaptController_I", 0)) { return 1; }
-    flag = ARKStepSetAdaptController(arkode_mem, C);
-    if (check_flag(&flag, "ARKStepSetAdaptController", 1)) { return 1; }
+    flag = ARKodeSetAdaptController(arkode_mem, C);
+    if (check_flag(&flag, "ARKodeSetAdaptController", 1)) { return 1; }
 
     // Set the step size reduction factor limit (1 / refinement factor limit)
-    flag = ARKStepSetMinReduction(arkode_mem, ONE / udata->x_rfactor_limit);
-    if (check_flag(&flag, "ARKStepSetMinReduction", 1)) { return 1; }
+    flag = ARKodeSetMinReduction(arkode_mem, ONE / udata->x_rfactor_limit);
+    if (check_flag(&flag, "ARKodeSetMinReduction", 1)) { return 1; }
 
     // Set the failed solve step size reduction factor (1 / refinement factor)
-    flag = ARKStepSetMaxCFailGrowth(arkode_mem, ONE / udata->x_rfactor_fail);
-    if (check_flag(&flag, "ARKStepSetMaxCFailGrowth", 1)) { return 1; }
+    flag = ARKodeSetMaxCFailGrowth(arkode_mem, ONE / udata->x_rfactor_fail);
+    if (check_flag(&flag, "ARKodeSetMaxCFailGrowth", 1)) { return 1; }
   }
 
   // ------------------------
@@ -701,10 +708,17 @@ int main(int argc, char* argv[])
   // Clean up and return
   // --------------------
 
-  ARKStepFree(&arkode_mem); // Free integrator memory
-  SUNLinSolFree(LS);        // Free linear solver
-  N_VDestroy(u);            // Free vectors
-  FreeUserData(udata);      // Free user data
+  // Finalize hypre if v2.20.0 or newer
+#if HYPRE_RELEASE_NUMBER >= 22000 || SUN_HYPRE_VERSION_MAJOR > 2 || \
+  (SUN_HYPRE_VERSION_MAJOR == 2 && SUN_HYPRE_VERSION_MINOR >= 20)
+  flag = HYPRE_Finalize();
+  if (check_flag(&flag, "HYPRE_Finalize", 1)) { return 1; }
+#endif
+
+  ARKodeFree(&arkode_mem); // Free integrator memory
+  SUNLinSolFree(LS);       // Free linear solver
+  N_VDestroy(u);           // Free vectors
+  FreeUserData(udata);     // Free user data
   delete udata;
   braid_Destroy(core);                 // Free braid memory
   ARKBraid_Free(&app);                 // Free interface memory
@@ -1400,7 +1414,7 @@ static int PSetup(sunrealtype t, N_Vector u, N_Vector f, sunbooleantype jok,
   flag = HYPRE_StructPFMGCreate(udata->comm_c, &(udata->precond));
   if (flag != 0) { return -1; }
 
-  // Signal that the inital guess is zero
+  // Signal that the initial guess is zero
   flag = HYPRE_StructPFMGSetZeroGuess(udata->precond);
   if (flag != 0) { return -1; }
 
@@ -1473,7 +1487,7 @@ static int PSolve(sunrealtype t, N_Vector u, N_Vector f, N_Vector r, N_Vector z,
   flag = HYPRE_StructPFMGSolve(udata->precond, udata->Amatrix, udata->bvec,
                                udata->xvec);
 
-  // If a convergence error occured, clear the error and continue. For any
+  // If a convergence error occurred, clear the error and continue. For any
   // other error return with a recoverable error.
   if (flag == HYPRE_ERROR_CONV) { HYPRE_ClearError(HYPRE_ERROR_CONV); }
   else if (flag != 0) { return 1; }
@@ -2781,7 +2795,7 @@ static void InputHelp()
   cout << "  --noforcing             : disable forcing term" << endl;
   cout << "  --tf <time>             : final time" << endl;
   cout << "  --rtol <rtol>           : relative tolerance" << endl;
-  cout << "  --atol <atol>           : absoltue tolerance" << endl;
+  cout << "  --atol <atol>           : absolute tolerance" << endl;
   cout << "  --nonlinear             : disable linearly implicit flag" << endl;
   cout << "  --order <ord>           : method order" << endl;
   cout << "  --gmres                 : use GMRES linear solver" << endl;
@@ -2888,29 +2902,29 @@ static int OutputStats(void* arkode_mem, UserData* udata)
   bool outproc = (udata->myid_w == 0);
 
   // Get integrator and solver stats
-  long int nst, nst_a, netf, nfe, nfi, nni, ncfn, nli, nlcf, nsetups, nfi_ls, nJv;
-  flag = ARKStepGetNumSteps(arkode_mem, &nst);
-  if (check_flag(&flag, "ARKStepGetNumSteps", 1)) { return -1; }
-  flag = ARKStepGetNumStepAttempts(arkode_mem, &nst_a);
-  if (check_flag(&flag, "ARKStepGetNumStepAttempts", 1)) { return -1; }
-  flag = ARKStepGetNumErrTestFails(arkode_mem, &netf);
-  if (check_flag(&flag, "ARKStepGetNumErrTestFails", 1)) { return -1; }
-  flag = ARKStepGetNumRhsEvals(arkode_mem, &nfe, &nfi);
-  if (check_flag(&flag, "ARKStepGetNumRhsEvals", 1)) { return -1; }
-  flag = ARKStepGetNumNonlinSolvIters(arkode_mem, &nni);
-  if (check_flag(&flag, "ARKStepGetNumNonlinSolvIters", 1)) { return -1; }
-  flag = ARKStepGetNumNonlinSolvConvFails(arkode_mem, &ncfn);
-  if (check_flag(&flag, "ARKStepGetNumNonlinSolvConvFails", 1)) { return -1; }
-  flag = ARKStepGetNumLinIters(arkode_mem, &nli);
-  if (check_flag(&flag, "ARKStepGetNumLinIters", 1)) { return -1; }
-  flag = ARKStepGetNumLinConvFails(arkode_mem, &nlcf);
-  if (check_flag(&flag, "ARKStepGetNumLinConvFails", 1)) { return -1; }
-  flag = ARKStepGetNumLinSolvSetups(arkode_mem, &nsetups);
-  if (check_flag(&flag, "ARKStepGetNumLinSolvSetups", 1)) { return -1; }
-  flag = ARKStepGetNumLinRhsEvals(arkode_mem, &nfi_ls);
-  if (check_flag(&flag, "ARKStepGetNumLinRhsEvals", 1)) { return -1; }
-  flag = ARKStepGetNumJtimesEvals(arkode_mem, &nJv);
-  if (check_flag(&flag, "ARKStepGetNumJtimesEvals", 1)) { return -1; }
+  long int nst, nst_a, netf, nfi, nni, ncfn, nli, nlcf, nsetups, nfi_ls, nJv;
+  flag = ARKodeGetNumSteps(arkode_mem, &nst);
+  if (check_flag(&flag, "ARKodeGetNumSteps", 1)) { return -1; }
+  flag = ARKodeGetNumStepAttempts(arkode_mem, &nst_a);
+  if (check_flag(&flag, "ARKodeGetNumStepAttempts", 1)) { return -1; }
+  flag = ARKodeGetNumErrTestFails(arkode_mem, &netf);
+  if (check_flag(&flag, "ARKodeGetNumErrTestFails", 1)) { return -1; }
+  flag = ARKodeGetNumRhsEvals(arkode_mem, 1, &nfi);
+  if (check_flag(&flag, "ARKodeGetNumRhsEvals", 1)) { return -1; }
+  flag = ARKodeGetNumNonlinSolvIters(arkode_mem, &nni);
+  if (check_flag(&flag, "ARKodeGetNumNonlinSolvIters", 1)) { return -1; }
+  flag = ARKodeGetNumNonlinSolvConvFails(arkode_mem, &ncfn);
+  if (check_flag(&flag, "ARKodeGetNumNonlinSolvConvFails", 1)) { return -1; }
+  flag = ARKodeGetNumLinIters(arkode_mem, &nli);
+  if (check_flag(&flag, "ARKodeGetNumLinIters", 1)) { return -1; }
+  flag = ARKodeGetNumLinConvFails(arkode_mem, &nlcf);
+  if (check_flag(&flag, "ARKodeGetNumLinConvFails", 1)) { return -1; }
+  flag = ARKodeGetNumLinSolvSetups(arkode_mem, &nsetups);
+  if (check_flag(&flag, "ARKodeGetNumLinSolvSetups", 1)) { return -1; }
+  flag = ARKodeGetNumLinRhsEvals(arkode_mem, &nfi_ls);
+  if (check_flag(&flag, "ARKodeGetNumLinRhsEvals", 1)) { return -1; }
+  flag = ARKodeGetNumJtimesEvals(arkode_mem, &nJv);
+  if (check_flag(&flag, "ARKodeGetNumJtimesEvals", 1)) { return -1; }
 
   // Reduce stats across time
   MPI_Allreduce(MPI_IN_PLACE, &nst, 1, MPI_LONG, MPI_MAX, udata->comm_w);
@@ -2955,10 +2969,10 @@ static int OutputStats(void* arkode_mem, UserData* udata)
   if (udata->prec)
   {
     long int npe, nps;
-    flag = ARKStepGetNumPrecEvals(arkode_mem, &npe);
-    if (check_flag(&flag, "ARKStepGetNumPrecEvals", 1)) { return -1; }
-    flag = ARKStepGetNumPrecSolves(arkode_mem, &nps);
-    if (check_flag(&flag, "ARKStepGetNumPrecSolves", 1)) { return -1; }
+    flag = ARKodeGetNumPrecEvals(arkode_mem, &npe);
+    if (check_flag(&flag, "ARKodeGetNumPrecEvals", 1)) { return -1; }
+    flag = ARKodeGetNumPrecSolves(arkode_mem, &nps);
+    if (check_flag(&flag, "ARKodeGetNumPrecSolves", 1)) { return -1; }
 
     MPI_Allreduce(MPI_IN_PLACE, &npe, 1, MPI_LONG, MPI_MAX, udata->comm_w);
     MPI_Allreduce(MPI_IN_PLACE, &nps, 1, MPI_LONG, MPI_MAX, udata->comm_w);

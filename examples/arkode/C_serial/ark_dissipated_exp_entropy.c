@@ -174,14 +174,13 @@ int main(int argc, char* argv[])
   if (check_flag(flag, "SUNContext_Create")) { return 1; }
 
   /* Create serial vector and set the initial condition values */
-  y = N_VNew_Serial(2, ctx);
+  y = N_VNew_Serial(1, ctx);
   if (check_ptr(y, "N_VNew_Serial")) { return 1; }
 
   ydata = N_VGetArrayPointer(y);
   if (check_ptr(ydata, "N_VGetArrayPointer")) { return 1; }
 
-  ydata[0] = SUN_RCONST(1.0);
-  ydata[1] = SUN_RCONST(0.5);
+  ydata[0] = SUN_RCONST(0.5);
 
   ytrue = N_VClone(y);
   if (check_ptr(ytrue, "N_VClone")) { return 1; }
@@ -195,32 +194,32 @@ int main(int argc, char* argv[])
   if (check_ptr(arkode_mem, "ARKStepCreate")) { return 1; }
 
   /* Specify tolerances */
-  flag = ARKStepSStolerances(arkode_mem, reltol, abstol);
-  if (check_flag(flag, "ARKStepSStolerances")) { return 1; }
+  flag = ARKodeSStolerances(arkode_mem, reltol, abstol);
+  if (check_flag(flag, "ARKodeSStolerances")) { return 1; }
 
   if (relax)
   {
     /* Enable relaxation methods */
-    flag = ARKStepSetRelaxFn(arkode_mem, Ent, JacEnt);
-    if (check_flag(flag, "ARKStepSetRelaxFn")) { return 1; }
+    flag = ARKodeSetRelaxFn(arkode_mem, Ent, JacEnt);
+    if (check_flag(flag, "ARKodeSetRelaxFn")) { return 1; }
   }
 
   if (implicit)
   {
     /* Create dense matrix and linear solver */
-    A = SUNDenseMatrix(2, 2, ctx);
+    A = SUNDenseMatrix(1, 1, ctx);
     if (check_ptr(A, "SUNDenseMatrix")) { return 1; }
 
     LS = SUNLinSol_Dense(y, A, ctx);
     if (check_ptr(LS, "SUNLinSol_Dense")) { return 1; }
 
     /* Attach the matrix and linear solver */
-    flag = ARKStepSetLinearSolver(arkode_mem, LS, A);
-    if (check_flag(flag, "ARKStepSetLinearSolver")) { return 1; }
+    flag = ARKodeSetLinearSolver(arkode_mem, LS, A);
+    if (check_flag(flag, "ARKodeSetLinearSolver")) { return 1; }
 
     /* Set Jacobian routine */
-    flag = ARKStepSetJacFn(arkode_mem, Jac);
-    if (check_flag(flag, "ARKStepSetJacFn")) { return 1; }
+    flag = ARKodeSetJacFn(arkode_mem, Jac);
+    if (check_flag(flag, "ARKodeSetJacFn")) { return 1; }
 
     /* Select a Butcher table with non-negative b values */
     flag = ARKStepSetTableName(arkode_mem, "ARKODE_ARK2_DIRK_3_1_2",
@@ -228,14 +227,14 @@ int main(int argc, char* argv[])
     if (check_flag(flag, "ARKStepSetTableName")) { return 1; }
 
     /* Tighten nonlinear solver tolerance */
-    flag = ARKStepSetNonlinConvCoef(arkode_mem, SUN_RCONST(0.01));
-    if (check_flag(flag, "ARKStepSetNonlinConvCoef")) { return 1; }
+    flag = ARKodeSetNonlinConvCoef(arkode_mem, SUN_RCONST(0.01));
+    if (check_flag(flag, "ARKodeSetNonlinConvCoef")) { return 1; }
   }
 
   if (fixed_h > SUN_RCONST(0.0))
   {
-    flag = ARKStepSetFixedStep(arkode_mem, fixed_h);
-    if (check_flag(flag, "ARKStepSetFixedStep")) { return 1; }
+    flag = ARKodeSetFixedStep(arkode_mem, fixed_h);
+    if (check_flag(flag, "ARKodeSetFixedStep")) { return 1; }
   }
 
   /* Open output stream for results, output comment line */
@@ -269,8 +268,8 @@ int main(int argc, char* argv[])
   while (t < tf)
   {
     /* Evolve in time */
-    flag = ARKStepEvolve(arkode_mem, tf, y, &t, ARK_ONE_STEP);
-    if (check_flag(flag, "ARKStepEvolve")) { break; }
+    flag = ARKodeEvolve(arkode_mem, tf, y, &t, ARK_ONE_STEP);
+    if (check_flag(flag, "ARKodeEvolve")) { break; }
 
     /* Output solution and errors */
     flag = Ent(y, &ent, NULL);
@@ -283,8 +282,8 @@ int main(int argc, char* argv[])
     u_err     = ydata[0] - ytdata[0];
 
     /* Output to the screen periodically */
-    flag = ARKStepGetNumSteps(arkode_mem, &nst);
-    check_flag(flag, "ARKStepGetNumSteps");
+    flag = ARKodeGetNumSteps(arkode_mem, &nst);
+    check_flag(flag, "ARKodeGetNumSteps");
 
     if (nst % 40 == 0)
     {
@@ -309,17 +308,20 @@ int main(int argc, char* argv[])
    * ------------ */
 
   /* Get final statistics on how the solve progressed */
-  flag = ARKStepGetNumSteps(arkode_mem, &nst);
-  check_flag(flag, "ARKStepGetNumSteps");
+  flag = ARKodeGetNumSteps(arkode_mem, &nst);
+  check_flag(flag, "ARKodeGetNumSteps");
 
-  flag = ARKStepGetNumStepAttempts(arkode_mem, &nst_a);
-  check_flag(flag, "ARKStepGetNumStepAttempts");
+  flag = ARKodeGetNumStepAttempts(arkode_mem, &nst_a);
+  check_flag(flag, "ARKodeGetNumStepAttempts");
 
-  flag = ARKStepGetNumErrTestFails(arkode_mem, &netf);
-  check_flag(flag, "ARKStepGetNumErrTestFails");
+  flag = ARKodeGetNumErrTestFails(arkode_mem, &netf);
+  check_flag(flag, "ARKodeGetNumErrTestFails");
 
-  flag = ARKStepGetNumRhsEvals(arkode_mem, &nfe, &nfi);
-  check_flag(flag, "ARKStepGetNumRhsEvals");
+  flag = ARKodeGetNumRhsEvals(arkode_mem, 0, &nfe);
+  check_flag(flag, "ARKodeGetNumRhsEvals");
+
+  flag = ARKodeGetNumRhsEvals(arkode_mem, 1, &nfi);
+  check_flag(flag, "ARKodeGetNumRhsEvals");
 
   printf("\nFinal Solver Statistics:\n");
   printf("   Internal solver steps = %li (attempted = %li)\n", nst, nst_a);
@@ -328,20 +330,20 @@ int main(int argc, char* argv[])
 
   if (implicit)
   {
-    flag = ARKStepGetNumNonlinSolvIters(arkode_mem, &nni);
-    check_flag(flag, "ARKStepGetNumNonlinSolvIters");
+    flag = ARKodeGetNumNonlinSolvIters(arkode_mem, &nni);
+    check_flag(flag, "ARKodeGetNumNonlinSolvIters");
 
-    flag = ARKStepGetNumNonlinSolvConvFails(arkode_mem, &ncfn);
-    check_flag(flag, "ARKStepGetNumNonlinSolvConvFails");
+    flag = ARKodeGetNumNonlinSolvConvFails(arkode_mem, &ncfn);
+    check_flag(flag, "ARKodeGetNumNonlinSolvConvFails");
 
-    flag = ARKStepGetNumLinSolvSetups(arkode_mem, &nsetups);
-    check_flag(flag, "ARKStepGetNumLinSolvSetups");
+    flag = ARKodeGetNumLinSolvSetups(arkode_mem, &nsetups);
+    check_flag(flag, "ARKodeGetNumLinSolvSetups");
 
-    flag = ARKStepGetNumJacEvals(arkode_mem, &nje);
-    check_flag(flag, "ARKStepGetNumJacEvals");
+    flag = ARKodeGetNumJacEvals(arkode_mem, &nje);
+    check_flag(flag, "ARKodeGetNumJacEvals");
 
-    flag = ARKStepGetNumLinRhsEvals(arkode_mem, &nfeLS);
-    check_flag(flag, "ARKStepGetNumLinRhsEvals");
+    flag = ARKodeGetNumLinRhsEvals(arkode_mem, &nfeLS);
+    check_flag(flag, "ARKodeGetNumLinRhsEvals");
 
     printf("   Total number of Newton iterations = %li\n", nni);
     printf("   Total number of linear solver convergence failures = %li\n", ncfn);
@@ -352,23 +354,23 @@ int main(int argc, char* argv[])
 
   if (relax)
   {
-    flag = ARKStepGetNumRelaxFnEvals(arkode_mem, &nre);
-    check_flag(flag, "ARKStepGetNumRelaxFnEvals");
+    flag = ARKodeGetNumRelaxFnEvals(arkode_mem, &nre);
+    check_flag(flag, "ARKodeGetNumRelaxFnEvals");
 
-    flag = ARKStepGetNumRelaxJacEvals(arkode_mem, &nrje);
-    check_flag(flag, "ARKStepGetNumRelaxJacEvals");
+    flag = ARKodeGetNumRelaxJacEvals(arkode_mem, &nrje);
+    check_flag(flag, "ARKodeGetNumRelaxJacEvals");
 
-    flag = ARKStepGetNumRelaxFails(arkode_mem, &nrf);
-    check_flag(flag, "ARKStepGetNumRelaxFails");
+    flag = ARKodeGetNumRelaxFails(arkode_mem, &nrf);
+    check_flag(flag, "ARKodeGetNumRelaxFails");
 
-    flag = ARKStepGetNumRelaxBoundFails(arkode_mem, &nrbf);
-    check_flag(flag, "ARKStepGetNumRelaxBoundFails");
+    flag = ARKodeGetNumRelaxBoundFails(arkode_mem, &nrbf);
+    check_flag(flag, "ARKodeGetNumRelaxBoundFails");
 
-    flag = ARKStepGetNumRelaxSolveFails(arkode_mem, &nrnlsf);
-    check_flag(flag, "ARKStepGetNumRelaxSolveFails");
+    flag = ARKodeGetNumRelaxSolveFails(arkode_mem, &nrnlsf);
+    check_flag(flag, "ARKodeGetNumRelaxSolveFails");
 
-    flag = ARKStepGetNumRelaxSolveIters(arkode_mem, &nrnlsi);
-    check_flag(flag, "ARKStepGetNumRelaxSolveIters");
+    flag = ARKodeGetNumRelaxSolveIters(arkode_mem, &nrnlsi);
+    check_flag(flag, "ARKodeGetNumRelaxSolveIters");
 
     printf("   Total Relaxation Fn evals    = %li\n", nre);
     printf("   Total Relaxation Jac evals   = %li\n", nrje);
@@ -383,8 +385,8 @@ int main(int argc, char* argv[])
    * Clean up *
    * -------- */
 
-  /* Free ARKStep integrator and SUNDIALS objects */
-  ARKStepFree(&arkode_mem);
+  /* Free ARKODE integrator and SUNDIALS objects */
+  ARKodeFree(&arkode_mem);
   SUNLinSolFree(LS);
   SUNMatDestroy(A);
   N_VDestroy(y);
@@ -442,7 +444,7 @@ int JacEnt(N_Vector y, N_Vector J, void* user_data)
 int ans(sunrealtype t, N_Vector y)
 {
   sunrealtype* ydata = N_VGetArrayPointer(y);
-  ydata[0]           = LOG(EXP(SUN_RCONST(-0.5)) + t);
+  ydata[0]           = -LOG(EXP(SUN_RCONST(-0.5)) + t);
   return 0;
 }
 

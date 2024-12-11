@@ -21,12 +21,16 @@ if(EXAMPLES_ENABLE_C)
   if(ENABLE_OPENMP AND OPENMP_FOUND)
     add_subdirectory(C_openmp)
   endif()
-  if(ENABLE_OPENMP_DEVICE AND OPENMP_FOUND AND OPENMP_SUPPORTS_DEVICE_OFFLOADING)
+  if(ENABLE_OPENMP_DEVICE
+     AND OPENMP_FOUND
+     AND OPENMP_SUPPORTS_DEVICE_OFFLOADING)
     add_subdirectory(C_openmpdev)
   endif()
   if(ENABLE_MPI AND MPI_C_FOUND)
     add_subdirectory(parallel)
-    add_subdirectory(C_mpimanyvector)
+    if(BUILD_NVECTOR_MPIMANYVECTOR)
+      add_subdirectory(C_mpimanyvector)
+    endif()
   endif()
   if(ENABLE_HYPRE AND HYPRE_FOUND)
     add_subdirectory(parhyp)
@@ -77,6 +81,9 @@ endif()
 # Fortran examples
 if(BUILD_FORTRAN_MODULE_INTERFACE AND EXAMPLES_ENABLE_F2003)
   add_subdirectory(F2003_serial)
+  if(ENABLE_MPI)
+    add_subdirectory(F2003_parallel)
+  endif()
 endif()
 
 # CUDA examples

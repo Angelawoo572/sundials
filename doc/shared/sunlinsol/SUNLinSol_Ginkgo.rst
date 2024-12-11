@@ -44,10 +44,10 @@ Using SUNLINEARSOLVER_GINKGO
 
 After choosing a compatible ``N_Vector`` (see :numref:`SUNMatrix.Ginkgo.CompatibleNVectors`) and creating a Ginkgo-enabled ``SUNMatrix`` (see
 :numref:`SUNMatrix.Ginkgo`) to use the SUNLINEARSOLVER_GINKGO module, we first create a Ginkgo
-stopping criteria object. Importantly, the :cpp:type:`sundials::ginkgo::DefaultStop` class provided
-by SUNDIALS implements a stopping critierion that matches the default SUNDIALS stopping critierion.
+stopping criteria object. Importantly, the ``sundials::ginkgo::DefaultStop`` class provided
+by SUNDIALS implements a stopping criterion that matches the default SUNDIALS stopping criterion.
 Namely, it checks if the max iterations (5 by default) were reached or if the absolute residual
-norm was below a speicified tolerance. The critierion can be created just like any other
+norm was below a specified tolerance. The criterion can be created just like any other
 Ginkgo stopping criteria:
 
 .. code-block:: cpp
@@ -59,7 +59,7 @@ Ginkgo stopping criteria:
    but it is optional. However, to use the Ginkgo multigrid or cbgmres linear solvers, different
    Ginkgo criterion must be used.
 
-Once we have created our stopping critierion, we create a Ginkgo solver factory object and
+Once we have created our stopping criterion, we create a Ginkgo solver factory object and
 wrap it in a :cpp:type:`sundials::ginkgo::LinearSolver` object. In this example, we create
 a Ginkgo conjugate gradient solver:
 
@@ -95,7 +95,7 @@ expecting a ``SUNLinearSolver`` object through the implicit conversion operator 
 .. warning::
 
   :c:func:`SUNLinSolFree` should never be called on a ``SUNLinearSolver`` that was created via conversion
-  from a ``sundials::ginkgo::LinearSolver``. Doing so may result in a double free.
+  from a :cpp:type:`sundials::ginkgo::LinearSolver`. Doing so may result in a double free.
 
 
 .. _SUNLinSol.Ginkgo.API:
@@ -106,7 +106,7 @@ SUNLINEARSOLVER_GINKGO API
 In this section we list the public API of the :cpp:type:`sundials::ginkgo::LinearSolver` class.
 
 .. cpp:class:: template<class GkoSolverType, class GkoMatrixType> \
-               LinearSolver : public ConvertibleTo<SUNLinearSolver>
+               sundials::ginkgo::LinearSolver : public sundials::ConvertibleTo<SUNLinearSolver>
 
    .. cpp:function:: LinearSolver() = default;
 
@@ -185,7 +185,7 @@ In this section we list the public API of the :cpp:type:`sundials::ginkgo::Linea
 
    .. cpp:function:: gko::LinOp* Solve(N_Vector b, N_Vector x, sunrealtype tol)
 
-      Solve the linear system Ax = b to the specificed tolerance.
+      Solve the linear system Ax = b to the specified tolerance.
 
       :param b: the right-hand side vector
       :param x: the solution vector

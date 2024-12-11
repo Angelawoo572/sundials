@@ -15,11 +15,11 @@
  *
  * The following is a simple example problem with analytical
  * solution,
- *    dy/dt = lamda*y + 1/(1+t^2) - lamda*atan(t)
+ *    dy/dt = lambda*y + 1/(1+t^2) - lambda*atan(t)
  * for t in the interval [0.0, 10.0], with initial condition: y=0.
  *
  * The stiffness of the problem is directly proportional to the
- * value of "lamda".  The value of lamda should be negative to
+ * value of "lambda".  The value of lambda should be negative to
  * result in a well-posed ODE; for values with magnitude larger
  * than 100 the problem becomes quite stiff.
  *
@@ -46,7 +46,7 @@
 #define FSYM "f"
 #endif
 
-/* User-supplied functions called by ARKStep */
+/* User-supplied functions called by ARKODE */
 static int f(sunrealtype t, N_Vector y, N_Vector ydot, void* user_data);
 
 /* Custom linear solver data structure, accessor macros, and routines */
@@ -73,7 +73,7 @@ int main(void)
   sunindextype NEQ   = 1;                  /* number of dependent vars. */
   sunrealtype reltol = SUN_RCONST(1.0e-6); /* tolerances */
   sunrealtype abstol = SUN_RCONST(1.0e-10);
-  sunrealtype lamda  = SUN_RCONST(-100.0); /* stiffness parameter */
+  sunrealtype lambda = SUN_RCONST(-100.0); /* stiffness parameter */
 
   /* general problem variables */
   int retval;                /* reusable error-checking flag */
@@ -90,7 +90,7 @@ int main(void)
 
   /* Initial diagnostics output */
   printf("\nAnalytical ODE test problem:\n");
-  printf("    lamda = %" GSYM "\n", lamda);
+  printf("   lambda = %" GSYM "\n", lambda);
   printf("   reltol = %.1" ESYM "\n", reltol);
   printf("   abstol = %.1" ESYM "\n\n", abstol);
 
@@ -100,30 +100,30 @@ int main(void)
   N_VConst(SUN_RCONST(0.0), y); /* Specify initial condition */
 
   /* Call ARKStepCreate to initialize the ARK timestepper module and
-     specify the right-hand side function in y'=f(t,y), the inital time
+     specify the right-hand side function in y'=f(t,y), the initial time
      T0, and the initial dependent variable vector y.  Note: since this
      problem is fully implicit, we set f_E to NULL and f_I to f. */
   arkode_mem = ARKStepCreate(NULL, f, T0, y, ctx);
   if (check_retval((void*)arkode_mem, "ARKStepCreate", 0)) { return 1; }
 
   /* Set routines */
-  retval = ARKStepSetUserData(arkode_mem,
-                              (void*)&lamda); /* Pass lamda to user functions */
-  if (check_retval(&retval, "ARKStepSetUserData", 1)) { return 1; }
-  retval = ARKStepSStolerances(arkode_mem, reltol, abstol); /* Specify tolerances */
-  if (check_retval(&retval, "ARKStepSStolerances", 1)) { return 1; }
+  retval = ARKodeSetUserData(arkode_mem,
+                             (void*)&lambda); /* Pass lambda to user functions */
+  if (check_retval(&retval, "ARKodeSetUserData", 1)) { return 1; }
+  retval = ARKodeSStolerances(arkode_mem, reltol, abstol); /* Specify tolerances */
+  if (check_retval(&retval, "ARKodeSStolerances", 1)) { return 1; }
 
   /* Initialize custom matrix-embedded linear solver */
   LS = MatrixEmbeddedLS(arkode_mem, ctx);
   if (check_retval((void*)LS, "MatrixEmbeddedLS", 0)) { return 1; }
-  retval = ARKStepSetLinearSolver(arkode_mem, LS, NULL); /* Attach linear solver */
-  if (check_retval(&retval, "ARKStepSetLinearSolver", 1)) { return 1; }
+  retval = ARKodeSetLinearSolver(arkode_mem, LS, NULL); /* Attach linear solver */
+  if (check_retval(&retval, "ARKodeSetLinearSolver", 1)) { return 1; }
 
   /* Specify linearly implicit RHS, with non-time-dependent Jacobian */
-  retval = ARKStepSetLinear(arkode_mem, 0);
-  if (check_retval(&retval, "ARKStepSetLinear", 1)) { return 1; }
+  retval = ARKodeSetLinear(arkode_mem, 0);
+  if (check_retval(&retval, "ARKodeSetLinear", 1)) { return 1; }
 
-  /* Main time-stepping loop: calls ARKStepEvolve to perform the integration, then
+  /* Main time-stepping loop: calls ARKodeEvolve to perform the integration, then
      prints results.  Stops when the final time has been reached. */
   t    = T0;
   tout = T0 + dTout;
@@ -131,9 +131,8 @@ int main(void)
   printf("   ---------------------\n");
   while (Tf - t > 1.0e-15)
   {
-    retval = ARKStepEvolve(arkode_mem, tout, y, &t,
-                           ARK_NORMAL); /* call integrator */
-    if (check_retval(&retval, "ARKStepEvolve", 1)) { break; }
+    retval = ARKodeEvolve(arkode_mem, tout, y, &t, ARK_NORMAL); /* call integrator */
+    if (check_retval(&retval, "ARKodeEvolve", 1)) { break; }
     printf("  %10.6" FSYM "  %10.6" FSYM "\n", t,
            NV_Ith_S(y, 0)); /* access/print solution */
     if (retval >= 0)
@@ -150,24 +149,26 @@ int main(void)
   printf("   ---------------------\n");
 
   /* Get/print some final statistics on how the solve progressed */
-  retval = ARKStepGetNumSteps(arkode_mem, &nst);
-  check_retval(&retval, "ARKStepGetNumSteps", 1);
-  retval = ARKStepGetNumStepAttempts(arkode_mem, &nst_a);
-  check_retval(&retval, "ARKStepGetNumStepAttempts", 1);
-  retval = ARKStepGetNumRhsEvals(arkode_mem, &nfe, &nfi);
-  check_retval(&retval, "ARKStepGetNumRhsEvals", 1);
-  retval = ARKStepGetNumLinSolvSetups(arkode_mem, &nsetups);
-  check_retval(&retval, "ARKStepGetNumLinSolvSetups", 1);
-  retval = ARKStepGetNumErrTestFails(arkode_mem, &netf);
-  check_retval(&retval, "ARKStepGetNumErrTestFails", 1);
-  retval = ARKStepGetNumNonlinSolvIters(arkode_mem, &nni);
-  check_retval(&retval, "ARKStepGetNumNonlinSolvIters", 1);
-  retval = ARKStepGetNumNonlinSolvConvFails(arkode_mem, &ncfn);
-  check_retval(&retval, "ARKStepGetNumNonlinSolvConvFails", 1);
-  retval = ARKStepGetNumJacEvals(arkode_mem, &nje);
-  check_retval(&retval, "ARKStepGetNumJacEvals", 1);
-  retval = ARKStepGetNumLinRhsEvals(arkode_mem, &nfeLS);
-  check_retval(&retval, "ARKStepGetNumLinRhsEvals", 1);
+  retval = ARKodeGetNumSteps(arkode_mem, &nst);
+  check_retval(&retval, "ARKodeGetNumSteps", 1);
+  retval = ARKodeGetNumStepAttempts(arkode_mem, &nst_a);
+  check_retval(&retval, "ARKodeGetNumStepAttempts", 1);
+  retval = ARKodeGetNumRhsEvals(arkode_mem, 0, &nfe);
+  check_retval(&retval, "ARKodeGetNumRhsEvals", 1);
+  retval = ARKodeGetNumRhsEvals(arkode_mem, 1, &nfi);
+  check_retval(&retval, "ARKodeGetNumRhsEvals", 1);
+  retval = ARKodeGetNumLinSolvSetups(arkode_mem, &nsetups);
+  check_retval(&retval, "ARKodeGetNumLinSolvSetups", 1);
+  retval = ARKodeGetNumErrTestFails(arkode_mem, &netf);
+  check_retval(&retval, "ARKodeGetNumErrTestFails", 1);
+  retval = ARKodeGetNumNonlinSolvIters(arkode_mem, &nni);
+  check_retval(&retval, "ARKodeGetNumNonlinSolvIters", 1);
+  retval = ARKodeGetNumNonlinSolvConvFails(arkode_mem, &ncfn);
+  check_retval(&retval, "ARKodeGetNumNonlinSolvConvFails", 1);
+  retval = ARKodeGetNumJacEvals(arkode_mem, &nje);
+  check_retval(&retval, "ARKodeGetNumJacEvals", 1);
+  retval = ARKodeGetNumLinRhsEvals(arkode_mem, &nfeLS);
+  check_retval(&retval, "ARKodeGetNumLinRhsEvals", 1);
 
   printf("\nFinal Solver Statistics:\n");
   printf("   Internal solver steps = %li (attempted = %li)\n", nst, nst_a);
@@ -183,10 +184,10 @@ int main(void)
   retval = check_ans(y, t, reltol, abstol);
 
   /* Clean up and return */
-  N_VDestroy(y);            /* Free y vector */
-  ARKStepFree(&arkode_mem); /* Free integrator memory */
-  SUNLinSolFree(LS);        /* Free linear solver */
-  SUNContext_Free(&ctx);    /* Free the SUNContext */
+  N_VDestroy(y);           /* Free y vector */
+  ARKodeFree(&arkode_mem); /* Free integrator memory */
+  SUNLinSolFree(LS);       /* Free linear solver */
+  SUNContext_Free(&ctx);   /* Free the SUNContext */
 
   return retval;
 }
@@ -199,12 +200,12 @@ int main(void)
 static int f(sunrealtype t, N_Vector y, N_Vector ydot, void* user_data)
 {
   sunrealtype* rdata = (sunrealtype*)user_data; /* cast user_data to sunrealtype */
-  sunrealtype lamda = rdata[0];       /* set shortcut for stiffness parameter */
-  sunrealtype u     = NV_Ith_S(y, 0); /* access current solution value */
+  sunrealtype lambda = rdata[0]; /* set shortcut for stiffness parameter */
+  sunrealtype u      = NV_Ith_S(y, 0); /* access current solution value */
 
   /* fill in the RHS function: "NV_Ith_S" accesses the 0th entry of ydot */
-  NV_Ith_S(ydot, 0) = lamda * u + SUN_RCONST(1.0) / (SUN_RCONST(1.0) + t * t) -
-                      lamda * atan(t);
+  NV_Ith_S(ydot, 0) = lambda * u + SUN_RCONST(1.0) / (SUN_RCONST(1.0) + t * t) -
+                      lambda * atan(t);
 
   return 0; /* return with success */
 }
@@ -248,22 +249,22 @@ static int MatrixEmbeddedLSSolve(SUNLinearSolver LS, SUNMatrix A, N_Vector x,
   sunrealtype tcur, gamma;
   void* user_data;
   sunrealtype* rdata;
-  sunrealtype lamda;
+  sunrealtype lambda;
 
-  /* retrieve implicit system data from ARKStep */
-  retval = ARKStepGetNonlinearSystemData(LS->content, &tcur, &zpred, &z, &Fi,
-                                         &gamma, &sdata, &user_data);
-  if (check_retval((void*)&retval, "ARKStepGetNonlinearSystemData", 1))
+  /* retrieve implicit system data from ARKODE */
+  retval = ARKodeGetNonlinearSystemData(LS->content, &tcur, &zpred, &z, &Fi,
+                                        &gamma, &sdata, &user_data);
+  if (check_retval((void*)&retval, "ARKodeGetNonlinearSystemData", 1))
   {
     return (-1);
   }
 
   /* extract stiffness parameter from user_data */
-  rdata = (sunrealtype*)user_data;
-  lamda = rdata[0];
+  rdata  = (sunrealtype*)user_data;
+  lambda = rdata[0];
 
-  /* perform linear solve: (1-gamma*lamda)*x = b */
-  NV_Ith_S(x, 0) = NV_Ith_S(b, 0) / (1 - gamma * lamda);
+  /* perform linear solve: (1-gamma*lambda)*x = b */
+  NV_Ith_S(x, 0) = NV_Ith_S(b, 0) / (1 - gamma * lambda);
 
   /* return with success */
   return (SUN_SUCCESS);
@@ -333,8 +334,8 @@ static int check_ans(N_Vector y, sunrealtype t, sunrealtype rtol, sunrealtype at
 
   /* compute solution error */
   ans = atan(t);
-  ewt = SUN_RCONST(1.0) / (rtol * fabs(ans) + atol);
-  err = ewt * fabs(NV_Ith_S(y, 0) - ans);
+  ewt = SUN_RCONST(1.0) / (rtol * SUNRabs(ans) + atol);
+  err = ewt * SUNRabs(NV_Ith_S(y, 0) - ans);
 
   /* is the solution within the tolerances? */
   passfail = (err < SUN_RCONST(1.0)) ? 0 : 1;

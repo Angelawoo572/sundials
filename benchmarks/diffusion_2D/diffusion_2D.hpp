@@ -159,7 +159,7 @@ struct UserData
   sunrealtype* Ssend = NULL;
   sunrealtype* Nsend = NULL;
 
-  // Send requests for neighor exchange
+  // Send requests for neighbor exchange
   MPI_Request reqSW;
   MPI_Request reqSE;
   MPI_Request reqSS;
@@ -168,7 +168,7 @@ struct UserData
   // Inverse of Jacobian diagonal for preconditioner
   N_Vector diag = NULL;
 
-  UserData(SUNProfiler prof) : prof(prof) {}
+  UserData(SUNProfiler prof_) : prof(prof_) {}
 
   ~UserData();
 
@@ -192,7 +192,7 @@ private:
 
 struct UserOutput
 {
-  // Ouput variables
+  // Output variables
   int output     = 1;    // 0 = no output, 1 = stats output, 2 = output to disk
   int nout       = 20;   // number of output times
   N_Vector error = NULL; // error vector
@@ -280,6 +280,6 @@ int SolutionDerivative(sunrealtype t, N_Vector up, UserData* udata);
 int SolutionError(sunrealtype t, N_Vector u, N_Vector e, UserData* udata);
 
 // Check function return values
-int check_flag(void* flagvalue, const string funcname, int opt);
+int check_flag(const void* flagvalue, const string funcname, int opt);
 
 #endif

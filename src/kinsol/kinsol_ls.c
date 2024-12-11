@@ -516,7 +516,7 @@ int KINGetNumLinIters(void* kinmem, long int* nliters)
 }
 
 /*------------------------------------------------------------------
-  KINGetNumLinConvFails returns the total numbe of convergence
+  KINGetNumLinConvFails returns the total number of convergence
   failures
   ------------------------------------------------------------------*/
 int KINGetNumLinConvFails(void* kinmem, long int* nlcfails)
@@ -678,7 +678,9 @@ int kinLsPSetup(void* kinmem)
   in the case in which preconditioning is not done. This is the only
   case in which the user's psolve routine is allowed to be NULL.
   ------------------------------------------------------------------*/
-int kinLsPSolve(void* kinmem, N_Vector r, N_Vector z, sunrealtype tol, int lr)
+int kinLsPSolve(void* kinmem, N_Vector r, N_Vector z,
+                SUNDIALS_MAYBE_UNUSED sunrealtype tol,
+                SUNDIALS_MAYBE_UNUSED int lr)
 {
   KINMem kin_mem;
   KINLsMem kinls_mem;
@@ -790,7 +792,7 @@ int kinLsDenseDQJac(N_Vector u, N_Vector fu, SUNMatrix Jac, KINMem kin_mem,
   /* Save pointer to the array in tmp2 */
   tmp2_data = N_VGetArrayPointer(tmp2);
 
-  /* Rename work vectors for readibility */
+  /* Rename work vectors for readability */
   ftemp  = tmp1;
   jthCol = tmp2;
 
@@ -941,8 +943,8 @@ int kinLsBandDQJac(N_Vector u, N_Vector fu, SUNMatrix Jac, KINMem kin_mem,
         a recovery may still be possible even if the system function
         fails (recoverably).
   ------------------------------------------------------------------*/
-int kinLsDQJtimes(N_Vector v, N_Vector Jv, N_Vector u, sunbooleantype* new_u,
-                  void* kinmem)
+int kinLsDQJtimes(N_Vector v, N_Vector Jv, N_Vector u,
+                  SUNDIALS_MAYBE_UNUSED sunbooleantype* new_u, void* kinmem)
 {
   sunrealtype sigma, sigma_inv, sutsv, sq1norm, sign, vtv;
   KINMem kin_mem;
@@ -1074,7 +1076,7 @@ int kinLsInitialize(KINMem kin_mem)
     return (KINLS_ILL_INPUT);
   }
 
-  /** error-checking is complete, begin initializtions **/
+  /** error-checking is complete, begin initializations **/
 
   /* Initialize counters */
   kinLsInitializeCounters(kinls_mem);
@@ -1250,7 +1252,7 @@ int kinLsSolve(KINMem kin_mem, N_Vector xx, N_Vector bb, sunrealtype* sJpnorm,
 #if SUNDIALS_LOGGING_LEVEL >= SUNDIALS_LOGLEVEL_INFO
   if (kinls_mem->iterative)
   {
-    KINPrintInfo(kin_mem, PRNT_NLI, "KINLS", "kinLsSolve", INFO_NLI, nli_inc);
+    KINPrintInfo(kin_mem, PRNT_NLI, "KINLS", __func__, INFO_NLI, nli_inc);
   }
 #endif
 
@@ -1334,7 +1336,7 @@ int kinLsSolve(KINMem kin_mem, N_Vector xx, N_Vector bb, sunrealtype* sJpnorm,
 #if SUNDIALS_LOGGING_LEVEL >= SUNDIALS_LOGLEVEL_INFO
   if (kin_mem->kin_inexact_ls)
   {
-    KINPrintInfo(kin_mem, PRNT_EPS, "KINLS", "kinLsSolve", INFO_EPS, res_norm,
+    KINPrintInfo(kin_mem, PRNT_EPS, "KINLS", __func__, INFO_EPS, res_norm,
                  kin_mem->kin_eps);
   }
 #endif

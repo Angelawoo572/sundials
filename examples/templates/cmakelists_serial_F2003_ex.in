@@ -32,6 +32,9 @@ set(CMAKE_Fortran_FLAGS
 # Specify project name and languages
 project(@SOLVER@_F2003_examples Fortran)
 
+# Fortran preprocessor must be enabled
+set(CMAKE_Fortran_PREPROCESS ON)
+
 # Enable testing
 include(CTest)
 
@@ -74,7 +77,7 @@ find_library(SUNDIALS_SOLVER_FLIB
 if("${NVEC_LIB}" STREQUAL "")
   # No additional NVECTOR library necessary
 else()
-  # Find the additonal NVECTOR library
+  # Find the additional NVECTOR library
   find_library(SUNDIALS_NVEC_LIB
     @NVEC_LIB@ ${SUNDIALS_LIBRARY_DIR}
     DOC "NVECTOR library")
@@ -143,6 +146,8 @@ foreach(example ${examples})
   # libraries to link against
   target_link_libraries(${example} ${SUNDIALS_LIBRARIES})
 
+  target_compile_definitions(${example} PRIVATE SUNDIALS_INT@SUNDIALS_INDEX_SIZE@_T)
+
   # add the example to ctest
   add_test(NAME ${example} COMMAND ${example})
 
@@ -180,9 +185,11 @@ if(KLU_LIBRARIES AND examples_klu)
     # directories to include
     target_include_directories(${example} PRIVATE ${SUNDIALS_INCLUDE_DIR})
 
-    # libraries to link agaisnt
+    # libraries to link against
     target_link_libraries(${example} ${SUNDIALS_LIBRARIES})
     target_link_libraries(${example} ${KLU_LIBRARIES})
+
+    target_compile_definitions(${example} PRIVATE SUNDIALS_INT@SUNDIALS_INDEX_SIZE@_T)
 
     # add the example to ctest
     add_test(NAME ${example} COMMAND ${example})

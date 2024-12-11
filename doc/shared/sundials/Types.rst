@@ -125,7 +125,15 @@ Boolean type
 The advantage of using the name sunbooleantype (instead of int) is an increase in
 code readability. It also allows the programmer to make a distinction between
 int and boolean data. Variables of type ``sunbooleantype`` are intended to have
-only the two values ``SUNFALSE`` (``0``) and ``SUNTRUE`` (``1``).
+only the two values: :c:macro:`SUNFALSE` or :c:macro:`SUNTRUE`.
+
+.. c:macro:: SUNFALSE
+
+   False (``0``)
+
+.. c:macro:: SUNTRUE
+
+   True (``1``)
 
 Output formatting type
 ----------------------
@@ -146,16 +154,20 @@ Output formatting type
 
    .. note::
 
-      The file ``scripts/sundials_csv.py`` provides python utility functions to
-      read and output the data from a SUNDIALS CSV output file using the key
-      and value pair format.
+      The Python module ``tools/suntools`` provides utilities to read and output
+      the data from a SUNDIALS CSV output file using the key and value pair
+      format.
 
 MPI types
 ---------
 
-.. c:type:: SUNComm 
+.. c:type:: SUNComm
 
    A simple typedef to an `int` when SUNDIALS is built without MPI, or a
    ``MPI_Comm`` when built with MPI. This type exists solely to ensure SUNDIALS
-   can support MPI and non-MPI builds. 
-   
+   can support MPI and non-MPI builds.
+
+.. c:macro:: SUN_COMM_NULL
+
+   A macro defined as ``0`` when SUNDIALS is built without MPI, or as
+   ``MPI_COMM_NULL`` when built with MPI.

@@ -449,7 +449,7 @@ For many users, the appropriate choices for tolerance values in ``reltol`` and
    different components have different noise levels, then ``abstol`` should be a
    vector. See the example ``idaRoberts_dns`` in the IDA package, and the
    discussion of it in the IDA Examples document :cite:p:`ida_ex`. In that
-   problem, the three components vary betwen 0 and 1, and have different noise
+   problem, the three components vary between 0 and 1, and have different noise
    levels; hence the ``abstol`` vector. It is impossible to give any general
    advice on ``abstol`` values, because the appropriate noise levels are
    completely problem-dependent. The user or modeler hopefully has some idea as
@@ -588,13 +588,9 @@ pertinent to their choice of linear solver.
       the documentation of the particular ``SUNMatrix`` in Chapter
       :numref:`SUNMatrix` for further information).
 
-   .. warning::
+   .. versionadded:: 4.0.0
 
-      The previous routines ``IDADlsSetLinearSolver`` and
-      ``IDASpilsSetLinearSolver`` are now wrappers for this routine, and may
-      still be used for backward-compatibility.  However, these will be
-      deprecated in future releases, so we recommend that users transition to
-      the new routine name soon.
+      Replaces the deprecated function ``IDASpilsSetLinearSolver``.
 
 
 .. _IDA.Usage.CC.nonlin_solv_init:
@@ -623,7 +619,7 @@ IDA integrator. We note that at present, the ``SUNNonlinearSolver`` object
 
 .. c:function:: int IDASetNonlinearSolver(void* ida_mem, SUNNonlinearSolver NLS)
 
-   The function ``IDASetNonLinearSolver`` attaches a ``SUNNonlinearSolver``  object (``NLS``) to IDA.
+   The function ``IDASetNonlinearSolver`` attaches a ``SUNNonlinearSolver``  object (``NLS``) to IDA.
 
    **Arguments:**
       * ``ida_mem`` -- pointer to the IDA solver object.
@@ -844,7 +840,7 @@ rootfinding (with :c:func:`IDARootInit`).
       If a stop time is enabled (through a call to :c:func:`IDASetStopTime`), then
       :c:func:`IDASolve` returns the solution at ``tstop``. Once the integrator
       returns at a stop time, any future testing for ``tstop`` is disabled (and
-      can be reenabled only though a new call to :c:func:`IDASetStopTime`).
+      can be re-enabled only though a new call to :c:func:`IDASetStopTime`).
 
       All failure return values are negative and therefore a test ``flag < 0`` will
       trap all :c:func:`IDASolve` failures.
@@ -1071,7 +1067,7 @@ Main solver optional input functions
    **Notes:**
       The default, if this routine is not called, is that no stop time is imposed.
       Once the integrator returns at a stop time, any future testing for ``tstop``
-      is disabled (and can be reenabled only though a new call to
+      is disabled (and can be re-enabled only though a new call to
       :c:func:`IDASetStopTime`).
 
       A stop time not reached before a call to :c:func:`IDAReInit` will
@@ -1089,7 +1085,7 @@ Main solver optional input functions
       * ``IDA_MEM_NULL`` if the IDA memory is ``NULL``
 
    **Notes:**
-      The stop time can be reenabled though a new call to
+      The stop time can be re-enabled though a new call to
       :c:func:`IDASetStopTime`.
 
    .. versionadded:: 6.5.1
@@ -1259,12 +1255,9 @@ in the program. The pointer ``user_data`` may be specified through
       ``jac``, this default function is used.
       An error will occur if no ``jac`` is supplied when using other matrix types.
 
-   .. warning::
+   .. versionadded:: 4.0.0
 
-      The previous routine ``IDADlsSetJacFn`` is now a wrapper for this routine,
-      and may still be used for backward-compatibility.  However, this will be
-      deprecated in future releases, so we recommend that users transition to
-      the new routine name soon.
+      Replaces the deprecated function ``IDADlsSetJacFn``.
 
 
 When using a matrix-based linear solver the matrix information will be updated
@@ -1369,12 +1362,9 @@ without using global data in the program.
       solver interface has been initialized through a call to
       :c:func:`IDASetLinearSolver`.
 
-   .. warning::
+   .. versionadded:: 4.0.0
 
-      The previous routine ``IDASpilsSetJacTimes`` is now a wrapper for this
-      routine, and may still be used for backward-compatibility.  However, this
-      will be deprecated in future releases, so we recommend that users
-      transition to the new routine name soon.
+      Replaces the deprecated function ``IDASpilsSetJacTimes``.
 
 
 When using the default difference-quotient approximation to the Jacobian-vector
@@ -1412,12 +1402,9 @@ finite-difference approximation, via a call to :c:func:`IDASetIncrementFactor`.
       linear solver interface has been initialized through a call to
       :c:func:`IDASetLinearSolver`.
 
-   .. warning::
+   .. versionadded:: 4.0.0
 
-      The previous routine :c:func:`IDASpilsSetIncrementFactor` is now a wrapper
-      for this routine, and may still be used for backward-compatibility.
-      However, this will be deprecated in future releases, so we recommend that
-      users transition to the new routine name soon.
+      Replaces the deprecated function ``IDASpilsSetIncrementFactor``.
 
 
 Additionally, when using the internal difference quotient, the user may also
@@ -1497,12 +1484,9 @@ global data in the program.
       function must be called after the IDALS linear solver interface has been
       initialized through a call to :c:func:`IDASetLinearSolver`.
 
-   .. warning::
+   .. versionadded:: 4.0.0
 
-      The previous routine ``IDASpilsSetPreconditioner`` is now a wrapper for
-      this routine, and may still be used for backward-compatibility.  However,
-      this will be deprecated in future releases, so we recommend that users
-      transition to the new routine name soon.
+      Replaces the deprecated function ``IDASpilsSetPreconditioner``.
 
 
 Also, as described in :numref:`IDA.Mathematics.ivp_sol`, the IDALS interface
@@ -1538,12 +1522,9 @@ where :math:`\epsilon` is the nonlinear solver tolerance, and the default
       :c:func:`IDASetLinearSolver`.  If ``eplifac`` :math:`= 0.0` is passed, the
       default value is used.
 
-   .. warning::
+   .. versionadded:: 4.0.0
 
-      The previous routine ``IDASpilsSetEpsLin`` is now a wrapper for this
-      routine, and may still be used for backward-compatibility.  However, this
-      will be deprecated in future releases, so we recommend that users
-      transition to the new routine name soon.
+      Replaces the deprecated function ``IDASpilsSetEpsLin``.
 
 .. c:function:: int IDASetLSNormFactor(void * ida_mem, sunrealtype nrmfac)
 
@@ -2511,7 +2492,7 @@ described next.
 
    .. note::
 
-      The ``ele`` vector, togther with the ``eweight`` vector from
+      The ``ele`` vector, together with the ``eweight`` vector from
       :c:func:`IDAGetErrWeights`, can be used to determine how the various
       components of the system contributed to the estimated local error test.
       Specifically, that error test uses the RMS norm of a vector whose
@@ -2621,9 +2602,9 @@ described next.
 
    .. note::
 
-      The file ``scripts/sundials_csv.py`` provides python utility functions to
-      read and output the data from a SUNDIALS CSV output file using the key
-      and value pair format.
+      The Python module ``tools/suntools`` provides utilities to read and output
+      the data from a SUNDIALS CSV output file using the key and value pair
+      format.
 
    .. versionadded:: 6.2.0
 
@@ -2820,13 +2801,10 @@ The following optional outputs are available from the IDALS modules:
       ``SUNLinearSolver`` object attached to it.  The template Jacobian
       matrix allocated by the user outside of IDALS is not included in this report.
 
-   .. warning::
+   .. versionadded:: 4.0.0
 
-      The previous routines ``IDADlsGetWorkspace`` and ``IDASpilsGetWorkspace``
-      are now wrappers for this routine, and may still be used for
-      backward-compatibility.  However, these will be deprecated in future
-      releases, so we recommend that users transition to the new routine name
-      soon.
+      Replaces the deprecated functions ``IDADlsGetWorkspace`` and
+      ``IDASpilsGetWorkspace``.
 
 .. c:function:: int IDAGetNumJacEvals(void * ida_mem, long int * njevals)
 
@@ -2842,12 +2820,9 @@ The following optional outputs are available from the IDALS modules:
       * ``IDALS_MEM_NULL`` -- The ``ida_mem`` pointer is ``NULL``.
       * ``IDALS_LMEM_NULL`` -- The IDALS linear solver has not been initialized.
 
-   .. warning::
+   .. versionadded:: 4.0.0
 
-      The previous routine ``IDADlsGetNumJacEvals`` is now a wrapper for this
-      routine, and may still be used for backward-compatibility.  However, this
-      will be deprecated in future releases, so we recommend that users
-      transition to the new routine name soon.
+      Replaces the deprecated function ``IDADlsGetNumJacEvals``.
 
 .. c:function:: int IDAGetNumLinResEvals(void * ida_mem, long int * nrevalsLS)
 
@@ -2869,13 +2844,10 @@ The following optional outputs are available from the IDALS modules:
       The value ``nrevalsLS`` is incremented only if one of the default internal
       difference quotient functions is used.
 
-   .. warning::
+   .. versionadded:: 4.0.0
 
-      The previous routines ``IDADlsGetNumRhsEvals`` and
-      ``IDASpilsGetNumRhsEvals`` are now wrappers for this routine, and may
-      still be used for backward-compatibility.  However, these will be
-      deprecated in future releases, so we recommend that users transition to
-      the new routine name soon.
+      Replaces the deprecated functions ``IDADlsGetNumRhsEvals`` and
+      ``IDASpilsGetNumRhsEvals``.
 
 .. c:function:: int IDAGetNumLinIters(void * ida_mem, long int * nliters)
 
@@ -2891,12 +2863,9 @@ The following optional outputs are available from the IDALS modules:
       * ``IDALS_MEM_NULL`` -- The ``ida_mem`` pointer is ``NULL``.
       * ``IDALS_LMEM_NULL`` -- The IDALS linear solver has not been initialized.
 
-   .. warning::
+   .. versionadded:: 4.0.0
 
-      The previous routine ``IDASpilsGetNumLinIters`` is now a wrapper for this
-      routine, and may still be used for backward-compatibility.  However, this
-      will be deprecated in future releases, so we recommend that users
-      transition to the new routine name soon.
+      Replaces the deprecated function ``IDASpilsGetNumLinIters``.
 
 .. c:function:: int IDAGetNumLinConvFails(void * ida_mem, long int * nlcfails)
 
@@ -2912,12 +2881,9 @@ The following optional outputs are available from the IDALS modules:
       * ``IDALS_MEM_NULL`` -- The ``ida_mem`` pointer is ``NULL``.
       * ``IDALS_LMEM_NULL`` -- The IDALS linear solver has not been initialized.
 
-   .. warning::
+   .. versionadded:: 4.0.0
 
-      The previous routine ``IDASpilsGetNumConvFails`` is now a wrapper for this
-      routine, and may still be used for backward-compatibility.  However, this
-      will be deprecated in future releases, so we recommend that users
-      transition to the new routine name soon.
+      Replaces the deprecated function ``IDASpilsGetNumConvFails``.
 
 .. c:function:: int IDAGetNumPrecEvals(void * ida_mem, long int * npevals)
 
@@ -2933,12 +2899,9 @@ The following optional outputs are available from the IDALS modules:
       * ``IDALS_MEM_NULL`` -- The ``ida_mem`` pointer is ``NULL``.
       * ``IDALS_LMEM_NULL`` -- The IDALS linear solver has not been initialized.
 
-   .. warning::
+   .. versionadded:: 4.0.0
 
-      The previous routine ``IDASpilsGetNumPrecEvals`` is now a wrapper for this
-      routine, and may still be used for backward-compatibility.  However, this
-      will be deprecated in future releases, so we recommend that users
-      transition to the new routine name soon.
+      Replaces the deprecated function ``IDASpilsGetNumPrecEvals``.
 
 .. c:function:: int IDAGetNumPrecSolves(void * ida_mem, long int * npsolves)
 
@@ -2954,12 +2917,9 @@ The following optional outputs are available from the IDALS modules:
       * ``IDALS_MEM_NULL`` -- The ``ida_mem`` pointer is ``NULL``.
       * ``IDALS_LMEM_NULL`` -- The IDALS linear solver has not been initialized.
 
-   .. warning::
+   .. versionadded:: 4.0.0
 
-      The previous routine ``IDASpilsGetNumPrecSolves`` is now a wrapper for
-      this routine, and may still be used for backward-compatibility.  However,
-      this will be deprecated in future releases, so we recommend that users
-      transition to the new routine name soon.
+      Replaces the deprecated function ``IDASpilsGetNumPrecSolves``.
 
 .. c:function:: int IDAGetNumJTSetupEvals(void * ida_mem, long int * njtsetup)
 
@@ -2975,12 +2935,9 @@ The following optional outputs are available from the IDALS modules:
       * ``IDALS_MEM_NULL`` -- The ``ida_mem`` pointer is ``NULL``.
       * ``IDALS_LMEM_NULL`` -- The IDALS linear solver has not been initialized.
 
-   .. warning::
+   .. versionadded:: 4.0.0
 
-      The previous routine ``IDASpilsGetNumJTSetupEvals`` is now a wrapper for
-      this routine, and may still be used for backward-compatibility.  However,
-      this will be deprecated in future releases, so we recommend that users
-      transition to the new routine name soon.
+      Replaces the deprecated function ``IDASpilsGetNumJTSetupEvals``.
 
 .. c:function:: int IDAGetNumJtimesEvals(void * ida_mem, long int * njvevals)
 
@@ -2996,12 +2953,9 @@ The following optional outputs are available from the IDALS modules:
       * ``IDALS_MEM_NULL`` -- The ``ida_mem`` pointer is ``NULL``.
       * ``IDALS_LMEM_NULL`` -- The IDALS linear solver has not been initialized.
 
-   .. warning::
+   .. versionadded:: 4.0.0
 
-      The previous routine ``IDASpilsGetNumJtimesEvals`` is now a wrapper for
-      this routine, and may still be used for backward-compatibility.  However,
-      this will be deprecated in future releases, so we recommend that users
-      transition to the new routine name soon.
+      Replaces the deprecated function ``IDASpilsGetNumJtimesEvals``.
 
 .. c:function:: int IDAGetLastLinFlag(void * ida_mem, long int * lsflag)
 
@@ -3039,13 +2993,10 @@ The following optional outputs are available from the IDALS modules:
       (SPGMR and SPFGMR only); or ``SUN_ERR_EXT_FAIL``, indicating an
       unrecoverable failure in an external iterative linear solver package.
 
-   .. warning::
+   .. versionadded:: 4.0.0
 
-      The previous routines ``IDADlsGetLastFlag`` and ``IDASpilsGetLastFlag``
-      are now wrappers for this routine, and may still be used for
-      backward-compatibility.  However, these will be deprecated in future
-      releases, so we recommend that users transition to the new routine name
-      soon.
+      Replaces the deprecated functions ``IDADlsGetLastFlag`` and
+      ``IDASpilsGetLastFlag``.
 
 .. c:function:: char* IDAGetLinReturnFlagName(long int lsflag)
 
@@ -3060,13 +3011,10 @@ The following optional outputs are available from the IDALS modules:
         :math:`1 \leq \mathtt{lsflag} \leq N` (LU factorization failed), this
         function returns "NONE".
 
-   .. warning::
+   .. versionadded:: 4.0.0
 
-      The previous routines ``IDADlsGetReturnFlagName`` and
-      ``IDASpilsGetReturnFlagName`` are now wrappers for this routine, and may
-      still be used for backward-compatibility.  However, these will be
-      deprecated in future releases, so we recommend that users transition to
-      the new routine name soon.
+      Replaces the deprecated functions ``IDADlsGetReturnFlagName`` and
+      ``IDASpilsGetReturnFlagName``.
 
 
 .. _IDA.Usage.CC.reinit:
@@ -3106,7 +3054,7 @@ To stop when the location of the discontinuity is known, simply make that
 location a value of :math:`t_{\text{out}}`. To stop when the location of the
 discontinuity is determined by the solution, use the rootfinding feature. In
 either case, it is critical that the residual function *not* incorporate the
-discontinuity, but rather have a smooth extention over the discontinuity, so
+discontinuity, but rather have a smooth extension over the discontinuity, so
 that the step across it (and subsequent rootfinding, if used) can be done
 efficiently. Then use a switch within the residual function (communicated
 through ``user_data``) that can be flipped between the stopping of the
@@ -3216,7 +3164,7 @@ Error weight function
 
    **Return value:**
       * ``0`` -- if it the error weights were successfully set.
-      * ``-1`` -- if any error occured.
+      * ``-1`` -- if any error occurred.
 
    **Notes:**
       Allocation of memory for ``ewt`` is handled within IDA.
@@ -3224,7 +3172,7 @@ Error weight function
    .. warning::
 
       The error weight vector must have all components positive. It is the
-      user's responsiblity to perform this test and return -1 if it is not
+      user's responsibility to perform this test and return -1 if it is not
       satisfied.
 
 
@@ -3255,8 +3203,8 @@ as follows:
         parameter passed to :c:func:`IDASetUserData`.
 
    **Return value:**
-      ``0`` if successful or non-zero if an error occured (in which case the
-      integration is halted and :c:func:`IDASolve` returs ``IDA_RTFUNC_FAIL``).
+      ``0`` if successful or non-zero if an error occurred (in which case the
+      integration is halted and :c:func:`IDASolve` returns ``IDA_RTFUNC_FAIL``).
 
    **Notes:**
       Allocation of memory for ``gout`` is handled within IDA.
@@ -3299,7 +3247,7 @@ user may provide a function of type :c:type:`IDALsJacFn` defined as follows:
       value if a recoverable error occurred, or a negative value if a
       nonrecoverable error occurred.
 
-      In the case of a recoverable eror return, the integrator will attempt to
+      In the case of a recoverable error return, the integrator will attempt to
       recover by reducing the stepsize, and hence changing :math:`\alpha` in
       :eq:`IDA_DAE_Jacobian`.
 
@@ -3401,12 +3349,9 @@ user may provide a function of type :c:type:`IDALsJacFn` defined as follows:
       ``SUNMATRIX_SPARSE`` type and accessor macros are documented in
       :numref:`SUNMatrix.Sparse`.
 
-   .. warning::
+   .. versionadded:: 4.0.0
 
-      The previous function type ``IDADlsJacFn`` is identical to ``IDALsJacFn``,
-      and may still be used for backward-compatibility. However, this will be
-      deprecated in future releases, so we recommend that users transition to
-      the new function type name soon.
+      Replaces the deprecated type ``IDADlsJacFn``.
 
 
 .. _IDA.Usage.CC.user_fct_sim.jtimesFn:
@@ -3461,13 +3406,9 @@ the default is a difference quotient approximation to these products.
       :numref:`IDA.Usage.CC.optional_output.optout_main`. The unit roundoff can be
       accessed as ``SUN_UNIT_ROUNDOFF`` defined in ``sundials_types.h``.
 
-   .. warning::
+   .. versionadded:: 4.0.0
 
-      The previous function type ``IDASpilsJacTimesVecFn`` is identical to
-      ``IDALsJacTimesVecFn``, and may still be used for
-      backward-compatibility. However, this will be deprecated in future
-      releases, so we recommend that users transition to the new function type
-      name soon.
+      Replaces the deprecated type ``IDASpilsJacTimesVecFn``.
 
 
 .. _IDA.Usage.CC.user_fct_sim.jtsetupFn:
@@ -3480,7 +3421,7 @@ Jacobian-related data be preprocessed or evaluated, then this needs to be done
 in a user-supplied function of type :c:type:`IDALsJacTimesSetupFn`, defined as
 follows:
 
-.. c:type:: int (*IDALsJacTimesSetupFn)(sunrealtype tt, N_Vector yy, N_Vector yp, N_Vector rr, ealtype cj, void *user_data);
+.. c:type:: int (*IDALsJacTimesSetupFn)(sunrealtype tt, N_Vector yy, N_Vector yp, N_Vector rr, sunrealtype cj, void *user_data);
 
    This function setups any data needed by :math:`Jv` product function (see
    :c:type:`IDALsJacTimesVecFn`).
@@ -3517,13 +3458,9 @@ follows:
       :numref:`IDA.Usage.CC.optional_output.optout_main`. The unit roundoff can be
       accessed as ``SUN_UNIT_ROUNDOFF`` defined in ``sundials_types.h``.
 
-   .. warning::
+   .. versionadded:: 4.0.0
 
-      The previous function type ``IDASpilsJacTimesSetupFn`` is identical to
-      ``IDALsJacTimesSetupFn``, and may still be used for
-      backward-compatibility. However, this will be deprecated in future
-      releases, so we recommend that users transition to the new function type
-      name soon.
+      Replaces the deprecated type ``IDASpilsJacTimesSetupFn``.
 
 
 

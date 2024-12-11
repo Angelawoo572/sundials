@@ -81,7 +81,7 @@ struct UserData
   // Inverse of Jacobian diagonal for preconditioner
   N_Vector d = nullptr;
 
-  // Ouput variables
+  // Output variables
   bool output = false; // write solution to disk
   int nout    = 20;    // number of output times
   std::ofstream uout;  // output file stream
@@ -107,7 +107,7 @@ UserData::~UserData()
 // -----------------------------------------------------------------------------
 
 // Compute the exact solution
-int Solution(sunrealtype t, N_Vector u, UserData& udata)
+static int Solution(sunrealtype t, N_Vector u, UserData& udata)
 {
   auto uarray = N_VGetArrayPointer(u);
   if (check_ptr(uarray, "N_VGetArrayPointer")) { return -1; }
@@ -137,7 +137,7 @@ int Solution(sunrealtype t, N_Vector u, UserData& udata)
 }
 
 // Compute the solution error
-int SolutionError(sunrealtype t, N_Vector u, N_Vector e, UserData& udata)
+static int SolutionError(sunrealtype t, N_Vector u, N_Vector e, UserData& udata)
 {
   // Compute true solution
   auto flag = Solution(t, e, udata);
@@ -151,7 +151,7 @@ int SolutionError(sunrealtype t, N_Vector u, N_Vector e, UserData& udata)
 }
 
 // Print command line options
-void InputHelp()
+static void InputHelp()
 {
   std::cout << std::endl
             << "Command line options:\n"
@@ -163,7 +163,7 @@ void InputHelp()
             << "  --kx <ky>          : y diffusion coefficient\n"
             << "  --tf <time>        : final time\n"
             << "  --rtol <rtol>      : relative tolerance\n"
-            << "  --atol <atol>      : absoltue tolerance\n"
+            << "  --atol <atol>      : absolute tolerance\n"
             << "  --gmres            : use GMRES linear solver\n"
             << "  --noprec           : disable preconditioner\n"
             << "  --liniters <iters> : max number of iterations\n"
@@ -176,7 +176,7 @@ void InputHelp()
 }
 
 // Read command line inputs
-int ReadInputs(std::vector<std::string>& args, UserData& udata)
+static int ReadInputs(std::vector<std::string>& args, UserData& udata)
 {
   if (find(args.begin(), args.end(), "--help") != args.end())
   {
@@ -212,7 +212,7 @@ int ReadInputs(std::vector<std::string>& args, UserData& udata)
 }
 
 // Print user data
-void PrintUserData(UserData& udata)
+static void PrintUserData(UserData& udata)
 {
   std::cout << std::endl
             << "2D Heat problem:\n"
@@ -243,7 +243,7 @@ void PrintUserData(UserData& udata)
 }
 
 // Initialize output
-int OpenOutput(UserData& udata)
+static int OpenOutput(UserData& udata)
 {
   // Header for status output
   std::cout << std::scientific
@@ -280,7 +280,7 @@ int OpenOutput(UserData& udata)
 }
 
 // Write output
-int WriteOutput(sunrealtype t, N_Vector u, N_Vector e, UserData& udata)
+static int WriteOutput(sunrealtype t, N_Vector u, N_Vector e, UserData& udata)
 {
   // Compute the error
   auto flag = SolutionError(t, u, e, udata);
@@ -325,7 +325,7 @@ int WriteOutput(sunrealtype t, N_Vector u, N_Vector e, UserData& udata)
 }
 
 // Finalize output
-int CloseOutput(UserData& udata)
+static int CloseOutput(UserData& udata)
 {
   // Footer for status output
   std::cout << " ----------------------------------------------"

@@ -11,7 +11,7 @@
  * SPDX-License-Identifier: BSD-3-Clause
  * SUNDIALS Copyright End
  * -----------------------------------------------------------------------------
- * Shared implementaiton file for 2D diffusion benchmark problem
+ * Shared implementation file for 2D diffusion benchmark problem
  * ---------------------------------------------------------------------------*/
 
 #include "diffusion_2D.hpp"
@@ -775,8 +775,8 @@ int UserOutput::open(UserData* udata)
 int UserOutput::write(sunrealtype t, N_Vector u, UserData* udata)
 {
   int flag;
-  sunrealtype max;
-  bool outproc = (udata->myid_c == 0);
+  sunrealtype max = ZERO;
+  bool outproc    = (udata->myid_c == 0);
 
   if (output > 0)
   {
@@ -900,7 +900,7 @@ int SolutionError(sunrealtype t, N_Vector u, N_Vector e, UserData* udata)
 }
 
 // Check function return value
-int check_flag(void* flagvalue, const string funcname, int opt)
+int check_flag(const void* flagvalue, const string funcname, int opt)
 {
   // Check if the function returned a NULL pointer
   if (opt == 0)
@@ -916,7 +916,7 @@ int check_flag(void* flagvalue, const string funcname, int opt)
   // Check the function return flag value
   else if (opt == 1 || opt == 2)
   {
-    int errflag = *((int*)flagvalue);
+    const int errflag = *((const int*)flagvalue);
     if ((opt == 1 && errflag < 0) || (opt == 2 && errflag != 0))
     {
       cerr << endl

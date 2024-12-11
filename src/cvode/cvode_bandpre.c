@@ -345,7 +345,7 @@ int CVBandPrecGetNumRhsEvals(void* cvode_mem, long int* nfevalsBP)
 
   gamma   is the scalar appearing in the Newton matrix.
 
-  bp_data is a pointer to preconditoner data (set by CVBandPrecInit)
+  bp_data is a pointer to preconditioner data (set by CVBandPrecInit)
 
   The value to be returned by the CVBandPrecSetup function is
     0  if successful, or
@@ -428,16 +428,19 @@ static int CVBandPrecSetup(sunrealtype t, N_Vector y, N_Vector fy,
 
   r is the right-hand side vector of the linear system.
 
-  bp_data is a pointer to preconditoner data (set by CVBandPrecInit)
+  bp_data is a pointer to preconditioner data (set by CVBandPrecInit)
 
   z is the output vector computed by CVBandPrecSolve.
 
   The value returned by the CVBandPrecSolve function is always 0,
   indicating success.
   -----------------------------------------------------------------*/
-static int CVBandPrecSolve(sunrealtype t, N_Vector y, N_Vector fy, N_Vector r,
-                           N_Vector z, sunrealtype gamma, sunrealtype delta,
-                           int lr, void* bp_data)
+static int CVBandPrecSolve(SUNDIALS_MAYBE_UNUSED sunrealtype t,
+                           SUNDIALS_MAYBE_UNUSED N_Vector y,
+                           SUNDIALS_MAYBE_UNUSED N_Vector fy, N_Vector r,
+                           N_Vector z, SUNDIALS_MAYBE_UNUSED sunrealtype gamma,
+                           SUNDIALS_MAYBE_UNUSED sunrealtype delta,
+                           SUNDIALS_MAYBE_UNUSED int lr, void* bp_data)
 {
   CVBandPrecData pdata;
   int retval;

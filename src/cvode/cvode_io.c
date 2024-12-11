@@ -104,6 +104,8 @@ int CVodeSetMonitorFn(void* cvode_mem, CVMonitorFn fn)
   cv_mem->cv_monitorfun = fn;
   return (CV_SUCCESS);
 #else
+  /* silence warnings when monitoring is disabled */
+  ((void)fn);
   cvProcessError(cv_mem, CV_ILL_INPUT, __LINE__, __func__, __FILE__,
                  "SUNDIALS was not built with monitoring enabled.");
   return (CV_ILL_INPUT);
@@ -809,7 +811,7 @@ int CVodeSetMaxNonlinIters(void* cvode_mem, int maxcor)
 /*
  * CVodeSetNonlinConvCoef
  *
- * Specifies the coeficient in the nonlinear solver convergence
+ * Specifies the coefficient in the nonlinear solver convergence
  * test
  */
 
@@ -1023,6 +1025,8 @@ int CVodeSetUseIntegratorFusedKernels(void* cvode_mem, sunbooleantype onoff)
   cv_mem->cv_usefused = onoff;
   return (CV_SUCCESS);
 #else
+  /* silence warnings when fused kernels are disabled */
+  ((void)onoff);
   cvProcessError(cv_mem, CV_ILL_INPUT, __LINE__, __func__, __FILE__,
                  "CVODE was not built with fused integrator kernels enabled");
   return (CV_ILL_INPUT);
@@ -1130,7 +1134,7 @@ int CVodeGetNumErrTestFails(void* cvode_mem, long int* netfails)
 /*
  * CVodeGetLastOrder
  *
- * Returns the order on the last succesful step
+ * Returns the order on the last successful step
  */
 
 int CVodeGetLastOrder(void* cvode_mem, int* qlast)

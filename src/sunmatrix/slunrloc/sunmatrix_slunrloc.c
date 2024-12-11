@@ -13,17 +13,21 @@
  * SUNDIALS Copyright End
  * ----------------------------------------------------------------------------
  * This is the implementation file for the SuperLU SuperMatrix SLU_NR_loc
- * format compatibile SUNMatrix.
+ * format compatible SUNMatrix.
  * ----------------------------------------------------------------------------
  */
 
 #include <mpi.h>
 #include <stdarg.h>
 #include <stdlib.h>
+
+#include <superlu_ddefs.h>
+
 #include <sundials/sundials_math.h>
 #include <sundials/sundials_mpi_types.h>
 #include <sunmatrix/sunmatrix_slunrloc.h>
-#include <superlu_ddefs.h>
+
+#include "sundials_macros.h"
 
 /*
  * ----------------------------------------------------------------------------
@@ -83,7 +87,7 @@ SUNMatrix SUNMatrix_SLUNRloc(SuperMatrix* A_super, gridinfo_t* grid,
   SUNMatrix A;
   SUNMatrixContent_SLUNRloc content;
 
-  /* Check for valid intputs */
+  /* Check for valid inputs */
   if (A_super == NULL || grid == NULL) { return (NULL); }
 
   if (A_super->Stype != SLU_NR_loc || A_super->Dtype != SLU_D ||
@@ -171,7 +175,10 @@ sunbooleantype SUNMatrix_SLUNRloc_OwnData(SUNMatrix A)
  * ----------------------------------------------------------------------------
  */
 
-SUNMatrix_ID SUNMatGetID_SLUNRloc(SUNMatrix A) { return (SUNMATRIX_SLUNRLOC); }
+SUNMatrix_ID SUNMatGetID_SLUNRloc(SUNDIALS_MAYBE_UNUSED SUNMatrix A)
+{
+  return (SUNMATRIX_SLUNRLOC);
+}
 
 SUNMatrix SUNMatClone_SLUNRloc(SUNMatrix A)
 {

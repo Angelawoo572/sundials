@@ -45,7 +45,7 @@ if the vector owns the execution policies and memory helper objects (i.e., it is
 in change of freeing the objects), :c:type:`SUNMemory` objects for the vector data on
 the host and device, pointers to execution policies that control how streaming
 and reduction kernels are launched, a :c:type:`SUNMemoryHelper` for performing memory
-operations, and a private data structure which holds additonal members that
+operations, and a private data structure which holds additional members that
 should not be accessed directly.
 
 When instantiated with :c:func:`N_VNew_Cuda`, the underlying data will be
@@ -84,7 +84,7 @@ accessor functions:
 
 .. c:function:: sunbooleantype N_VIsManagedMemory_Cuda(N_Vector v)
 
-   This function returns a boolean flag indiciating if the vector
+   This function returns a boolean flag indicating if the vector
    data array is in managed memory or not.
 
 
@@ -159,8 +159,8 @@ The module NVECTOR_CUDA also provides the following user-callable routines:
 
    This function sets the execution policies which control the kernel parameters
    utilized when launching the streaming and reduction CUDA kernels. By default
-   the vector is setup to use the :cpp:func:`SUNCudaThreadDirectExecPolicy` and
-   :cpp:func:`SUNCudaBlockReduceAtomicExecPolicy`. Any custom execution policy
+   the vector is setup to use the ``SUNCudaThreadDirectExecPolicy`` and
+   ``SUNCudaBlockReduceAtomicExecPolicy``. Any custom execution policy
    for reductions must ensure that the grid dimensions (number of thread blocks)
    is a multiple of the CUDA warp size (32). See
    :numref:`NVectors.CUDA.SUNCudaExecPolicy` below for more information about
@@ -272,7 +272,7 @@ options as the vector they are cloned from while vectors created with
 **Notes**
 
 * When there is a need to access components of an ``N_Vector_Cuda``, ``v``,
-  it is recommeded to use functions :c:func:`N_VGetDeviceArrayPointer_Cuda()` or
+  it is recommended to use functions :c:func:`N_VGetDeviceArrayPointer_Cuda()` or
   :c:func:`N_VGetHostArrayPointer_Cuda()`. However, when using managed memory,
   the function :c:func:`N_VGetArrayPointer` may also be used.
 
@@ -288,7 +288,6 @@ options as the vector they are cloned from while vectors created with
 The ``SUNCudaExecPolicy`` Class
 --------------------------------
 
-
 In order to provide maximum flexibility to users, the CUDA kernel execution parameters used
 by kernels within SUNDIALS are defined by objects of the ``sundials::cuda::ExecPolicy``
 abstract class type (this class can be accessed in the global namespace as ``SUNCudaExecPolicy``).
@@ -300,27 +299,23 @@ Thus, users may provide custom execution policies that fit the needs of their pr
 where the ``sundials::cuda::ExecPolicy`` class is defined in the header file
 ``sundials_cuda_policies.hpp``, as follows:
 
-.. code-block:: c++
+.. cpp:class:: sundials::cuda::ExecPolicy
 
-   class ExecPolicy
-   {
-   public:
-      ExecPolicy(cudaStream_t stream = 0) : stream_(stream) { }
-      virtual size_t gridSize(size_t numWorkUnits = 0, size_t blockDim = 0) const = 0;
-      virtual size_t blockSize(size_t numWorkUnits = 0, size_t gridDim = 0) const = 0;
-      virtual const cudaStream_t* stream() const { return (&stream_); }
-      virtual ExecPolicy* clone() const = 0;
-      ExecPolicy* clone_new_stream(cudaStream_t stream) const {
-         ExecPolicy* ex = clone();
-         ex->stream_ = stream;
-         return ex;
-      }
-      virtual bool atomic() const { return false; }
-      virtual ~ExecPolicy() {}
-   protected:
-      cudaStream_t stream_;
-   };
+   .. cpp:function:: ExecPolicy(cudaStream_t stream = 0)
 
+   .. cpp:function:: virtual size_t gridSize(size_t numWorkUnits = 0, size_t blockDim = 0)
+
+   .. cpp:function:: virtual size_t blockSize(size_t numWorkUnits = 0, size_t gridDim = 0)
+
+   .. cpp:function:: virtual const cudaStream_t* stream() const
+
+   .. cpp:function:: virtual ExecPolicy* clone() const
+
+   .. cpp:function:: ExecPolicy* clone_new_stream(cudaStream_t stream) const
+
+   .. cpp:function:: virtual bool atomic() const
+
+   .. cpp:function:: virtual ~ExecPolicy()
 
 To define a custom execution policy, a user simply needs to create a class that
 inherits from the abstract class and implements the methods. The SUNDIALS
@@ -380,7 +375,7 @@ In total, SUNDIALS provides 3 execution policies:
 
    .. cpp:function:: SUNCudaBlockReduceExecPolicy(const size_t blockDim, const cudaStream_t stream = 0)
 
-      Is for kernels performing a reduction across indvidual thread blocks. The
+      Is for kernels performing a reduction across individual thread blocks. The
       number of threads per block (blockDim) can be set to any valid multiple of
       the CUDA warp size. The grid size (gridDim) can be set to any value
       greater than 0. If it is set to 0, then the grid size will be chosen so
@@ -389,7 +384,7 @@ In total, SUNDIALS provides 3 execution policies:
 
    .. cpp:function:: SUNCudaBlockReduceAtomicExecPolicy(const size_t blockDim, const cudaStream_t stream = 0)
 
-      Is for kernels performing a reduction across indvidual thread blocks using
+      Is for kernels performing a reduction across individual thread blocks using
       atomic operations. The number of threads per block (blockDim) can be set
       to any valid multiple of the CUDA warp size. The grid size (gridDim) can be
       set to any value greater than 0. If it is set to 0, then the grid size

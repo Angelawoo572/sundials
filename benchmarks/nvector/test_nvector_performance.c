@@ -43,7 +43,7 @@ static void time_stats(N_Vector X, double* times, int start, int ntimes,
 int print_time = 0; /* flag for printing timing data */
 int nwarmups   = 1; /* number of extra tests to perform and ignore in average */
 
-#if defined(SUNDIALS_HAVE_POSIX_TIMERS) && defined(_POSIX_TIMERS)
+#if defined(SUNDIALS_HAVE_POSIX_TIMERS)
 time_t base_time_tv_sec = 0; /* Base time; makes time values returned
                                 by get_time easier to read when
                                 printed since they will be zero
@@ -2723,7 +2723,7 @@ void SetNumWarmups(int num_warmups)
 
 void SetTiming(int onoff, int myid)
 {
-#if defined(SUNDIALS_HAVE_POSIX_TIMERS) && defined(_POSIX_TIMERS)
+#if defined(SUNDIALS_HAVE_POSIX_TIMERS)
   struct timespec spec;
   clock_gettime(CLOCK_MONOTONIC, &spec);
   base_time_tv_sec = spec.tv_sec;
@@ -2812,7 +2812,7 @@ void rand_realtype_constraints(sunrealtype* data, sunindextype len)
 static double get_time(void)
 {
   double time;
-#if defined(SUNDIALS_HAVE_POSIX_TIMERS) && defined(_POSIX_TIMERS)
+#if defined(SUNDIALS_HAVE_POSIX_TIMERS)
   struct timespec spec;
   clock_gettime(CLOCK_MONOTONIC, &spec);
   time = (double)(spec.tv_sec - base_time_tv_sec) +
@@ -2826,23 +2826,23 @@ static double get_time(void)
 /* ----------------------------------------------------------------------
  * compute average, standard deviation, max, and min
  * --------------------------------------------------------------------*/
-static void time_stats(N_Vector X, double* times, int nwarmups, int ntests,
+static void time_stats(N_Vector X, double* times, int num_warmups, int ntests,
                        double* avg, double* sdev, double* min, double* max)
 {
   int i, ntotal;
 
   /* total number of times collected */
-  ntotal = nwarmups + ntests;
+  ntotal = num_warmups + ntests;
 
   /* if running in parallel collect data from all processes */
   collect_times(X, times, ntotal);
 
   /* compute timing stats */
   *avg = 0.0;
-  *min = times[nwarmups];
-  *max = times[nwarmups];
+  *min = times[num_warmups];
+  *max = times[num_warmups];
 
-  for (i = nwarmups; i < ntotal; i++)
+  for (i = num_warmups; i < ntotal; i++)
   {
     *avg += times[i];
     if (times[i] < *min) { *min = times[i]; }
@@ -2853,7 +2853,7 @@ static void time_stats(N_Vector X, double* times, int nwarmups, int ntests,
   *sdev = 0.0;
   if (ntests > 1)
   {
-    for (i = nwarmups; i < ntotal; i++)
+    for (i = num_warmups; i < ntotal; i++)
     {
       *sdev += (times[i] - *avg) * (times[i] - *avg);
     }

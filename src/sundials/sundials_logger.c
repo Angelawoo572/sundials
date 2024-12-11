@@ -16,18 +16,19 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
 #include <sundials/priv/sundials_errors_impl.h>
 #include <sundials/sundials_config.h>
+#include <sundials/sundials_errors.h>
 #include <sundials/sundials_logger.h>
-
-#include "sundials/sundials_errors.h"
-#include "sundials/sundials_types.h"
+#include <sundials/sundials_types.h>
 
 #if SUNDIALS_MPI_ENABLED
 #include <mpi.h>
 #endif
 
 #include "sundials_logger_impl.h"
+#include "sundials_macros.h"
 #include "sundials_utils.h"
 
 /* max number of files that can be opened */
@@ -37,7 +38,7 @@ void sunCreateLogMessage(SUNLogLevel lvl, int rank, const char* scope,
                          const char* label, const char* txt, va_list args,
                          char** log_msg)
 {
-  char* prefix;
+  const char* prefix;
   char* formatted_txt;
   int msg_length;
 
@@ -52,10 +53,10 @@ void sunCreateLogMessage(SUNLogLevel lvl, int rank, const char* scope,
     fprintf(stderr, "[FATAL LOGGER ERROR] %s\n", "message size too large");
   }
 
-  if (lvl == SUN_LOGLEVEL_DEBUG) { prefix = (char*)"DEBUG"; }
-  else if (lvl == SUN_LOGLEVEL_WARNING) { prefix = (char*)"WARNING"; }
-  else if (lvl == SUN_LOGLEVEL_INFO) { prefix = (char*)"INFO"; }
-  else if (lvl == SUN_LOGLEVEL_ERROR) { prefix = (char*)"ERROR"; }
+  if (lvl == SUN_LOGLEVEL_DEBUG) { prefix = "DEBUG"; }
+  else if (lvl == SUN_LOGLEVEL_WARNING) { prefix = "WARNING"; }
+  else if (lvl == SUN_LOGLEVEL_INFO) { prefix = "INFO"; }
+  else if (lvl == SUN_LOGLEVEL_ERROR) { prefix = "ERROR"; }
 
   msg_length = sunsnprintf(NULL, 0, "[%s][rank %d][%s][%s] %s\n", prefix, rank,
                            scope, label, formatted_txt);
@@ -65,6 +66,7 @@ void sunCreateLogMessage(SUNLogLevel lvl, int rank, const char* scope,
   free(formatted_txt);
 }
 
+#if SUNDIALS_LOGGING_LEVEL > 0
 static FILE* sunOpenLogFile(const char* fname, const char* mode)
 {
   FILE* fp = NULL;
@@ -78,13 +80,15 @@ static FILE* sunOpenLogFile(const char* fname, const char* mode)
 
   return fp;
 }
+#endif
 
 static void sunCloseLogFile(void* fp)
 {
   if (fp && fp != stdout && fp != stderr) { fclose((FILE*)fp); }
 }
 
-static sunbooleantype sunLoggerIsOutputRank(SUNLogger logger, int* rank_ref)
+static sunbooleantype sunLoggerIsOutputRank(SUNDIALS_MAYBE_UNUSED SUNLogger logger,
+                                            int* rank_ref)
 {
   sunbooleantype retval;
 
@@ -329,12 +333,12 @@ SUNErrCode SUNLogger_QueueMsg(SUNLogger logger, SUNLogLevel lvl,
       return retval;
     }
 
-    va_list args;
-    va_start(args, msg_txt);
-
     if (logger->queuemsg)
     {
+      va_list args;
+      va_start(args, msg_txt);
       retval = logger->queuemsg(logger, lvl, scope, label, msg_txt, args);
+      va_end(args);
     }
     else
     {
@@ -343,7 +347,10 @@ SUNErrCode SUNLogger_QueueMsg(SUNLogger logger, SUNLogLevel lvl,
       if (sunLoggerIsOutputRank(logger, &rank))
       {
         char* log_msg = NULL;
+        va_list args;
+        va_start(args, msg_txt);
         sunCreateLogMessage(lvl, rank, scope, label, msg_txt, args, &log_msg);
+        va_end(args);
 
         switch (lvl)
         {
@@ -368,9 +375,14 @@ SUNErrCode SUNLogger_QueueMsg(SUNLogger logger, SUNLogLevel lvl,
         free(log_msg);
       }
     }
-
-    va_end(args);
   }
+#else
+  /* silence warnings when all logging is disabled */
+  ((void)logger);
+  ((void)lvl);
+  ((void)scope);
+  ((void)label);
+  ((void)msg_txt);
 #endif
 
   return retval;
@@ -417,6 +429,9 @@ SUNErrCode SUNLogger_Flush(SUNLogger logger, SUNLogLevel lvl)
       }
     }
   }
+#else
+  /* silence warnings when all logging is disabled */
+  ((void)lvl);
 #endif
 
   return retval;

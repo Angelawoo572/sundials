@@ -443,7 +443,7 @@ makes no sense (and is overly costly) after ``y[i]`` is below some noise level. 
 ``abstol`` (if scalar) or ``abstol[i]`` (if a vector) needs to be set to that noise level. If the different
 components have different noise levels, then ``abstol`` should be a vector. See the example  ``cvsRoberts_dns``
 in the CVODES package, and the discussion of it in the CVODES Examples document
-:cite:p:`cvodes_ex`. In that problem, the three components vary betwen 0 and 1,
+:cite:p:`cvodes_ex`. In that problem, the three components vary between 0 and 1,
 and have different noise levels; hence the ``abstol`` vector. It is impossible to give any
 general advice on ``abstol`` values, because the appropriate noise levels are completely
 problem-dependent. The user or modeler hopefully has some idea as to what those
@@ -581,7 +581,9 @@ returned by :c:func:`CVodeCreate`.
 
       When using sparse linear solvers, it is typically much more  efficient to supply ``J`` so that it includes the full sparsity  pattern of the Newton system matrices :math:`M=I-\gamma J`, even if ``J``  itself has zeros in nonzero locations of I.  The reasoning for  this is that M is constructed in-place, on top of the  user-specified values of ``J``, so if the sparsity pattern in  ``J`` is insufficient to store M then it will need to be resized  internally by CVODES.
 
-      The previous routines ``CVDlsSetLinearSolver`` and  ``CVSpilsSetLinearSolver`` are now wrappers for this routine, and may  still be used for backward-compatibility.  However, these will be  deprecated in future releases, so we recommend that users transition  to the new routine name soon.
+   .. versionadded:: 4.0.0
+
+      Replaces the deprecated functions ``CVDlsSetLinearSolver`` and  ``CVSpilsSetLinearSolver``.
 
 .. c:function:: int CVDiag(void* cvode_mem)
 
@@ -626,7 +628,7 @@ attaches the nonlinear solver to the main CVODES integrator.
 
 .. c:function:: int CVodeSetNonlinearSolver(void* cvode_mem, SUNNonlinearSolver NLS)
 
-   The function ``CVodeSetNonLinearSolver`` attaches a ``SUNNonlinearSolver``  object (``NLS``) to CVODES.
+   The function ``CVodeSetNonlinearSolver`` attaches a ``SUNNonlinearSolver``  object (``NLS``) to CVODES.
 
    **Arguments:**
      * ``cvode_mem`` -- pointer to the CVODES memory block.
@@ -770,7 +772,7 @@ rootfinding.
 
       In the ``CV_ONE_STEP`` mode, ``tout`` is used only on the first call,  and only to get the direction and a rough scale of the independent variable.
 
-      If a stop time is enabled (through a call to ``CVodeSetStopTime``), then  ``CVode`` returns the solution at ``tstop``. Once the integrator returns  at a stop time, any future testing for ``tstop`` is disabled (and can be  reenabled only though a new call to ``CVodeSetStopTime``).
+      If a stop time is enabled (through a call to ``CVodeSetStopTime``), then  ``CVode`` returns the solution at ``tstop``. Once the integrator returns  at a stop time, any future testing for ``tstop`` is disabled (and can be  re-enabled only though a new call to ``CVodeSetStopTime``).
 
       All failure return values are negative and so the test ``flag < 0``  will trap all ``CVode`` failures.
 
@@ -912,7 +914,7 @@ Main solver optional input functions
 
    **Arguments:**
      * ``cvode_mem`` -- pointer to the CVODES memory block.
-     * ``nst`` -- number of successful steps inbetween calls to the monitor function 0 by default;    a 0 input will turn off monitoring.
+     * ``nst`` -- number of successful steps in between calls to the monitor function 0 by default;    a 0 input will turn off monitoring.
 
    **Return value:**
      * ``CV_SUCCESS`` -- The optional value has been successfully set.
@@ -1054,7 +1056,7 @@ Main solver optional input functions
    **Notes:**
       The default, if this routine is not called, is that no stop time is imposed.
 
-      Once the integrator returns at a stop time, any future testing for ``tstop``  is disabled (and can be reenabled only though a new call to ``CVodeSetStopTime``).
+      Once the integrator returns at a stop time, any future testing for ``tstop``  is disabled (and can be re-enabled only though a new call to ``CVodeSetStopTime``).
 
       A stop time not reached before a call to :c:func:`CVodeReInit` will
       remain active but can be disabled by calling :c:func:`CVodeClearStopTime`.
@@ -1087,7 +1089,7 @@ Main solver optional input functions
       * ``CV_MEM_NULL`` if the CVODES memory is ``NULL``
 
    **Notes:**
-      The stop time can be reenabled though a new call to
+      The stop time can be re-enabled though a new call to
       :c:func:`CVodeSetStopTime`.
 
    .. versionadded:: 6.5.1
@@ -1367,7 +1369,9 @@ through :c:func:`CVodeSetUserData`.
 
       The function type :c:type:`CVLsJacFn` is described in :numref:`CVODES.Usage.SIM.user_supplied.jacFn`.
 
-      The previous routine ``CVDlsSetJacFn`` is now a wrapper for this  routine, and may still be used for backward-compatibility.  However, this will be deprecated in future releases, so we recommend that  users transition to the new routine name soon.
+   .. versionadded:: 4.0.0
+
+      Replaces the deprecated function ``CVDlsSetJacFn``.
 
 
 To specify a user-supplied linear system function ``linsys``, CVLS provides
@@ -1472,7 +1476,9 @@ without using global data in the program.
 
       This function must be called after the CVLS linear solver  interface has been initialized through a call to  :c:func:`CVodeSetLinearSolver`.
 
-      The previous routine ``CVSpilsSetJacTimes`` is now a wrapper for this routine, and may still be used for backward-compatibility.  However, this will be deprecated in future releases, so we recommend that users transition to the new routine name soon.
+   .. versionadded:: 4.0.0
+
+      Replaces the deprecated function ``CVSpilsSetJacTimes``.
 
 
 When using the internal difference quotient the user may optionally supply an
@@ -1555,7 +1561,9 @@ the :c:func:`CVodeSetEpsLin` function.
 
       The function type :c:type:`CVLsPrecSetupFn` is described in :numref:`CVODES.Usage.SIM.user_supplied.precondFn`.
 
-      The previous routine ``CVSpilsSetPreconditioner`` is now a wrapper  for this routine, and may still be used for backward-compatibility.  However, this will be deprecated in future releases, so we recommend  that users transition to the new routine name soon.
+   .. versionadded:: 4.0.0
+
+      Replaces the deprecated function ``CVSpilsSetPreconditioner``.
 
 
 .. c:function:: int CVodeSetEpsLin(void* cvode_mem, sunrealtype eplifac)
@@ -1579,7 +1587,9 @@ the :c:func:`CVodeSetEpsLin` function.
 
       If ``eplifac`` = 0.0 is passed, the default value is used.
 
-      The previous routine ``CVSpilsSetEpsLin`` is now a wrapper for this  routine, and may still be used for backward-compatibility.  However,  this will be deprecated in future releases, so we recommend that  users transition to the new routine name soon.
+   .. versionadded:: 4.0.0
+
+      Replaces the deprecated function ``CVSpilsSetEpsLin``.
 
 
 .. c:function:: int CVodeSetLSNormFactor(void* cvode_mem, sunrealtype nrmfac)
@@ -2310,7 +2320,7 @@ the preconditioner.
    +-------------------------------------------------+------------------------------------------+
    | No. of Jacobian-vector product evaluations      | :c:func:`CVodeGetNumJtimesEvals`         |
    +-------------------------------------------------+------------------------------------------+
-   | Get all linear solver statistics in one         | :c:func:`CVodeGetLinSolvStats`           |
+   | Get all linear solver statistics in one         | :c:func:`CVodeGetLinSolveStats`          |
    | function call                                   |                                          |
    +-------------------------------------------------+------------------------------------------+
    | Last return from a linear solver function       | :c:func:`CVodeGetLastLinFlag`            |
@@ -2617,7 +2627,7 @@ described next.
 
       The values returned in ``ele`` are valid only if :c:func:`CVode` returned  a non-negative value.
 
-      The ``ele`` vector, togther with the ``eweight`` vector from :c:func:`CVodeGetErrWeights`, can be used to determine how the various  components of the system contributed to the estimated local error  test.  Specifically, that error test uses the RMS norm of a vector  whose components are the products of the components of these two vectors.  Thus, for example, if there were recent error test failures, the components  causing the failures are those with largest values for the products,  denoted loosely as ``eweight[i]*ele[i]``.
+      The ``ele`` vector, together with the ``eweight`` vector from :c:func:`CVodeGetErrWeights`, can be used to determine how the various  components of the system contributed to the estimated local error  test.  Specifically, that error test uses the RMS norm of a vector  whose components are the products of the components of these two vectors.  Thus, for example, if there were recent error test failures, the components  causing the failures are those with largest values for the products,  denoted loosely as ``eweight[i]*ele[i]``.
 
 
 
@@ -2726,9 +2736,9 @@ described next.
 
    .. note::
 
-      The file ``scripts/sundials_csv.py`` provides python utility functions to
-      read and output the data from a SUNDIALS CSV output file using the key
-      and value pair format.
+      The Python module ``tools/suntools`` provides utilities to read and output
+      the data from a SUNDIALS CSV output file using the key and value pair
+      format.
 
    .. versionadded:: 6.2.0
 
@@ -2902,7 +2912,9 @@ solver, a suffix (for Linear Solver) has been added (e.g. ``lenrwLS``).
    **Notes:**
       The workspace requirements reported by this routine correspond only  to memory allocated within this interface and to memory allocated by  the ``SUNLinearSolver`` object attached to it.  The template Jacobian  matrix allocated by the user outside of CVLS is not included in  this report.
 
-      The previous routines ``CVDlsGetWorkspace`` and  ``CVSpilsGetWorkspace`` are now wrappers for this routine, and may  still be used for backward-compatibility.  However, these will be  deprecated in future releases, so we recommend that users transition  to the new routine name soon.
+   .. versionadded:: 4.0.0
+
+      Replaces the deprecated functions ``CVDlsGetWorkspace`` and  ``CVSpilsGetWorkspace``.
 
 
 .. c:function:: int CVodeGetNumJacEvals(void* cvode_mem, long int *njevals)
@@ -2918,8 +2930,9 @@ solver, a suffix (for Linear Solver) has been added (e.g. ``lenrwLS``).
      * ``CVLS_MEM_NULL`` --  The ``cvode_mem`` pointer is ``NULL``.
      * ``CVLS_LMEM_NULL`` -- The CVLS linear solver has not been initialized.
 
-   **Notes:**
-      The previous routine ``CVDlsGetNumJacEvals`` is now a wrapper for  this routine, and may still be used for backward-compatibility.  However, this will be deprecated in future releases, so we recommend  that users transition to the new routine name soon.
+   .. versionadded:: 4.0.0
+
+      Replaces the deprecated function ``CVDlsGetNumJacEvals``.
 
 
 .. c:function:: int CVodeGetNumLinRhsEvals(void* cvode_mem, long int *nfevalsLS)
@@ -2938,7 +2951,9 @@ solver, a suffix (for Linear Solver) has been added (e.g. ``lenrwLS``).
    **Notes:**
       The value ``nfevalsLS`` is incremented only if one of the default  internal difference quotient functions is used.
 
-      The previous routines ``CVDlsGetNumRhsEvals`` and  ``CVSpilsGetNumRhsEvals`` are now wrappers for this routine, and may  still be used for backward-compatibility.  However, these will be  deprecated in future releases, so we recommend that users transition  to the new routine name soon.
+   .. versionadded:: 4.0.0
+
+      Replaces the deprecated functions ``CVDlsGetNumRhsEvals`` and  ``CVSpilsGetNumRhsEvals``.
 
 
 .. c:function:: int CVodeGetNumLinIters(void* cvode_mem, long int *nliters)
@@ -2954,8 +2969,9 @@ solver, a suffix (for Linear Solver) has been added (e.g. ``lenrwLS``).
      * ``CVLS_MEM_NULL`` --  The ``cvode_mem`` pointer is ``NULL``.
      * ``CVLS_LMEM_NULL`` -- The CVLS linear solver has not been initialized.
 
-   **Notes:**
-      The previous routine ``CVSpilsGetNumLinIters`` is now a wrapper for  this routine, and may still be used for backward-compatibility.  However, this will be deprecated in future releases, so we recommend  that users transition to the new routine name soon.
+   .. versionadded:: 4.0.0
+
+      Replaces the deprecated function ``CVSpilsGetNumLinIters``.
 
 
 .. c:function:: int CVodeGetNumLinConvFails(void* cvode_mem, long int *nlcfails)
@@ -2971,8 +2987,9 @@ solver, a suffix (for Linear Solver) has been added (e.g. ``lenrwLS``).
      * ``CVLS_MEM_NULL`` --  The ``cvode_mem`` pointer is ``NULL``.
      * ``CVLS_LMEM_NULL`` -- The CVLS linear solver has not been initialized.
 
-   **Notes:**
-      The previous routine ``CVSpilsGetNumConvFails`` is now a wrapper for  this routine, and may still be used for backward-compatibility.  However, this will be deprecated in future releases, so we recommend  that users transition to the new routine name soon.
+   .. versionadded:: 4.0.0
+
+      Replaces the deprecated function ``CVSpilsGetNumConvFails``.
 
 
 .. c:function:: int CVodeGetNumPrecEvals(void* cvode_mem, long int *npevals)
@@ -2988,8 +3005,9 @@ solver, a suffix (for Linear Solver) has been added (e.g. ``lenrwLS``).
      * ``CVLS_MEM_NULL`` --  The ``cvode_mem`` pointer is ``NULL``.
      * ``CVLS_LMEM_NULL`` -- The CVLS linear solver has not been initialized.
 
-   **Notes:**
-      The previous routine ``CVSpilsGetNumPrecEvals`` is now a wrapper for  this routine, and may still be used for backward-compatibility.  However, this will be deprecated in future releases, so we recommend  that users transition to the new routine name soon.
+   .. versionadded:: 4.0.0
+
+      Replaces the deprecated function ``CVSpilsGetNumPrecEvals``.
 
 
 .. c:function:: int CVodeGetNumPrecSolves(void* cvode_mem, long int *npsolves)
@@ -3034,9 +3052,9 @@ solver, a suffix (for Linear Solver) has been added (e.g. ``lenrwLS``).
      * ``CVLS_LMEM_NULL`` -- The CVLS linear solver has not been initialized.
 
 
-.. c:function:: int CVodeGetLinSolvStats(void* cvode_mem, long int* njevals, long int* nfevalsLS, long int* nliters, long int* nlcfails, long int* npevals, long int* npsolves, long int* njtsetups, long int* njtimes)
+.. c:function:: int CVodeGetLinSolveStats(void* cvode_mem, long int* njevals, long int* nfevalsLS, long int* nliters, long int* nlcfails, long int* npevals, long int* npsolves, long int* njtsetups, long int* njtimes)
 
-   The function ``CVodeGetLinSolvStats`` returns CVODES linear solver  statistics.
+   The function ``CVodeGetLinSolveStats`` returns CVODES linear solver  statistics.
 
    **Arguments:**
      * ``cvode_mem`` -- pointer to the CVODES memory block.
@@ -3075,7 +3093,9 @@ solver, a suffix (for Linear Solver) has been added (e.g. ``lenrwLS``).
 
       If the CVLS solve function failed (i.e., :c:func:`CVode` returned  ``CV_LSOLVE_FAIL``), then ``lsflag`` contains the error return  flag from the ``SUNLinearSolver`` object, which will be one of: ``SUN_ERR_ARG_CORRUPTRRUPT``, indicating that the ``SUNLinearSolver`` memory is ``NULL``;   ``SUNLS_ATIMES_FAIL_UNREC``, indicating an unrecoverable failure in the  Jv function; ``SUNLS_PSOLVE_FAIL_UNREC``, indicating that the preconditioner solve  function ``psolve`` failed unrecoverably;  ``SUNLS_GS_FAIL``, indicating a failure in the Gram-Schmidt  procedure (SPGMR and SPFGMR only);  ``SUNLS_QRSOL_FAIL``, indicating that the matrix R was found to be  singular during the QR solve phase (SPGMR and SPFGMR only); or  ``SUN_ERR_EXT_FAIL``, indicating an unrecoverable  failure in an external iterative linear solver package.
 
-      The previous routines ``CVDlsGetLastFlag`` and  ``CVSpilsGetLastFlag`` are now wrappers for this routine, and may  still be used for backward-compatibility.  However, these will be  deprecated in future releases, so we recommend that users transition  to the new routine name soon.
+   .. versionadded:: 4.0.0
+
+      Replaces the deprecated functions ``CVDlsGetLastFlag`` and  ``CVSpilsGetLastFlag``.
 
 
 .. c:function:: int CVodeGetLinReturnFlagName(long int lsflag)
@@ -3088,8 +3108,9 @@ solver, a suffix (for Linear Solver) has been added (e.g. ``lenrwLS``).
    **Return value:**
      * The return value is a string containing the name of the corresponding constant. If :math:`1 \leq \text{lsflag} \leq N` (LU factorization failed), this routine returns "NONE".
 
-   **Notes:**
-      The previous routines ``CVDlsGetReturnFlagName`` and  ``CVSpilsGetReturnFlagName`` are now wrappers for this routine, and may  still be used for backward-compatibility.  However, these will be  deprecated in future releases, so we recommend that users transition  to the new routine name soon.
+   .. versionadded:: 4.0.0
+
+      Replaces the deprecated functions ``CVDlsGetReturnFlagName`` and  ``CVSpilsGetReturnFlagName``.
 
 
 .. _CVODES.Usage.SIM.optional_output.optout_diag:
@@ -3115,7 +3136,7 @@ solver, a suffix (for Linear Solver) has been added here (e.g. ``lenrwLS``).
      * ``leniwLS`` -- the number of integer values in the CVDIAG workspace.
 
    **Return value:**
-     * ``CVDIAG_SUCCESS`` -- The optional output valus have been successfully set.
+     * ``CVDIAG_SUCCESS`` -- The optional output values have been successfully set.
      * ``CVDIAG_MEM_NULL`` -- The ``cvode_mem`` pointer is ``NULL``.
      * ``CVDIAG_LMEM_NULL`` -- The CVDIAG linear solver has not been initialized.
 
@@ -3202,7 +3223,7 @@ known, simply make that location a value of tout. To stop when the
 location of the discontinuity is determined by the solution, use the
 rootfinding feature. In either case, it is critical that the RHS
 function *not* incorporate the discontinuity, but rather have a smooth
-extention over the discontinuity, so that the step across it (and
+extension over the discontinuity, so that the step across it (and
 subsequent rootfinding, if used) can be done efficiently. Then use a
 switch within the RHS function (communicated through ``user_data``) that can be
 flipped between the stopping of the integration and the restart, so that
@@ -3361,7 +3382,7 @@ These weights will be used in place of those defined by Eq.
 
    .. warning::
 
-      The error weight vector must have all components positive. It is the user's responsiblity to perform this test and return -1 if it is not satisfied.
+      The error weight vector must have all components positive. It is the user's responsibility to perform this test and return -1 if it is not satisfied.
 
 
 .. _CVODES.Usage.SIM.user_supplied.rootFn:
@@ -3384,7 +3405,7 @@ follows:
       * ``user_data`` a pointer to user data, the same as the ``user_data`` parameter passed to :c:func:`CVodeSetUserData`.
 
    **Return value:**
-      A ``CVRootFn`` should return 0 if successful or a non-zero value if an error occured (in which case the integration is haled and ``CVode`` returns ``CV_RTFUNC_FAIL``.
+      A ``CVRootFn`` should return 0 if successful or a non-zero value if an error occurred (in which case the integration is haled and ``CVode`` returns ``CV_RTFUNC_FAIL``.
 
    **Notes:**
       Allocation of memory for ``gout`` is automatically handled within CVODES.
@@ -3407,7 +3428,7 @@ user-defined projection operation the projection function must have type
       * ``t`` -- the current value of the independent variable.
       * ``ycur`` -- the current value of the dependent variable vector :math:`y(t)`.
       * ``corr`` -- the correction, :math:`c`, to the dependent variable vector so that :math:`y(t) + c` satisfies the constraint equation.
-      * ``epsProj`` -- the tolerance to use in the nonlinear solver stopping test when solving the nonlinear constrainted least squares problem.
+      * ``epsProj`` -- the tolerance to use in the nonlinear solver stopping test when solving the nonlinear constrained least squares problem.
       * ``err`` -- is on input the current error estimate, if error projection is enabled (the default) then this should be overwritten with the projected error on output. If error projection is disabled then ``err`` is ``NULL``.
       * ``user_data`` a pointer to user data, the same as the ``user_data`` parameter passed to :c:func:`CVodeSetUserData`.
 
@@ -3554,10 +3575,9 @@ side function (or an approximation of it). ``CVLsJacFn`` is defined as follows:
       SUNMATRIX_SPARSE type and accessor macros are documented in
       :numref:`SUNMatrix.Sparse`.
 
-      The previous function type :c:type:`CVDlsJacFn` is identical to
-      :c:type:`CVLsJacFn`, and may still be used for backward-compatibility.
-      However, this will be deprecated in future releases, so we recommend
-      that users transition to the new function type name soon.
+   .. versionadded:: 4.0.0
+
+      Replaces the deprecated type ``CVDlsJacFn``.
 
 
 .. _CVODES.Usage.SIM.user_supplied.linsysFn:
@@ -3629,10 +3649,9 @@ the default is a difference quotient approximation to these products.
       :numref:`CVODES.Usage.SIM.optional_output.optout_main`. The unit roundoff can be accessed as
       ``SUN_UNIT_ROUNDOFF`` defined in ``sundials_types.h``.
 
-      The previous function type ``CVSpilsJacTimesVecFn`` is identical to
-      :c:func:`CVLsJacTimesVecFn`, and may still be used for backward-compatibility.
-      However, this will be deprecated in future releases, so we recommend
-      that users transition to the new function type name soon.
+   .. versionadded:: 4.0.0
+
+      Replaces the deprecated type ``CVSpilsJacTimesVecFn``.
 
 
   .. _CVODES.Usage.SIM.user_supplied.jtsetupFn:
@@ -3674,11 +3693,9 @@ be done in a user-supplied function of type :c:type:`CVLsJacTimesSetupFn`, defin
       :numref:`CVODES.Usage.SIM.optional_output.optout_main`. The unit roundoff can be accessed as
       ``SUN_UNIT_ROUNDOFF`` defined in ``sundials_types.h``.
 
-      The previous function type ``CVSpilsJacTimesSetupFn`` is identical
-      to :c:type:`CVLsJacTimesSetupFn`, and may still be used for
-      backward-compatibility.  However, this will be deprecated in future
-      releases, so we recommend that users transition to the new function
-      type name soon.
+   .. versionadded:: 4.0.0
+
+      Replaces the deprecated type ``CVSpilsJacTimesSetupFn``.
 
 
 .. _CVODES.Usage.SIM.user_supplied.psolveFn:
@@ -3716,11 +3733,9 @@ sides, the product of the two preconditioner matrices should approximate
       positive for a recoverable error (in which case the step will be retried), or
       negative for an unrecoverable error (in which case the integration is halted).
 
-   **Notes:**
-      The previous function type ``CVSpilsPrecSolveFn`` is identical to
-      :c:type:`CVLsPrecSolveFn`, and may still be used for backward-compatibility.
-      However, this will be deprecated in future releases, so we recommend
-      that users transition to the new function type name soon.
+   .. versionadded:: 4.0.0
+
+      Replaces the deprecated type ``CVSpilsPrecSolveFn``.
 
 
 .. _CVODES.Usage.SIM.user_supplied.precondFn:
@@ -3777,10 +3792,9 @@ function of type , defined as follows:
       :numref:`CVODES.Usage.SIM.optional_output`. The unit roundoff can be accessed as
       ``SUN_UNIT_ROUNDOFF`` defined in ``sundials_types.h``.
 
-      The previous function type ``CVSpilsPrecSetupFn`` is identical to
-      :c:type:`CVLsPrecSetupFn`, and may still be used for backward-compatibility.
-      However, this will be deprecated in future releases, so we recommend
-      that users transition to the new function type name soon.
+   .. versionadded:: 4.0.0
+
+      Replaces the deprecated function type ``CVSpilsPrecSetupFn``.
 
 
 .. _CVODES.Usage.purequad:
@@ -3841,7 +3855,7 @@ are in bold.
 #. **Set optional inputs for quadrature integration**
 
    Call :c:func:`CVodeSetQuadErrCon` to indicate whether or not quadrature
-   variables shoule be used in the step size control mechanism, and to specify
+   variables should be used in the step size control mechanism, and to specify
    the integration tolerances for quadrature variables. See
    :numref:`CVODES.Usage.purequad.optional_inputs` for details.
 
