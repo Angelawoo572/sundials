@@ -2,14 +2,10 @@
 name: Build and Test - Ubuntu/gcc (Address Sanitizer)
 
 on:
-<<<<<<<< HEAD:.github/workflows/tpl-tests-spack-latest.yml
-  #push: # disable for now
-========
   push:
     branches:
       - main
       - develop
->>>>>>>> develop:.github/workflows/test-address-sanitizer.yml
   pull_request:
   merge_group:
   workflow_dispatch:
