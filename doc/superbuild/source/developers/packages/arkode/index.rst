@@ -2,7 +2,7 @@
    Author(s): David J. Gardner @ LLNL
    -----------------------------------------------------------------------------
    SUNDIALS Copyright Start
-   Copyright (c) 2002-2025, Lawrence Livermore National Security
+   Copyright (c) 2002-2024, Lawrence Livermore National Security
    and Southern Methodist University.
    All rights reserved.
 
@@ -12,13 +12,12 @@
    SUNDIALS Copyright End
    -----------------------------------------------------------------------------
 
-.. _Packages:
+.. _ARKODE.Alg:
 
-Packages
-===========
+ARKODE
+======
 
 .. toctree::
    :maxdepth: 2
 
-   arkode/index.rst
-   cvode/index.rst
+   FullRhs
