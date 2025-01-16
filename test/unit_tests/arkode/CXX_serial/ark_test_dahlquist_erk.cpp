@@ -188,6 +188,9 @@ int main(int argc, char* argv[])
   if (numfails) { std::cout << "\n\nFailed " << numfails << " tests!\n"; }
   else { std::cout << "\n\nAll tests passed!\n"; }
 
+  std::cout << std::endl;
+  SUNContext_PrintAllocStats(sunctx, stdout, SUN_OUTPUTFORMAT_TABLE);
+
   // Return test status
   return numfails;
 }
@@ -360,6 +363,9 @@ int run_tests(ARKodeButcherTable Be, ProblemData& prob_data,
 
     std::cout << "--------------------" << std::endl;
   }
+
+  std::cout << std::endl;
+  SUNContext_PrintAllocStats(sunctx, stdout, SUN_OUTPUTFORMAT_TABLE);
 
   // --------
   // Clean up
