@@ -395,7 +395,16 @@ case "$testtype" in
             args_realtypes+=("double")
             args_indexsizes+=("${is}")
             args_libtypes+=("static")
-            args_tpls+=("OFF" "ON")
+            args_tpls+=("OFF")
+            args_suntests+=("DEV")
+            args_phase+=("TEST")
+        done
+
+        for is in 32; do
+            args_realtypes+=("double")
+            args_indexsizes+=("${is}")
+            args_libtypes+=("static")
+            args_tpls+=("ON")
             args_suntests+=("DEV")
             args_phase+=("TEST")
         done
