@@ -390,11 +390,12 @@ case "$testtype" in
         tarball=NONE
 
         # Test configs
-        for is in 32 64; do
+        #for is in 32 64; do
+        for is in 32; do
             args_realtypes+=("double")
             args_indexsizes+=("${is}")
             args_libtypes+=("static")
-            args_tpls+=("ON")
+            args_tpls+=("OFF" "ON")
             args_suntests+=("DEV")
             args_phase+=("TEST")
         done

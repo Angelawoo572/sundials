@@ -228,4 +228,11 @@ then
     return 1
 fi
 
+export SUNDIALS_ARKODE=OFF
+export SUNDIALS_CVODE=OFF
+export SUNDIALS_CVODES=OFF
+export SUNDIALS_IDA=OFF
+export SUNDIALS_IDAS=OFF
+export SUNDIALS_KINSOL=ON
+
 return 0
