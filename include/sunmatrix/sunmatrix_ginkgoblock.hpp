@@ -65,7 +65,7 @@ int SUNMatCopy_GinkgoBlock(SUNMatrix A, SUNMatrix B)
 {
   auto Amat{static_cast<BlockMatrix<GkoBatchMatType>*>(A->content)};
   Copy(*Amat, *static_cast<ginkgo::BlockMatrix<GkoBatchMatType>*>(B->content));
-  return SUNMAT_SUCCESS;
+  return SUN_SUCCESS;
 }
 
 template<class GkoBatchMatType>
@@ -74,7 +74,7 @@ int SUNMatScaleAdd_GinkgoBlock(sunrealtype c, SUNMatrix A, SUNMatrix B)
   auto Amat{static_cast<BlockMatrix<GkoBatchMatType>*>(A->content)};
   ScaleAdd(c, *Amat,
            *static_cast<ginkgo::BlockMatrix<GkoBatchMatType>*>(B->content));
-  return SUNMAT_SUCCESS;
+  return SUN_SUCCESS;
 }
 
 template<class GkoBatchMatType>
@@ -82,7 +82,7 @@ int SUNMatScaleAddI_GinkgoBlock(sunrealtype c, SUNMatrix A)
 {
   auto Amat{static_cast<BlockMatrix<GkoBatchMatType>*>(A->content)};
   ScaleAddI(c, *Amat);
-  return SUNMAT_SUCCESS;
+  return SUN_SUCCESS;
 }
 
 template<class GkoBatchMatType>
@@ -90,7 +90,7 @@ int SUNMatMatvec_GinkgoBlock(SUNMatrix A, N_Vector x, N_Vector y)
 {
   auto Amat{static_cast<BlockMatrix<GkoBatchMatType>*>(A->content)};
   Matvec(*Amat, x, y);
-  return SUNMAT_SUCCESS;
+  return SUN_SUCCESS;
 }
 
 template<class GkoBatchMatType>

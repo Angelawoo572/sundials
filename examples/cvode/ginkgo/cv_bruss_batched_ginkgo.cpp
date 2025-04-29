@@ -115,7 +115,7 @@ static void f_kernel(sunrealtype t, sunrealtype* y, sunrealtype* ydot,
 static int Jac(sunrealtype t, N_Vector y, N_Vector fy, SUNMatrix J,
                void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
 
-static int JacVec(N_Vector v, N_Vector Jv, realtype t,
+static int JacVec(N_Vector v, N_Vector Jv, sunrealtype t,
                   N_Vector y, N_Vector fy, void *user_data, N_Vector tmp);
 
 __global__
@@ -458,7 +458,7 @@ int JacInit(SUNMatrix J)
    to do the actual computation. At the very least, doing this
    saves moving the vector data in y and ydot to/from the device
    every evaluation of f. */
-int f(realtype t, N_Vector y, N_Vector ydot, void *user_data)
+int f(sunrealtype t, N_Vector y, N_Vector ydot, void *user_data)
 {
   UserData *udata;
   sunrealtype *ydata, *ydotdata;
@@ -514,7 +514,7 @@ void f_kernel(sunrealtype t, sunrealtype* ydata, sunrealtype* ydotdata,
  * This is done on the GPU.
  */
 
-int Jac(realtype t, N_Vector y, N_Vector fy, SUNMatrix J,
+int Jac(sunrealtype t, N_Vector y, N_Vector fy, SUNMatrix J,
                void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)
 {
   UserData *udata = (UserData*) user_data;
@@ -544,7 +544,7 @@ int Jac(realtype t, N_Vector y, N_Vector fy, SUNMatrix J,
   return(0);
 }
 
-int JacVec(N_Vector v, N_Vector Jv, realtype t,
+int JacVec(N_Vector v, N_Vector Jv, sunrealtype t,
            N_Vector y, N_Vector fy, void *user_data, N_Vector tmp)
 {
   UserData *udata = (UserData*) user_data;
@@ -663,7 +663,7 @@ void jv_kernel(sunrealtype* vdata, sunrealtype *Jvdata, sunrealtype* A, sunrealt
  *-------------------------------
  */
 
-void PrintOutput(realtype t, realtype y1, realtype y2, realtype y3)
+void PrintOutput(sunrealtype t, sunrealtype y1, sunrealtype y2, sunrealtype y3)
 {
 #if defined(SUNDIALS_EXTENDED_PRECISION)
   printf("At t = %0.4Le      y =%14.6Le  %14.6Le  %14.6Le\n", t, y1, y2, y3);

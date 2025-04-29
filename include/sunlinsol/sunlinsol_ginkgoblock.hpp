@@ -1,9 +1,6 @@
 #include <cmath>
 #include <memory>
-#include <sundials/sundials_config.h>
-#include <sundials/sundials_linearsolver.hpp>
-#include <sundials/sundials_logger.h>
-#include <sundials/sundials_nvector.hpp>
+#include <sundials/sundials_core.hpp>
 #include <sunlinsol/sunlinsol_ginkgo.hpp>
 #include <sunmatrix/sunmatrix_ginkgoblock.hpp>
 #include <utility>
@@ -32,7 +29,7 @@ inline SUNLinearSolver_ID SUNLinSolGetID_GinkgoBlock(SUNLinearSolver S)
 template<class GkoBatchLinearSolverType>
 int SUNLinSolInitialize_GinkgoBlock(SUNLinearSolver S)
 {
-  return SUNLS_SUCCESS;
+  return SUN_SUCCESS;
 }
 
 template<class GkoBatchLinearSolverType>
@@ -40,9 +37,9 @@ int SUNLinSolSetScalingVectors_GinkgoBlock(SUNLinearSolver S, N_Vector s1,
                                            N_Vector s2)
 {
   auto solver = static_cast<GkoBatchLinearSolverType*>(S->content);
-  if (!s1 || !s2) { return SUNLS_ILL_INPUT; }
+  if (!s1 || !s2) { return SUN_ERR_ARG_INCOMPATIBLE; }
   solver->setScalingVectors(s1, s2);
-  return SUNLS_SUCCESS;
+  return SUN_SUCCESS;
 }
 
 template<class GkoBatchLinearSolverType, class GkoBatchMatType>
@@ -65,7 +62,7 @@ int SUNLinSolFree_GinkgoBlock(SUNLinearSolver S)
 {
   auto solver = static_cast<GkoBatchLinearSolverType*>(S->content);
   delete solver; // NOLINT(cppcoreguidelines-owning-memory)
-  return SUNLS_SUCCESS;
+  return SUN_SUCCESS;
 }
 
 template<class GkoBatchLinearSolverType>
@@ -226,7 +223,7 @@ public:
 
   int setup(BlockMatrix<GkoBatchMatType>* A)
   {
-    if (num_blocks_ != A->NumBlocks()) { return SUNLS_ILL_INPUT; }
+    if (num_blocks_ != A->NumBlocks()) { return SUN_ERR_ARG_OUTOFRANGE; }
 
     matrix_ = A;
 
@@ -249,7 +246,7 @@ public:
       SUNDIALS_MARK_END(sunProfiler(), "generate solver");
     }
 
-    return SUNLS_SUCCESS;
+    return SUN_SUCCESS;
   }
 
   int solve(N_Vector b, N_Vector x, sunrealtype tol)
@@ -369,8 +366,7 @@ public:
     sum_of_avg_iters_ += avg_iter_count_;
 
     // Compute the std. dev. in iteration count across all batch entries.
-    // This helps us understand how varied (in difficulty to solve) the entries
-    // are.
+    // This helps us understand how varied (in difficulty to solve) the entries are.
     stddev_iter_count_ = 0.0;
     for (int i = 0; i < num_blocks_; i++)
     {
@@ -387,7 +383,7 @@ public:
       retval = SUNLS_CONV_FAIL;
     }
     else if (at_least_one_did_not_converge) { retval = SUNLS_RES_REDUCED; }
-    else { retval = SUNLS_SUCCESS; }
+    else { retval = SUN_SUCCESS; }
 
 #if SUNDIALS_LOGGING_LEVEL >= SUNDIALS_LOGGING_INFO
     SUNLogger_QueueMsg(sunLogger(), SUN_LOGLEVEL_INFO,
