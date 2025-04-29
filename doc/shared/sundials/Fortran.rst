@@ -1,6 +1,6 @@
 .. ----------------------------------------------------------------
    SUNDIALS Copyright Start
-   Copyright (c) 2002-2023, Lawrence Livermore National Security
+   Copyright (c) 2002-2025, Lawrence Livermore National Security
    and Southern Methodist University.
    All rights reserved.
 
@@ -12,17 +12,19 @@
 
 .. _SUNDIALS.Fortran:
 
-SUNDIALS Fortran Interface
-==========================
+Fortran Interface
+=================
 
 SUNDIALS provides modern, Fortran 2003 based, interfaces as Fortran modules to
 most of the C API including:
 
+- The SUNDIALS core types, utilities, and data structures via the ``fsundials_core_mod`` module.
+
 - All of the time-stepping modules in ARKODE:
 
-  * The ``farkode_arkstep_mod``, ``farkode_erkstep_mod``, and
-    ``farkode_mristep_mod`` modules provide interfaces to the ARKStep, ERKStep,
-    and MRIStep integrators respectively.
+  * The ``farkode_arkstep_mod``, ``farkode_erkstep_mod``,
+    ``farkode_mristep_mod``, and ``farkode_sprkstep_mod`` modules provide interfaces
+    to the ARKStep, ERKStep, MRIStep, and SPRKStep integrators respectively.
 
   * The ``farkode_mod`` module interfaces to the components of ARKODE which are
     shared by the time-stepping modules.
@@ -50,16 +52,22 @@ most of the C API including:
    A complete list of class implementations with Fortran 2003 interface modules is given in
    :numref:`SUNDIALS.Fortran.Table`.
 
+
 An interface module can be accessed with the ``use`` statement, e.g.
 
 .. code-block:: fortran
 
-   use fcvode_mod
-   use fnvector_openmp_mod
+   use fsundials_core_mod   ! this is needed to access core SUNDIALS types, utilities, and data structures
+   use fcvode_mod           ! this is needed to access CVODE functions and types
+   use fnvector_openmp_mod  ! this is needed to access the OpenMP implementation of the N_Vector class
 
 and by linking to the Fortran 2003 library in addition to the C library, e.g.
+``libsundials_fcore_mod.<so|a>``, ``libsundials_core.<so|a>``,
 ``libsundials_fnvecpenmp_mod.<so|a>``, ``libsundials_nvecopenmp.<so|a>``,
 ``libsundials_fcvode_mod.<so|a>`` and ``libsundials_cvode.<so|a>``.
+The ``use`` statements mirror the ``#include`` statements needed when using the
+C API.
+
 
 The Fortran 2003 interfaces leverage the ``iso_c_binding`` module and the
 ``bind(C)`` attribute to closely follow the SUNDIALS C API (modulo language
@@ -73,24 +81,11 @@ differences are discussed in :numref:`SUNDIALS.Fortran.Differences`. A
 discussion on the topic of equivalent data types in C and Fortran 2003 is
 presented in :numref:`SUNDIALS.Fortran.DataTypes`.
 
-.. ifconfig:: package_name == 'kinsol'
-
-   Further information on the Fortran 2003 interfaces specific to the
-   :c:type:`N_Vector`, :c:type:`SUNMatrix`, and :c:type:`SUNLinearSolver`
-   classes is given alongside the C documentation (:numref:`NVectors`,
-   :numref:`SUNMatrix`, and :numref:`SUNLinSol`, respectively). For details on
-   where the Fortran 2003 module (``.mod``) files and libraries are installed
-   see :numref:`Installation`.
-
-.. ifconfig:: package_name != 'kinsol'
-
-   Further information on the Fortran 2003 interfaces specific to the
-   :c:type:`N_Vector`, :c:type:`SUNMatrix`, :c:type:`SUNLinearSolver`, and
-   :c:type:`SUNNonlinearSolver` classes is given alongside the C documentation
-   (:numref:`NVectors`, :numref:`SUNMatrix`, :numref:`SUNLinSol`, and
-   :numref:`SUNNonlinSol` respectively). For details on where the Fortran 2003
-   module (``.mod``) files and libraries are installed see
-   :numref:`Installation`.
+Further information on the Fortran 2003 interfaces specific to the
+:c:type:`N_Vector`, :c:type:`SUNMatrix`, :c:type:`SUNLinearSolver`, and
+:c:type:`SUNNonlinearSolver` classes is given alongside the C documentation. For
+details on where the Fortran 2003 module (``.mod``) files and libraries are
+installed see :numref:`Installation`.
 
 The Fortran 2003 interface modules were generated with SWIG Fortran
 :cite:p:`Swig-Fortran`, a fork of SWIG. Users who are interested in the SWIG
@@ -104,16 +99,17 @@ team.
    =======================  ====================================
    **Class/Module**          **Fortran 2003 Module Name**
    =======================  ====================================
+   SUNDIALS core            ``fsundials_core_mode``
    ARKODE                   ``farkode_mod``
    ARKODE::ARKSTEP          ``farkode_arkstep_mod``
    ARKODE::ERKSTEP          ``farkode_erkstep_mod``
    ARKODE::MRISTEP          ``farkode_mristep_mod``
+   ARKODE::SPRKSTEP         ``farkode_sprkstep_mod``
    CVODE                    ``fcvode_mod``
    CVODES                   ``fcvodes_mod``
    IDA                      ``fida_mod``
    IDAS                     ``fidas_mod``
    KINSOL                   ``fkinsol_mod``
-   NVECTOR                  ``fsundials_nvector_mod``
    NVECTOR_SERIAL           ``fnvector_serial_mod``
    NVECTOR_OPENMP           ``fnvector_openmp_mod``
    NVECTOR_PTHREADS         ``fnvector_pthreads_mod``
@@ -126,13 +122,11 @@ team.
    NVECTOR_MANVECTOR        ``fnvector_manyvector_mod``
    NVECTOR_MPIMANVECTOR     ``fnvector_mpimanyvector_mod``
    NVECTOR_MPIPLUSX         ``fnvector_mpiplusx_mod``
-   SUNMATRIX                ``fsundials_matrix_mod``
    SUNMATRIX_BAND           ``fsunmatrix_band_mod``
    SUNMATRIX_DENSE          ``fsunmatrix_dense_mod``
    SUNMATRIX_MAGMADENSE     Not interfaced
    SUNMATRIX_ONEMKLDENSE    Not interfaced
    SUNMATRIX_SPARSE         ``fsunmatrix_sparse_mod``
-   SUNLINSOL                ``fsundials_linearsolver_mod``
    SUNLINSOL_BAND           ``fsunlinsol_band_mod``
    SUNLINSOL_DENSE          ``fsunlinsol_dense_mod``
    SUNLINSOL_LAPACKBAND     Not interfaced
@@ -147,7 +141,6 @@ team.
    SUNLINSOL_SPBCGS         ``fsunlinsol_spbcgs_mod``
    SUNLINSOL_SPTFQMR        ``fsunlinsol_sptfqmr_mod``
    SUNLINSOL_PCG            ``fsunlinsol_pcg_mof``
-   SUNNONLINSOL             ``fsundials_nonlinearsolver_mod``
    SUNNONLINSOL_NEWTON      ``fsunnonlinsol_newton_mod``
    SUNNONLINSOL_FIXEDPOINT  ``fsunnonlinsol_fixedpoint_mod``
    SUNNONLINSOL_PETSCSNES   Not interfaced
@@ -169,8 +162,13 @@ equivalencies with the parameter direction in mind.
 .. warning::
 
    Currently, the Fortran 2003 interfaces are only compatible with SUNDIALS
-   builds where the ``realtype`` is double-precision the ``sunindextype`` size
-   is 64-bits.
+   builds where the ``sunrealtype`` is double-precision.
+
+.. versionchanged:: 7.1.0
+
+   The Fortran interfaces can now be built with 32-bit ``sunindextype`` in
+   addition to 64-bit ``sunindextype``.
+
 
 .. _SUNDIALS.Fortran.DataTypes.Table:
 .. table:: C/Fortran-2003 Equivalent Types
@@ -178,15 +176,19 @@ equivalencies with the parameter direction in mind.
    +-------------------------+-------------------------------+-------------------------------------------+
    | **C Type**              | **Parameter Direction**       | **Fortran 2003 type**                     |
    +=========================+===============================+===========================================+
+   |``SUNComm``              | in, inout, out, return        | ``integer(c_int)``                        |
+   +-------------------------+-------------------------------+-------------------------------------------+
+   |``SUNErrCode``           | in, inout, out, return        | ``integer(c_int)``                        |
+   +-------------------------+-------------------------------+-------------------------------------------+
    |``double``               | in, inout, out, return        | ``real(c_double)``                        |
    +-------------------------+-------------------------------+-------------------------------------------+
    |``int``                  | in, inout, out, return        | ``integer(c_int)``                        |
    +-------------------------+-------------------------------+-------------------------------------------+
    |``long``                 | in, inout, out, return        | ``integer(c_long)``                       |
    +-------------------------+-------------------------------+-------------------------------------------+
-   |``booleantype``          | in, inout, out, return        | ``integer(c_int)``                        |
+   |``sunbooleantype``       | in, inout, out, return        | ``integer(c_int)``                        |
    +-------------------------+-------------------------------+-------------------------------------------+
-   |``realtype``             | in, inout, out, return        | ``real(c_double)``                        |
+   |``sunrealtype``          | in, inout, out, return        | ``real(c_double)``                        |
    +-------------------------+-------------------------------+-------------------------------------------+
    |``sunindextype``         | in, inout, out, return        | ``integer(c_long)``                       |
    +-------------------------+-------------------------------+-------------------------------------------+
@@ -202,15 +204,15 @@ equivalencies with the parameter direction in mind.
    +-------------------------+-------------------------------+-------------------------------------------+
    |``long*``                | return                        | ``real(c_long), pointer, dimension(:)``   |
    +-------------------------+-------------------------------+-------------------------------------------+
-   |``realtype*``            | in, inout, out                | ``real(c_double), dimension(*)``          |
+   |``sunrealtype*``         | in, inout, out                | ``real(c_double), dimension(*)``          |
    +-------------------------+-------------------------------+-------------------------------------------+
-   |``realtype*``            | return                        | ``real(c_double), pointer, dimension(:)`` |
+   |``sunrealtype*``         | return                        | ``real(c_double), pointer, dimension(:)`` |
    +-------------------------+-------------------------------+-------------------------------------------+
    |``sunindextype*``        | in, inout, out                | ``real(c_long), dimension(*)``            |
    +-------------------------+-------------------------------+-------------------------------------------+
    |``sunindextype*``        | return                        | ``real(c_long), pointer, dimension(:)``   |
    +-------------------------+-------------------------------+-------------------------------------------+
-   |``realtype[]``           | in, inout, out                | ``real(c_double), dimension(*)``          |
+   |``sunrealtype[]``        | in, inout, out                | ``real(c_double), dimension(*)``          |
    +-------------------------+-------------------------------+-------------------------------------------+
    |``sunindextype[]``       | in, inout, out                | ``integer(c_long), dimension(*)``         |
    +-------------------------+-------------------------------+-------------------------------------------+
@@ -302,7 +304,7 @@ C code:
 .. sourcecode:: c
 
    N_Vector x;
-   realtype* xdata;
+   sunrealtype* xdata;
    long int leniw, lenrw;
 
    /* create a new serial vector */
@@ -427,9 +429,9 @@ Arrays of :c:type:`N_Vector` objects are interfaced to Fortran 2003 as an opaque
 ``type(c_ptr)``.  As such, it is not possible to directly index an array of
 :c:type:`N_Vector` objects returned by the ``N_Vector`` "VectorArray" operations, or
 packages with sensitivity capabilities (CVODES and IDAS).  Instead, SUNDIALS
-provides a utility function :f:func:`FN_VGetVecAtIndexVectorArray` that can be
-called for accessing a vector in a vector array. The example below demonstrates
-this:
+provides a utility function ``FN_VGetVecAtIndexVectorArray`` wrapping
+:c:func:`N_VGetVecAtIndexVectorArray`. The example below demonstrates accessing
+a vector in a vector array.
 
 C code:
 
@@ -482,42 +484,71 @@ There are a few functions in the SUNDIALS C API which take a ``FILE*`` argument.
 Since there is no portable way to convert between a Fortran file descriptor and
 a C file pointer, SUNDIALS provides two utility functions for creating a
 ``FILE*`` and destroying it. These functions are defined in the module
-``fsundials_futils_mod``.
+``fsundials_core_mod``.
 
-.. c:function:: FILE* SUNDIALSFileOpen(filename, mode)
+.. c:function:: SUNErrCode SUNDIALSFileOpen(const char* filename, const char* mode, FILE** fp)
 
    The function allocates a ``FILE*`` by calling the C function ``fopen`` with
    the provided filename and I/O mode.
 
-   **Arguments:**
-      * ``filename`` -- the full path to the file, that should have Fortran
-        type ``character(kind=C_CHAR, len=*)``.
-      * ``mode`` -- the I/O mode to use for the file.  This should have the
-        Fortran type ``character(kind=C_CHAR, len=*)``.  The string begins
-        with one of the following characters:
+   :param filename: the path to the file, that should have Fortran
+      type ``character(kind=C_CHAR, len=*)``.  There are two special filenames:
+      ``stdout`` and ``stderr`` -- these two filenames will result in output
+      going to the standard output file and standard error file, respectively.
 
-        * ``r``  to open a text file for reading
-        * ``r+`` to open a text file for reading/writing
-        * ``w``  to truncate a text file to zero length or create it for writing
-        * ``w+`` to open a text file for reading/writing or create it if it does
-          not exist
-        * ``a``  to open a text file for appending, see documentation of ``fopen`` for
-          your system/compiler
-        * ``a+`` to open a text file for reading/appending, see documentation for
-          ``fopen`` for your system/compiler
+   :param mode: the I/O mode to use for the file.  This should have the
+      Fortran type ``character(kind=C_CHAR, len=*)``.  The string begins
+      with one of the following characters:
 
-   **Return value:**
-      * The function returns a ``type(C_PTR)`` which holds a C ``FILE*``.
+      * ``r``  to open a text file for reading
+      * ``r+`` to open a text file for reading/writing
+      * ``w``  to truncate a text file to zero length or create it for writing
+      * ``w+`` to open a text file for reading/writing or create it if it does
+         not exist
+      * ``a``  to open a text file for appending, see documentation of ``fopen`` for
+         your system/compiler
+      * ``a+`` to open a text file for reading/appending, see documentation for
+         ``fopen`` for your system/compiler
 
+   :param fp: The ``FILE*`` that will be open when the function returns.
+      This should be a `type(c_ptr)` in the Fortran.
 
-.. c:function:: void SUNDIALSFileClose(fp)
+   :return: A :c:type:`SUNErrCode`
+
+   Usage example:
+
+   .. code-block:: Fortran
+
+      type(c_ptr) :: fp
+
+      ! Open up the file output.log for writing
+      ierr = FSUNDIALSFileOpen("output.log", "w+", fp)
+
+      ! The C function ARKStepPrintMem takes void* arkode_mem and FILE* fp as arguments
+      call FARKStepPrintMem(arkode_mem, fp)
+
+      ! Close the file
+      ierr = FSUNDIALSFileClose(fp)
+
+   .. versionchanged:: 7.0.0
+
+      The function signature was updated to return a `SUNErrCode` and take a `FILE**` as the last input parameter rather then return a `FILE*`.
+
+.. c:function:: SUNErrCode SUNDIALSFileClose(FILE** fp)
 
    The function deallocates a C ``FILE*`` by calling the C function ``fclose``
    with the provided pointer.
 
-   **Arguments:**
-      * ``fp`` -- the C ``FILE*`` that was previously obtained from ``fopen``.
-        This should have the Fortran type ``type(c_ptr)``.
+   :param fp: the C ``FILE*`` that was previously obtained from ``fopen``.
+        This should have the Fortran type ``type(c_ptr)``.  Note that if either
+        ``stdout`` or ``stderr`` were opened using :c:func:`SUNDIALSFileOpen()`
+
+   :return: A :c:type:`SUNErrCode`
+
+   .. versionchanged:: 7.0.0
+
+      The function signature was updated to return a `SUNErrCode` and the `fp` parameter was changed from `FILE*` to `FILE**`.
+
 
 
 .. _SUNDIALS.Fortran.Portability:
@@ -526,8 +557,7 @@ Important notes on portability
 ------------------------------
 
 The SUNDIALS Fortran 2003 interface *should* be compatible with any compiler
-supporting the Fortran 2003 ISO standard. However, it has only been tested and
-confirmed to be working with GNU Fortran 4.9+ and Intel Fortran 18.0.1+.
+supporting the Fortran 2003 ISO standard.
 
 Upon compilation of SUNDIALS, Fortran module (``.mod``) files are generated for
 each Fortran 2003 interface. These files are highly compiler specific, and thus

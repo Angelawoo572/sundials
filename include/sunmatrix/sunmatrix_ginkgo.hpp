@@ -2,7 +2,7 @@
  * Programmer(s): Cody J. Balos @ LLNL
  * -----------------------------------------------------------------------------
  * SUNDIALS Copyright Start
- * Copyright (c) 2002-2023, Lawrence Livermore National Security
+ * Copyright (c) 2002-2025, Lawrence Livermore National Security
  * and Southern Methodist University.
  * All rights reserved.
  *
@@ -23,10 +23,12 @@
 #include <sundials/sundials_matrix.hpp>
 #include <utility>
 
+#include "sundials/sundials_errors.h"
+
 namespace sundials {
 namespace ginkgo {
 
-// Forward decalaration of regular Matrix class
+// Forward declaration of regular Matrix class
 template<typename GkoMatType>
 class Matrix;
 
@@ -102,45 +104,45 @@ void SUNMatDestroy_Ginkgo(SUNMatrix A)
 }
 
 template<typename GkoMatType>
-int SUNMatZero_Ginkgo(SUNMatrix A)
+SUNErrCode SUNMatZero_Ginkgo(SUNMatrix A)
 {
   auto A_mat{static_cast<Matrix<GkoMatType>*>(A->content)};
   impl::Zero(*A_mat);
-  return SUNMAT_SUCCESS;
+  return SUN_SUCCESS;
 }
 
 template<typename GkoMatType>
-int SUNMatCopy_Ginkgo(SUNMatrix A, SUNMatrix B)
+SUNErrCode SUNMatCopy_Ginkgo(SUNMatrix A, SUNMatrix B)
 {
   auto A_mat{static_cast<Matrix<GkoMatType>*>(A->content)};
   auto B_mat{static_cast<Matrix<GkoMatType>*>(B->content)};
   impl::Copy(*A_mat, *B_mat);
-  return SUNMAT_SUCCESS;
+  return SUN_SUCCESS;
 }
 
 template<typename GkoMatType>
-int SUNMatScaleAdd_Ginkgo(sunrealtype c, SUNMatrix A, SUNMatrix B)
+SUNErrCode SUNMatScaleAdd_Ginkgo(sunrealtype c, SUNMatrix A, SUNMatrix B)
 {
   auto A_mat{static_cast<Matrix<GkoMatType>*>(A->content)};
   auto B_mat{static_cast<Matrix<GkoMatType>*>(B->content)};
   impl::ScaleAdd(c, *A_mat, *B_mat);
-  return SUNMAT_SUCCESS;
+  return SUN_SUCCESS;
 }
 
 template<typename GkoMatType>
-int SUNMatScaleAddI_Ginkgo(sunrealtype c, SUNMatrix A)
+SUNErrCode SUNMatScaleAddI_Ginkgo(sunrealtype c, SUNMatrix A)
 {
   auto A_mat{static_cast<Matrix<GkoMatType>*>(A->content)};
   impl::ScaleAddI(c, *A_mat);
-  return SUNMAT_SUCCESS;
+  return SUN_SUCCESS;
 }
 
 template<typename GkoMatType>
-int SUNMatMatvec_Ginkgo(SUNMatrix A, N_Vector x, N_Vector y)
+SUNErrCode SUNMatMatvec_Ginkgo(SUNMatrix A, N_Vector x, N_Vector y)
 {
   auto A_mat{static_cast<Matrix<GkoMatType>*>(A->content)};
   impl::Matvec(*A_mat, x, y);
-  return SUNMAT_SUCCESS;
+  return SUN_SUCCESS;
 }
 
 } // namespace impl
@@ -322,8 +324,14 @@ void Matvec(Matrix<GkoMatType>& A, N_Vector x, N_Vector y)
 template<typename GkoMatType>
 void ScaleAdd(const sunrealtype c, Matrix<GkoMatType>& A, Matrix<GkoMatType>& B)
 {
+#if GKO_VERSION_MAJOR > 1 || (GKO_VERSION_MAJOR == 1 && GKO_VERSION_MINOR >= 8)
+  // Identity constructor always creates a square matrix
   const auto I{
-    gko::matrix::Identity<sunrealtype>::create(A.GkoExec(), A.GkoSize()[0])};
+    gko::matrix::Identity<sunrealtype>::create(A.GkoExec(), A.GkoSize()[1])};
+#else
+  const auto I{
+    gko::matrix::Identity<sunrealtype>::create(A.GkoExec(), A.GkoSize())};
+#endif
   const auto one{gko::initialize<GkoDenseMat>({1.0}, A.GkoExec())};
   const auto cmat{gko::initialize<GkoDenseMat>({c}, A.GkoExec())};
   // A = B + cA

@@ -1,6 +1,6 @@
 .. ----------------------------------------------------------------
    SUNDIALS Copyright Start
-   Copyright (c) 2002-2023, Lawrence Livermore National Security
+   Copyright (c) 2002-2025, Lawrence Livermore National Security
    and Southern Methodist University.
    All rights reserved.
 
@@ -49,7 +49,7 @@ the combined state and sensitivity nonlinear systems are also reformulated in
 terms of the correction to the predicted state and sensitivities.
 
 The nonlinear system functions provided by CVODES to the nonlinear solver module
-internally update the current value of the new state (and the sensitvities)
+internally update the current value of the new state (and the sensitivities)
 based on the input correction vector(s) i.e., :math:`y^n = y_{pred} + y_{cor}`
 and :math:`s_i^n = s_{i,pred} + s_{i,cor}`. The updated vector(s) are used when
 calling the right-hand side function and when setting up linear solves (e.g.,
@@ -60,7 +60,7 @@ users, but might be useful for users who choose to provide their own
 implementation of the ``SUNNonlinearSolver`` API. For example, such a user might
 need access to the current value of :math:`\gamma` to compute Jacobian data.
 
-.. c:function:: int CVodeGetCurrentGamma(void* cvode_mem, realtype* gamma)
+.. c:function:: int CVodeGetCurrentGamma(void* cvode_mem, sunrealtype* gamma)
 
    The function :c:func:`CVodeGetCurrentGamma` returns the current value of the
    scalar :math:`\gamma`.
@@ -91,7 +91,7 @@ need access to the current value of :math:`\gamma` to compute Jacobian data.
      * ``CV_MEM_NULL`` -- The CVODES memory block was ``NULL``.
 
 
-.. c:function:: int CVodeGetNonlinearSystemData(void *cvode_mem, realtype *tcur, N_Vector *ypred, N_Vector *yn, N_Vector *fn, realtype *gamma, realtype *rl1, N_Vector *zn1, void **user_data)
+.. c:function:: int CVodeGetNonlinearSystemData(void *cvode_mem, sunrealtype *tcur, N_Vector *ypred, N_Vector *yn, N_Vector *fn, sunrealtype *gamma, sunrealtype *rl1, N_Vector *zn1, void **user_data)
 
    The function :c:func:`CVodeGetNonlinearSystemData` returns all internal data
    required to construct the current nonlinear system :eq:`CVODES_res_corrector` or
@@ -125,7 +125,7 @@ need access to the current value of :math:`\gamma` to compute Jacobian data.
       When supplying a custom
       :c:type:`SUNNonlinSolSysFn` to an existing  ``SUNNonlinearSolver`` object,
       the user should call :c:func:`CVodeGetNonlinearSystemData` inside the
-      nonlinear system  function to access the requisite data for evaluting
+      nonlinear system  function to access the requisite data for evaluating
       the nonlinear system function of their choosing. Additionlly, if the
       ``SUNNonlinearSolver`` object  (existing or custom) leverages the
       :c:type:`SUNNonlinSolLSetupFn` and/or :c:type:`SUNNonlinSolLSolveFn`
@@ -208,15 +208,15 @@ need access to the current value of :math:`\gamma` to compute Jacobian data.
      * ``CV_MEM_NULL`` -- The ``cvode_mem`` pointer is ``NULL``.
 
    **Notes:**
-      This routine is intended for users who whish to attach a custom
+      This routine is intended for users who wish to attach a custom
       :c:type:`SUNNonlinSolSysFn` to an  existing ``SUNNonlinearSolver``
       object (through a call to  ``SUNNonlinSolSetSysFn``) or who need access to
-      nonlinear system data to  compute the nonlinear system fucntion as part of
+      nonlinear system data to  compute the nonlinear system function as part of
       a custom  ``SUNNonlinearSolver`` object.  When supplying a custom
       :c:type:`SUNNonlinSolSysFn` to an existing  ``SUNNonlinearSolver`` object, the
       user should call  :c:func:`CVodeGetNonlinearSystemDataSens` inside the nonlinear
       system  function used in the sensitivity nonlinear solve to access the
-      requisite data  for evaluting the nonlinear system function of their
+      requisite data  for evaluating the nonlinear system function of their
       choosing. This could be  the same function used for solving for the new
       state (the simultaneous  approach) or a different function (the staggered
       or stagggered1 approaches).  Additionlly, the vectors ``ySn`` are only

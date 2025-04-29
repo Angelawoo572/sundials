@@ -79,7 +79,7 @@ EmptyLineAfterAccessModifier                  : Never
 EmptyLineBeforeAccessModifier                 : Always
 ExperimentalAutoDetectBinPacking              : false
 FixNamespaceComments                          : true
-IncludeBlocks                   : Regroup
+IncludeBlocks                   : Preserve
 IncludeCategories               :
 - Regex                           : '^(<|"(gtest|gmock|isl|json)/)'
   Priority                        : 1
@@ -116,7 +116,7 @@ PenaltyReturnTypeOnItsOwnLine       : 10000  # (penalize more)
 PointerAlignment                    : Left
 QualifierAlignment                  : Leave
 ReferenceAlignment                  : Pointer
-ReflowComments                      : true
+ReflowComments                      : false
 SeparateDefinitionBlocks            : Always
 SortIncludes                        : true
 SortUsingDeclarations               : true
@@ -140,7 +140,6 @@ SpacesInConditionalStatement        : false
 SpacesInContainerLiterals           : true
 SpacesInParentheses                 : false
 SpacesInSquareBrackets              : false
-SpaceBeforeSquareBrackets           : false
 Standard                            : c++14
 TabWidth: 2
 UseCRLF : false

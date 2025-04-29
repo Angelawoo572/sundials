@@ -1,7 +1,7 @@
 ..
    ----------------------------------------------------------------
    SUNDIALS Copyright Start
-   Copyright (c) 2002-2023, Lawrence Livermore National Security
+   Copyright (c) 2002-2025, Lawrence Livermore National Security
    and Southern Methodist University.
    All rights reserved.
 
@@ -21,11 +21,11 @@ This section describes the SUNNonlinSol interface to the
 `PETSc SNES nonlinear solver(s) <https://petsc.org/release/docs/manual/snes/>`_.
 To enable the SUNonlinSol_PetscSNES module, SUNDIALS must be
 configured to use PETSc. Instructions on how to do this are given in
-:numref:`Installation.CMake.ExternalLibraries.PETSc`. To access the
+:numref:`Installation.Options.PETSc`. To access the
 SUNNonlinSol_PetscSNES module, include the header file
 ``sunnonlinsol/sunnonlinsol_petscsnes.h``. The library to link to is
 ``libsundials_sunnonlinsolpetsc.lib`` where ``.lib`` is typically ``.so`` for
-shared libaries and ``.a`` for static libraries. Users of the
+shared libraries and ``.a`` for static libraries. Users of the
 SUNNonlinSol_PetscSNES module should also see :numref:`NVectors.NVPETSc`
 which discusses the NVECTOR interface to the PETSc ``Vec`` API.
 
@@ -115,7 +115,7 @@ be called in favor of the SUNNonlinSol_PetscSNES specific implementations.
 The SUNNonlinSol_PetscSNES module also defines the following
 user-callable functions.
 
-.. c:function:: int SUNNonlinSolGetSNES_PetscSNES(SUNNonlinearSolver NLS, SNES* snes)
+.. c:function:: SUNErrCode SUNNonlinSolGetSNES_PetscSNES(SUNNonlinearSolver NLS, SNES* snes)
 
   This gets the ``SNES`` object that was wrapped.
 
@@ -124,11 +124,10 @@ user-callable functions.
     * *snes* -- a pointer to a PETSc ``SNES`` object that will be set upon return.
 
   **Return value:**
-     The return value (of type ``int``) should be zero for a successful call,
-     and a negative value for a failure.
+    A :c:type:`SUNErrCode`
 
 
-.. c:function:: int SUNNonlinSolGetPetscError_PetscSNES(SUNNonlinearSolver NLS, PestcErrorCode* error)
+.. c:function:: SUNErrCode SUNNonlinSolGetPetscError_PetscSNES(SUNNonlinearSolver NLS, PetscErrorCode* error)
 
   This gets the last error code returned by the last internal call to a PETSc API function.
 
@@ -137,11 +136,10 @@ user-callable functions.
     * *error* -- a pointer to a PETSc error integer that will be set upon return.
 
   **Return value:**
-     The return value (of type ``int``) should be zero for a successful call,
-     and a negative value for a failure.
+    A :c:type:`SUNErrCode`
 
 
-.. c:function:: int SUNNonlinSolGetSysFn_PetscSNES(SUNNonlinearSolver NLS, SUNNonlinSolSysFn* SysFn)
+.. c:function:: SUNErrCode SUNNonlinSolGetSysFn_PetscSNES(SUNNonlinearSolver NLS, SUNNonlinSolSysFn* SysFn)
 
   This returns the residual function that defines the nonlinear system.
 
@@ -150,8 +148,7 @@ user-callable functions.
     * *SysFn* -- the function defining the nonlinear system.
 
   **Return value:**
-     The return value (of type ``int``) should be zero for a successful call,
-     and a negative value for a failure.
+    A :c:type:`SUNErrCode`
 
 
 .. _SUNNonlinSolPetscSNES.Content:
@@ -187,4 +184,4 @@ These entries of the *content* field contain the following information:
 * ``r``               -- the nonlinear residual,
 * ``y``               -- wrapper for PETSc vectors used in the system function,
 * ``f``               -- wrapper for PETSc vectors used in the system function,
-* ``Sys``             -- nonlinear system definining function.
+* ``Sys``             -- nonlinear system defining function.

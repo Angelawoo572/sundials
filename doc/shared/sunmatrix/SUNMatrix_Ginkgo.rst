@@ -1,7 +1,7 @@
 ..
    ----------------------------------------------------------------
    SUNDIALS Copyright Start
-   Copyright (c) 2002-2023, Lawrence Livermore National Security
+   Copyright (c) 2002-2025, Lawrence Livermore National Security
    and Southern Methodist University.
    All rights reserved.
 
@@ -26,7 +26,7 @@ Since Ginkgo is a modern C++ library, SUNMATRIX_GINKGO is also written in
 modern C++ (it requires C++14). Unlike most other SUNDIALS modules, it is a header only library.
 To use the SUNMATRIX_GINKGO ``SUNMatrix``, users will need to include ``sunmatrix/sunmatrix_ginkgo.hpp``.
 More instructions on building SUNDIALS with Ginkgo enabled are given in
-:numref:`Installation.CMake.ExternalLibraries`. For instructions on building and using
+:numref:`Installation.Options.Ginkgo`. For instructions on building and using
 Ginkgo itself, refer to the `Ginkgo website and documentation <https://ginkgo-project.github.io/>`_.
 
 .. note::
@@ -44,10 +44,10 @@ The SUNMATRIX_GINKGO module is defined by the ``sundials::ginkgo::Matrix`` templ
 
 .. _SUNMatrix.Ginkgo.CompatibleNVectors:
 
-Compatible ``N_Vectors``
-------------------------
+Compatible Vectors
+------------------
 
-The  ``N_Vector`` to use with the SUNLINEARSOLVER_GINKGO module depends on the ``gko::Executor``
+The :c:type:`N_Vector` to use with the SUNLINEARSOLVER_GINKGO module depends on the ``gko::Executor``
 utilized. That is, when using the ``gko::CudaExecutor`` you should use a CUDA capable ``N_Vector``
 (e.g., :numref:`NVectors.CUDA`), ``gko::HipExecutor`` goes with a HIP capable ``N_Vector`` (e.g.,
 :numref:`NVectors.HIP`), ``gko::DpcppExecutor`` goes with a DPC++/SYCL capable ``N_Vector`` (e.g.,
@@ -57,7 +57,7 @@ executors is where they store the data. The GPU enabled Ginkgo executors need th
 the GPU, so the ``N_Vector`` must implement :c:func:`N_VGetDeviceArrayPointer` and keep the data in
 GPU memory. The CPU-only enabled Ginkgo executors (e.g, ``gko::OmpExecutor`` and
 ``gko::ReferenceExecutor``) need data to reside on the CPU and will use
-:c:func:`N_VGetArraryPointer` to access the ``N_Vector`` data.
+:c:func:`N_VGetArrayPointer` to access the ``N_Vector`` data.
 
 .. _SUNMatrix.Ginkgo.Usage:
 

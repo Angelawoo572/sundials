@@ -3,7 +3,7 @@
 # Programmer(s): David J. Gardner @ LLNL
 # ------------------------------------------------------------------------------
 # SUNDIALS Copyright Start
-# Copyright (c) 2002-2023, Lawrence Livermore National Security
+# Copyright (c) 2002-2025, Lawrence Livermore National Security
 # and Southern Methodist University.
 # All rights reserved.
 #
@@ -105,7 +105,7 @@ else
 fi
 
 # Fortran settings
-if [[ ("$SUNDIALS_PRECISION" == "double") && ("$indexsize" == "64") ]]; then
+if [[ ("$SUNDIALS_PRECISION" == "double") ]]; then
     export SUNDIALS_FMOD_INTERFACE=${FORTRAN_STATUS}
 else
     export SUNDIALS_FMOD_INTERFACE=OFF

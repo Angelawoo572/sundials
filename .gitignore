@@ -19,6 +19,7 @@
 /.pydevproject
 .vscode
 compile_commands.json
+.clangd
 
 # custom test environment setup script
 /test/env/env.sh
@@ -36,6 +37,8 @@ compile_commands.json
 *.orig
 *.nvvp
 *.ptp-sync*
+*.project
+*.cproject
 *~
 \#*
 
@@ -59,6 +62,7 @@ compile_commands.json
 /doc/*/*.log
 
 # directories created by/for Sphinx documentation
+/doc/.venv
 /doc/.pyvenv
 /doc/*/guide/build/
 /doc/*/examples/build/
@@ -75,3 +79,6 @@ uberenv_libs
 
 # swig
 /swig/swig
+
+# tools
+/tools/suntools/__pycache__

@@ -3,7 +3,7 @@
 # Programmer(s): Cody J. Balos and David J. Gardner @ LLNL
 # ------------------------------------------------------------------------------
 # SUNDIALS Copyright Start
-# Copyright (c) 2002-2023, Lawrence Livermore National Security
+# Copyright (c) 2002-2025, Lawrence Livermore National Security
 # and Southern Methodist University.
 # All rights reserved.
 #
@@ -109,12 +109,8 @@ if [ "$compilername" == "gcc" ]; then
         export CUDAFLAGS="-g -O3"
     fi
 
-    # append additional warning flags
-    if [[ "$SUNDIALS_PRECISION" == "double" && "$SUNDIALS_INDEX_SIZE" == "32" ]]; then
-        export CFLAGS="${CFLAGS} -Wconversion -Wno-sign-conversion"
-        export CXXFLAGS="${CXXFLAGS} -Wconversion -Wno-sign-conversion"
-    fi
-
+    # additional Fortran flags not currently added by ENABLE_ALL_WARNINGS
+    export FFLAGS="${FFLAGS} -fcheck=all,no-pointer,no-recursion"
 fi
 
 # ------------------------------------------------------------------------------
@@ -138,7 +134,7 @@ export SUNDIALS_KINSOL=ON
 
 # Fortran interface status
 if [ "$compilername" == "gcc" ]; then
-    if [[ ("$SUNDIALS_PRECISION" == "double") && ("$SUNDIALS_INDEX_SIZE" == "64") ]]; then
+    if [[ ("$SUNDIALS_PRECISION" == "double") ]]; then
         export SUNDIALS_FMOD_INTERFACE=ON
     else
         export SUNDIALS_FMOD_INTERFACE=OFF
@@ -158,7 +154,6 @@ export SUNDIALS_PROFILING=ON
 
 # Sundials logging
 export SUNDIALS_LOGGING_LEVEL=3
-export SUNDIALS_LOGGING_ENABLE_MPI=ON
 
 # Answer files
 if [ -z "${SUNDIALS_TEST_ANSWER_DIR}" ]; then
@@ -178,9 +173,6 @@ else # single
     export SUNDIALS_TEST_FLOAT_PRECISION=3
     export SUNDIALS_TEST_INTEGER_PRECISION=10
 fi
-
-# FindMPI fails with this ON
-export SUNDIALS_ENABLE_WARNINGS_AS_ERRORS=OFF
 
 # ------------------------------------------------------------------------------
 # Third party libraries
@@ -302,7 +294,7 @@ if [ "$SUNDIALS_PRECISION" == "double" ]; then
     export SUPERLU_DIST_LIBRARIES="${BLAS_LIBRARIES};${PARMETIS_LIBRARIES};${METIS_LIBRARIES};${SUPERLU_DIST_ROOT}/lib/libsuperlu_dist.a"
     export SUPERLU_DIST_OPENMP=OFF
 
-    # if BLAS wasnt found, then dont build SuperLU_DIST
+    # if BLAS wasn't found, then dont build SuperLU_DIST
     if [ -z "$BLAS_LIBRARIES" ]; then
         export SUNDIALS_SUPERLU_DIST=OFF
     else
@@ -347,7 +339,7 @@ fi
 # --------
 
 if [ "$SUNDIALS_PRECISION" == "double" ] && [ "$SUNDIALS_INDEX_SIZE" == "32" ]; then
-    export SUNDIALS_TRILINOS=ON
+    export SUNDIALS_TRILINOS=OFF
     export TRILINOS_ROOT=/opt/view
 else
     export SUNDIALS_TRILINOS=OFF

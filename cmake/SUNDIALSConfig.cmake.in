@@ -2,7 +2,7 @@
 # Programmer(s): Cody J. Balos @ LLNL
 # ---------------------------------------------------------------
 # SUNDIALS Copyright Start
-# Copyright (c) 2002-2023, Lawrence Livermore National Security
+# Copyright (c) 2002-2025, Lawrence Livermore National Security
 # and Southern Methodist University.
 # All rights reserved.
 #
@@ -55,12 +55,21 @@ endforeach()
 
 ### ------- Create TPL imported targets
 
+if("@ENABLE_MPI@" AND NOT TARGET MPI::MPI_C)
+  set(MPI_C_COMPILER "@MPI_C_COMPILER@")
+  find_dependency(MPI)
+endif()
+
 if("@ENABLE_OPENMP@" AND NOT TARGET OpenMP::OpenMP_C)
   find_dependency(OpenMP)
 endif()
 
 if("@ENABLE_CALIPER@" AND NOT TARGET caliper)
   find_dependency(CALIPER PATHS "@CALIPER_DIR@")
+endif()
+
+if("@ENABLE_ADIAK@" AND NOT TARGET adiak::adiak)
+  find_dependency(adiak PATHS "@adiak_DIR@")
 endif()
 
 if("@ENABLE_CUDA@" AND NOT (TARGET CUDA::cudart AND TARGET CUDA::cublas
@@ -82,9 +91,13 @@ if("@ENABLE_HYPRE@" AND NOT TARGET SUNDIALS::HYPRE)
 endif()
 
 if("@ENABLE_KLU@" AND NOT TARGET SUNDIALS::KLU)
-  add_library(SUNDIALS::KLU INTERFACE IMPORTED)
-  target_link_libraries(SUNDIALS::KLU INTERFACE "@KLU_LIBRARIES@")
-  set_target_properties(SUNDIALS::KLU PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "@KLU_INCLUDE_DIR@")
+  if("@KLU_SUITESPARSE_TARGET@")
+    find_dependency(KLU)
+  else()
+    add_library(SUNDIALS::KLU INTERFACE IMPORTED)
+    target_link_libraries(SUNDIALS::KLU INTERFACE "@KLU_LIBRARIES@")
+    set_target_properties(SUNDIALS::KLU PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "@KLU_INCLUDE_DIR@")
+  endif()
 endif()
 
 if("@ENABLE_KOKKOS@" AND NOT TARGET Kokkos::kokkos)
@@ -93,6 +106,16 @@ endif()
 
 if("@ENABLE_KOKKOS_KERNELS@" AND NOT TARGET Kokkos::kokkoskernels)
   find_dependency(KokkosKernels PATHS "@KokkosKernels_DIR@")
+endif()
+
+if("@ENABLE_LAPACK@" AND NOT TARGET LAPACK::LAPACK)
+  # For some reason find_dependency does not find the libraries if the variables
+  # below are internal rather than CACHE variables
+  set(BLAS_LIBRARIES "@BLAS_LIBRARIES@" CACHE "FILEPATH" "BLAS libraries")
+  set(BLAS_LINKER_FLAGS "@BLAS_LINKER_FLAGS@" CACHE "STRING" "BLAS linker flags")
+  set(LAPACK_LIBRARIES "@LAPACK_LIBRARIES@" CACHE "FILEPATH" "LAPACK libraries")
+  set(LAPACK_LINKER_FLAGS "@LAPACK_LINKER_FLAGS@" CACHE "STRING" "LAPACK linker flags")
+  find_dependency(LAPACK)
 endif()
 
 if("@ENABLE_PETSC@" AND NOT TARGET SUNDIALS::PETSC)
@@ -148,10 +171,8 @@ if("@ENABLE_RAJA@" AND NOT TARGET RAJA)
   find_dependency(RAJA PATHS "@RAJA_DIR@")
 endif()
 
-if("@ENABLE_TRILINOS@" AND NOT TARGET SUNDIALS::TRILINOS)
-  add_library(SUNDIALS::TRILINOS INTERFACE IMPORTED)
-  target_link_libraries(SUNDIALS::TRILINOS INTERFACE "@Trilinos_LIBRARIES@")
-  set_target_properties(SUNDIALS::TRILINOS PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "@Trilinos_INCLUDE_DIRS@")
+if("@ENABLE_TRILINOS@" AND NOT TARGET Tpetra::all_libs)
+  find_dependency(Trilinos COMPONENTS Tpetra PATHS "@Trilinos_DIR@")
 endif()
 
 if("@ENABLE_XBRAID@" AND NOT TARGET SUNDIALS::XBRAID)

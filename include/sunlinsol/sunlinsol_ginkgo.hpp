@@ -2,7 +2,7 @@
  * Programmer(s): Cody J. Balos @ LLNL
  * -----------------------------------------------------------------------------
  * SUNDIALS Copyright Start
- * Copyright (c) 2002-2023, Lawrence Livermore National Security
+ * Copyright (c) 2002-2025, Lawrence Livermore National Security
  * and Southern Methodist University.
  * All rights reserved.
  *
@@ -53,7 +53,7 @@ int SUNLinSolSetup_Ginkgo(SUNLinearSolver S, SUNMatrix A)
   auto solver{
     static_cast<LinearSolver<GkoSolverType, GkoMatrixType>*>(S->content)};
   solver->Setup(static_cast<Matrix<GkoMatrixType>*>(A->content));
-  return SUNLS_SUCCESS;
+  return SUN_SUCCESS;
 }
 
 template<class GkoSolverType, class GkoMatrixType>
@@ -63,16 +63,16 @@ int SUNLinSolSolve_Ginkgo(SUNLinearSolver S, SUNMatrix A, N_Vector x,
   auto solver{
     static_cast<LinearSolver<GkoSolverType, GkoMatrixType>*>(S->content)};
   solver->Solve(b, x, tol);
-  return SUNLS_SUCCESS;
+  return SUN_SUCCESS;
 }
 
 template<class GkoSolverType, class GkoMatrixType>
-int SUNLinSolFree_Ginkgo(SUNLinearSolver S)
+SUNErrCode SUNLinSolFree_Ginkgo(SUNLinearSolver S)
 {
   auto solver{
     static_cast<LinearSolver<GkoSolverType, GkoMatrixType>*>(S->content)};
   delete solver; // NOLINT
-  return SUNLS_SUCCESS;
+  return SUN_SUCCESS;
 }
 
 template<class GkoSolverType, class GkoMatrixType>
@@ -289,7 +289,7 @@ public:
     return gko_solver_.get();
   }
 
-  /// Solve the linear system Ax = b to the specificed tolerance.
+  /// Solve the linear system Ax = b to the specified tolerance.
   /// \param b the right-hand side vector
   /// \param x the solution vector
   /// \param tol the tolerance to solve the system to
@@ -332,11 +332,19 @@ public:
     }
 
     iter_count_ = static_cast<int>(logger->get_num_iterations());
+#if (GKO_VERSION_MAJOR == 1) && (GKO_VERSION_MINOR < 6)
+    GkoExec()->get_master()->copy_from(gko::lend(GkoExec()), 1,
+                                       gko::as<impl::GkoDenseMat>(
+                                         logger->get_residual_norm())
+                                         ->get_const_values(),
+                                       &res_norm_);
+#else
     GkoExec()->get_master()->copy_from(GkoExec(), 1,
                                        gko::as<impl::GkoDenseMat>(
                                          logger->get_residual_norm())
                                          ->get_const_values(),
                                        &res_norm_);
+#endif
 
     return result;
   }

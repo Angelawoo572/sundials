@@ -2,7 +2,7 @@
    Programmer(s): Daniel R. Reynolds @ SMU
    ----------------------------------------------------------------
    SUNDIALS Copyright Start
-   Copyright (c) 2002-2023, Lawrence Livermore National Security
+   Copyright (c) 2002-2025, Lawrence Livermore National Security
    and Southern Methodist University.
    All rights reserved.
 
@@ -34,37 +34,80 @@ Specifically, a generic ``SUNMatrix`` is a pointer to a structure
 that has an implementation-dependent *content* field containing
 the description and actual data of the matrix, and an *ops* field
 pointing to a structure with generic matrix operations.
-The type ``SUNMatrix`` is defined as:
+
+A :c:type:`SUNMatrix` is a pointer to the :c:struct:`_generic_SUNMatrix`
+structure:
 
 .. c:type:: struct _generic_SUNMatrix *SUNMatrix
 
-and the generic structure is defined as
+.. c:struct:: _generic_SUNMatrix
 
-.. code-block:: c
+   The structure defining the SUNDIALS matrix class.
 
-   struct _generic_SUNMatrix {
-       void *content;
-       struct _generic_SUNMatrix_Ops *ops;
-   };
+   .. c:member:: void *content
 
-Here, the ``_generic_SUNMatrix_Ops`` structure is essentially a list of
-function pointers to the various actual matrix operations, and is
-defined as
+      Pointer to matrix-specific member data
 
-.. code-block:: c
+   .. c:member:: struct _generic_SUNMatrix_Ops *ops
 
-   struct _generic_SUNMatrix_Ops {
-     SUNMatrix_ID (*getid)(SUNMatrix);
-     SUNMatrix    (*clone)(SUNMatrix);
-     void         (*destroy)(SUNMatrix);
-     int          (*zero)(SUNMatrix);
-     int          (*copy)(SUNMatrix, SUNMatrix);
-     int          (*scaleadd)(realtype, SUNMatrix, SUNMatrix);
-     int          (*scaleaddi)(realtype, SUNMatrix);
-     int          (*matvecsetup)(SUNMatrix);
-     int          (*matvec)(SUNMatrix, N_Vector, N_Vector);
-     int          (*space)(SUNMatrix, long int*, long int*);
-   };
+      A virtual table of matrix operations provided by a specific
+      implementation
+
+   .. c:member:: SUNContext sunctx
+
+      The SUNDIALS simulation context
+
+The virtual table structure is defined as
+
+.. c:struct:: _generic_SUNMatrix_Ops
+
+   The structure defining :c:type:`SUNMatrix` operations.
+
+   .. c:member:: SUNMatrix_ID (*getid)(SUNMatrix)
+
+      The function implementing :c:func:`SUNMatGetID`
+
+   .. c:member:: SUNMatrix (*clone)(SUNMatrix)
+
+      The function implementing :c:func:`SUNMatClone`
+
+   .. c:member:: void (*destroy)(SUNMatrix)
+
+      The function implementing :c:func:`SUNMatDestroy`
+
+   .. c:member:: SUNErrCode (*zero)(SUNMatrix)
+
+      The function implementing :c:func:`SUNMatZero`
+
+   .. c:member:: SUNErrCode (*copy)(SUNMatrix, SUNMatrix)
+
+      The function implementing :c:func:`SUNMatCopy`
+
+   .. c:member:: SUNErrCode (*scaleadd)(sunrealtype, SUNMatrix, SUNMatrix)
+
+      The function implementing :c:func:`SUNMatScaleAdd`
+
+   .. c:member:: SUNErrCode (*scaleaddi)(sunrealtype, SUNMatrix)
+
+      The function implementing :c:func:`SUNMatScaleAddI`
+
+   .. c:member:: SUNErrCode (*matvecsetup)(SUNMatrix)
+
+      The function implementing :c:func:`SUNMatMatvecSetup`
+
+   .. c:member:: SUNErrCode (*matvec)(SUNMatrix, N_Vector, N_Vector)
+
+      The function implementing :c:func:`SUNMatMatvec`
+
+   .. c:member:: SUNErrCode (*mathermitiantransposevec)(SUNMatrix, N_Vector, N_Vector)
+
+      The function implementing :c:func:`SUNMatHermitianTransposeVec`
+      
+      .. versionadded:: 7.3.0
+
+   .. c:member:: SUNErrCode (*space)(SUNMatrix, long int*, long int*)
+
+      The function implementing :c:func:`SUNMatSpace`
 
 
 The generic SUNMATRIX module defines and implements the matrix
@@ -79,9 +122,9 @@ operation:
 
 .. code-block:: c
 
-   int SUNMatZero(SUNMatrix A)
+   SUNErrCode SUNMatZero(SUNMatrix A)
    {
-     return((int) A->ops->zero(A));
+     return(A->ops->zero(A));
    }
 
 :numref:`SUNMatrix.Ops` contains a complete list of all
@@ -118,7 +161,7 @@ routines these functions will ease the introduction of any new optional matrix
 operations to the SUNMATRIX API by ensuring only required operations need to be
 set and all operations are copied when cloning a matrix.
 
-.. c:function:: SUNMatrix SUNMatNewEmpty()
+.. c:function:: SUNMatrix SUNMatNewEmpty(SUNContext sunctx)
 
   This function allocates a new generic ``SUNMatrix`` object and initializes its
   content pointer and the function pointers in the operations structure to ``NULL``.
@@ -127,7 +170,7 @@ set and all operations are copied when cloning a matrix.
      If successful, this function returns a ``SUNMatrix`` object. If an error
      occurs when allocating the object, then this routine will return ``NULL``.
 
-.. c:function:: int SUNMatCopyOps(SUNMatrix A, SUNMatrix B)
+.. c:function:: SUNErrCode SUNMatCopyOps(SUNMatrix A, SUNMatrix B)
 
   This function copies the function pointers in the ``ops`` structure of ``A``
   into the ``ops`` structure of ``B``.
@@ -137,9 +180,7 @@ set and all operations are copied when cloning a matrix.
       * *B* -- the matrix to copy operations to.
 
    **Return value:**
-      If successful, this function returns ``0``. If either of the inputs
-      are ``NULL`` or the ``ops`` structure of either input is ``NULL``,
-      then is function returns a non-zero value.
+      * A :c:type:`SUNErrCode`
 
 .. c:function:: void SUNMatFreeEmpty(SUNMatrix A)
 
@@ -152,11 +193,13 @@ set and all operations are copied when cloning a matrix.
       * *A* -- the SUNMatrix object to free
 
 
-Each SUNMATRIX implementation included in SUNDIALS has a unique
-identifier specified in enumeration and shown in
-:numref:`SUNMatrix.Description.matrixIDs`. It is recommended that a
-user-supplied SUNMATRIX implementation use the ``SUNMATRIX_CUSTOM``
-identifier.
+.. c:type:: SUNMatrix_ID
+
+   Each SUNMATRIX implementation included in SUNDIALS has a unique identifier
+   specified in enumeration and shown in
+   :numref:`SUNMatrix.Description.matrixIDs`. It is recommended that a
+   user-supplied SUNMATRIX implementation use the ``SUNMATRIX_CUSTOM``
+   identifier.
 
 
 .. _SUNMatrix.Description.matrixIDs:
@@ -164,15 +207,15 @@ identifier.
    :align: center
 
    ======================  =================================================
-   Matrix ID               Matrix type                                      
+   Matrix ID               Matrix type
    ======================  =================================================
-   SUNMATRIX_BAND          Band :math:`M \times M` matrix                     
-   SUNMATRIX_CUSPARSE      CUDA sparse CSR matrix                             
-   SUNMATRIX_CUSTOM        User-provided custom matrix                      
-   SUNMATRIX_DENSE         Dense :math:`M \times N` matrix      
-   SUNMATRIX_GINKGO        SUNMatrix wraper for Ginkgo matrices
-   SUNMATRIX_MAGMADENSE    Dense :math:`M \times N` matrix        
-   SUNMATRIX_ONEMKLDENSE   oneMKL dense :math:`M \times N` matrix             
-   SUNMATRIX_SLUNRLOC      SUNMatrix wrapper for SuperLU_DIST SuperMatrix     
-   SUNMATRIX_SPARSE        Sparse (CSR or CSC) :math:`M\times N` matrix       
+   SUNMATRIX_BAND          Band :math:`M \times M` matrix
+   SUNMATRIX_CUSPARSE      CUDA sparse CSR matrix
+   SUNMATRIX_CUSTOM        User-provided custom matrix
+   SUNMATRIX_DENSE         Dense :math:`M \times N` matrix
+   SUNMATRIX_GINKGO        SUNMatrix wrapper for Ginkgo matrices
+   SUNMATRIX_MAGMADENSE    Dense :math:`M \times N` matrix
+   SUNMATRIX_ONEMKLDENSE   oneMKL dense :math:`M \times N` matrix
+   SUNMATRIX_SLUNRLOC      SUNMatrix wrapper for SuperLU_DIST SuperMatrix
+   SUNMATRIX_SPARSE        Sparse (CSR or CSC) :math:`M\times N` matrix
    ======================  =================================================

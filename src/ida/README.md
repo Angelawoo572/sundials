@@ -1,7 +1,7 @@
 # IDA
-### Version 6.5.1 (Mar 2023)
+### Version 7.3.0 (Apr 2025)
 
-**Alan C. Hindmarsh, Radu Serban, Cody J. Balos, David J. Gardner, 
+**Alan C. Hindmarsh, Radu Serban, Cody J. Balos, David J. Gardner,
   and Carol S. Woodward, Center for Applied Scientific Computing, LLNL**
 
 **Daniel R. Reynolds, Department of Mathematics, Southern Methodist University**
@@ -47,11 +47,11 @@ the "SUNDIALS Release History" appendix of the IDA User Guide.
 ## References
 
 * A. C. Hindmarsh, R. Serban, C. J. Balos, D. J. Gardner, D. R. Reynolds
-  and C. S. Woodward, "User Documentation for IDA v6.5.1,"
-  LLNL technical report UCRL-SM-208112, Mar 2023.
+  and C. S. Woodward, "User Documentation for IDA v7.3.0,"
+  LLNL technical report UCRL-SM-208112, Apr 2025.
 
-* A. C. Hindmarsh, R. Serban, and A. Collier, "Example Programs for IDA v6.5.1,"
-  LLNL technical report UCRL-SM-208113, Mar 2023.
+* A. C. Hindmarsh, R. Serban, and A. Collier, "Example Programs for IDA v7.3.0,"
+  LLNL technical report UCRL-SM-208113, Apr 2025.
 
 * A. C. Hindmarsh, P. N. Brown, K. E. Grant, S. L. Lee, R. Serban,
   D. E. Shumaker, and C. S. Woodward, "SUNDIALS, Suite of Nonlinear and

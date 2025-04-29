@@ -2,7 +2,7 @@
  * Programmer(s): David J. Gardner @ LLNL
  * -----------------------------------------------------------------------------
  * SUNDIALS Copyright Start
- * Copyright (c) 2002-2023, Lawrence Livermore National Security
+ * Copyright (c) 2002-2025, Lawrence Livermore National Security
  * and Southern Methodist University.
  * All rights reserved.
  *
@@ -42,6 +42,7 @@
 #include "arkode/arkode_arkstep.h"
 #include "arkode/arkode_mristep.h"
 #include "nvector/nvector_serial.h"
+#include "sundials/sundials_core.hpp"
 #include "sundials/sundials_math.h"
 #include "sunlinsol/sunlinsol_dense.h"
 #include "sunmatrix/sunmatrix_dense.h"
@@ -89,7 +90,7 @@ static int ytrue(sunrealtype t, N_Vector y)
  *   [a  b] * [ (-1 + u^2 - r(t)) / (2*u) ] + [ r'(t) / (2u) ]
  *   [c  d]   [ (-2 + v^2 - s(t)) / (2*v) ]   [ s'(t) / (2v) ]
  * ---------------------------------------------------------------------------*/
-int f(sunrealtype t, N_Vector y, N_Vector ydot, void* user_data)
+static int f(sunrealtype t, N_Vector y, N_Vector ydot, void* user_data)
 {
   sunrealtype* udata  = (sunrealtype*)user_data;
   const sunrealtype a = udata[0];
@@ -115,7 +116,7 @@ int f(sunrealtype t, N_Vector y, N_Vector ydot, void* user_data)
 /* -----------------------------------------------------------------------------
  * Compute the fast ODE RHS function
  * ---------------------------------------------------------------------------*/
-int f0(sunrealtype t, N_Vector y, N_Vector ydot, void* user_data)
+static int f0(sunrealtype t, N_Vector y, N_Vector ydot, void* user_data)
 {
   N_VConst(ZERO, ydot);
   return 0;
@@ -126,8 +127,8 @@ int f0(sunrealtype t, N_Vector y, N_Vector ydot, void* user_data)
  *   [a/2 + (a(1+r(t))-rdot(t))/(2u^2)     b/2 + b*(2+s(t))/(2*v^2)         ]
  *   [c/2 + c(1+r(t))/(2u^2)               d/2 + (d(2+s(t))-sdot(t))/(2u^2) ]
  * ---------------------------------------------------------------------------*/
-int J(sunrealtype t, N_Vector y, N_Vector fy, SUNMatrix J, void* user_data,
-      N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)
+static int J(sunrealtype t, N_Vector y, N_Vector fy, SUNMatrix J,
+             void* user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)
 {
   sunrealtype* udata  = (sunrealtype*)user_data;
   const sunrealtype a = udata[0];
@@ -154,19 +155,19 @@ int J(sunrealtype t, N_Vector y, N_Vector fy, SUNMatrix J, void* user_data,
 // -----------------------------------------------------------------------------
 
 // Check function return flag
-int check_flag(int flag, const std::string funcname)
+static int check_flag(int flag, const std::string funcname)
 {
-  if (!flag) return 0;
-  if (flag < 0) std::cerr << "ERROR: ";
-  if (flag > 0) std::cerr << "WARNING: ";
+  if (!flag) { return 0; }
+  if (flag < 0) { std::cerr << "ERROR: "; }
+  if (flag > 0) { std::cerr << "WARNING: "; }
   std::cerr << funcname << " returned " << flag << std::endl;
   return 1;
 }
 
 // Check if a function returned a NULL pointer
-int check_ptr(void* ptr, const std::string funcname)
+static int check_ptr(void* ptr, const std::string funcname)
 {
-  if (ptr) return 0;
+  if (ptr) { return 0; }
   std::cerr << "ERROR: " << funcname << " returned NULL" << std::endl;
   return 1;
 }
@@ -214,83 +215,82 @@ int main(int argc, char* argv[])
 
   // Create initial condition
   N_Vector y = N_VNew_Serial(2, sunctx);
-  if (check_ptr(y, "N_VNew_Serial")) return 1;
+  if (check_ptr(y, "N_VNew_Serial")) { return 1; }
 
   int flag = ytrue(ZERO, y);
-  if (check_flag(flag, "ytrue")) return 1;
+  if (check_flag(flag, "ytrue")) { return 1; }
 
   // Create the fast integrator memory structure
   void* inner_arkode_mem = ARKStepCreate(f0, NULL, ZERO, y, sunctx);
-  if (check_ptr(inner_arkode_mem, "ARKStepCreate")) return 1;
+  if (check_ptr(inner_arkode_mem, "ARKStepCreate")) { return 1; }
 
   // Create inner stepper
   MRIStepInnerStepper inner_stepper;
-  flag = ARKStepCreateMRIStepInnerStepper(inner_arkode_mem,
-                                          &inner_stepper);
-  if (check_flag(flag, "ARKStepCreateMRIStepInnerStepper")) return 1;
+  flag = ARKodeCreateMRIStepInnerStepper(inner_arkode_mem, &inner_stepper);
+  if (check_flag(flag, "ARKodeCreateMRIStepInnerStepper")) { return 1; }
 
   // Create MRIStep memory structure
   void* arkode_mem = MRIStepCreate(nullptr, f, ZERO, y, inner_stepper, sunctx);
-  if (check_ptr(arkode_mem, "MRIStepCreate")) return 1;
+  if (check_ptr(arkode_mem, "MRIStepCreate")) { return 1; }
 
-  flag = MRIStepSStolerances(arkode_mem, rtol, atol);
-  if (check_flag(flag, "MRIStepSStolerances")) return 1;
+  flag = ARKodeSStolerances(arkode_mem, rtol, atol);
+  if (check_flag(flag, "ARKodeSStolerances")) { return 1; }
 
-  flag = MRIStepSetFixedStep(arkode_mem, SUN_RCONST(1.0e-5));
-  if (check_flag(flag, "MRIStepSetFixedStep")) return 1;
+  flag = ARKodeSetFixedStep(arkode_mem, SUN_RCONST(1.0e-5));
+  if (check_flag(flag, "ARKodeSetFixedStep")) { return 1; }
 
   SUNMatrix A = SUNDenseMatrix(2, 2, sunctx);
-  if (check_ptr(A, "SUNDenseMatrix")) return 1;
+  if (check_ptr(A, "SUNDenseMatrix")) { return 1; }
 
   SUNLinearSolver LS = SUNLinSol_Dense(y, A, sunctx);
-  if (check_ptr(LS, "SUNLinSol_Dense")) return 1;
+  if (check_ptr(LS, "SUNLinSol_Dense")) { return 1; }
 
-  flag = MRIStepSetLinearSolver(arkode_mem, LS, A);
-  if (check_flag(flag, "MRIStepSetLinearSolver")) return 1;
+  flag = ARKodeSetLinearSolver(arkode_mem, LS, A);
+  if (check_flag(flag, "ARKodeSetLinearSolver")) { return 1; }
 
   sunrealtype udata[4] = {-TWO, HALF, HALF, -ONE};
 
-  flag = MRIStepSetUserData(arkode_mem, udata);
-  if (check_flag(flag, "MRIStepSetUserData")) return 1;
+  flag = ARKodeSetUserData(arkode_mem, udata);
+  if (check_flag(flag, "ARKodeSetUserData")) { return 1; }
 
   // Initial time and fist output time
   sunrealtype tret = ZERO;
   sunrealtype tout = tret + SUN_RCONST(0.1);
 
   // Advance one step in time
-  flag = MRIStepEvolve(arkode_mem, tout, y, &tret, ARK_ONE_STEP);
-  if (check_flag(flag, "MRIStep")) return 1;
+  flag = ARKodeEvolve(arkode_mem, tout, y, &tret, ARK_ONE_STEP);
+  if (check_flag(flag, "ARKode")) { return 1; }
 
   // Get the internal finite difference approximation to J
   SUNMatrix Jdq;
-  flag = MRIStepGetJac(arkode_mem, &Jdq);
-  if (check_flag(flag, "MRIStepGetJac")) return 1;
+  flag = ARKodeGetJac(arkode_mem, &Jdq);
+  if (check_flag(flag, "ARKodeGetJac")) { return 1; }
 
   // Get the step and time at which the approximation was computed
   long int nst_Jdq;
-  flag = MRIStepGetJacNumSteps(arkode_mem, &nst_Jdq);
-  if (check_flag(flag, "MRIStepGetJacNumSteps")) return 1;
+  flag = ARKodeGetJacNumSteps(arkode_mem, &nst_Jdq);
+  if (check_flag(flag, "ARKodeGetJacNumSteps")) { return 1; }
 
   sunrealtype t_Jdq;
-  flag = MRIStepGetJacTime(arkode_mem, &t_Jdq);
-  if (check_flag(flag, "MRIStepGetJacTime")) return 1;
+  flag = ARKodeGetJacTime(arkode_mem, &t_Jdq);
+  if (check_flag(flag, "ARKodeGetJacTime")) { return 1; }
 
   // Compute the true Jacobian
   SUNMatrix Jtrue = SUNDenseMatrix(2, 2, sunctx);
-  if (check_ptr(Jtrue, "SUNDenseMatrix")) return 1;
+  if (check_ptr(Jtrue, "SUNDenseMatrix")) { return 1; }
 
   flag = ytrue(t_Jdq, y);
-  if (check_flag(flag, "ytrue")) return 1;
+  if (check_flag(flag, "ytrue")) { return 1; }
 
   flag = J(t_Jdq, y, nullptr, Jtrue, &udata, nullptr, nullptr, nullptr);
-  if (check_flag(flag, "J")) return 1;
+  if (check_flag(flag, "J")) { return 1; }
 
   // Compare finite difference and true Jacobian
   sunrealtype* Jdq_data = SUNDenseMatrix_Data(Jdq);
-  if (check_ptr(Jdq_data, "SUNDenseMatrix_Data")) return 1;
+  if (check_ptr(Jdq_data, "SUNDenseMatrix_Data")) { return 1; }
 
   sunrealtype* Jtrue_data = SUNDenseMatrix_Data(Jtrue);
-  if (check_ptr(Jtrue_data, "SUNDenseMatrix_Data")) return 1;
+  if (check_ptr(Jtrue_data, "SUNDenseMatrix_Data")) { return 1; }
 
   // Output Jacobian data
   std::cout << std::scientific;
@@ -302,19 +302,19 @@ int main(int argc, char* argv[])
             << std::right << "J DQ" << std::setw(25) << std::right << "J true"
             << std::setw(25) << std::right << "absolute difference"
             << std::setw(25) << std::right << "relative difference" << std::endl;
-  for (int i = 0; i < 4 * 25 + 8; i++) std::cout << "-";
+  for (int i = 0; i < 4 * 25 + 8; i++) { std::cout << "-"; }
   std::cout << std::endl;
 
-  int result = 0;
+  int result         = 0;
   sunindextype ldata = SUNDenseMatrix_LData(Jtrue);
   for (sunindextype i = 0; i < ldata; i++)
   {
     std::cout << std::setw(8) << std::right << i << std::setw(25) << std::right
               << Jdq_data[i] << std::setw(25) << std::right << Jtrue_data[i]
               << std::setw(25) << std::right
-              << std::abs(Jdq_data[i] - Jtrue_data[i])
-              << std::setw(25) << std::right
-              << std::abs(Jdq_data[i] - Jtrue_data[i])/Jtrue_data[i]
+              << std::abs(Jdq_data[i] - Jtrue_data[i]) << std::setw(25)
+              << std::right
+              << std::abs(Jdq_data[i] - Jtrue_data[i]) / Jtrue_data[i]
               << std::endl;
     result += SUNRCompareTol(Jdq_data[i], Jtrue_data[i], tol);
   }
@@ -325,8 +325,8 @@ int main(int argc, char* argv[])
   SUNMatDestroy(Jtrue);
   SUNLinSolFree(LS);
   MRIStepInnerStepper_Free(&inner_stepper);
-  ARKStepFree(&inner_arkode_mem);
-  MRIStepFree(&arkode_mem);
+  ARKodeFree(&inner_arkode_mem);
+  ARKodeFree(&arkode_mem);
 
   return result;
 }

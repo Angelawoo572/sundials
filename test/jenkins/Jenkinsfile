@@ -2,6 +2,11 @@
 pipeline {
     agent any
 
+    options {
+        // Abort a running Pipeline build if a new one is started
+        disableConcurrentBuilds(abortPrevious: true)
+    }
+
     stages {
 
         stage('print-environment') {
@@ -16,12 +21,12 @@ pipeline {
                     script {
                         if (env.CHANGE_BRANCH =~ '^(release(/|-).*)$' ||
                             env.BRANCH_NAME =~ '^(release(/|-).*)$') {
-                            sh "./test_driver.sh --testtype Release"
+                            sh "./test_driver.sh --testtype Release --env env/jenkins.sh"
                         } else if (env.BRANCH_NAME =~ '^(main|develop)$' ||
                                    env.CHANGE_TARGET =~ '^(main|develop)$') {
-                            sh "./test_driver.sh --testtype PR"
+                            sh "./test_driver.sh --testtype PR --env env/jenkins.sh"
                         } else {
-                            sh "./test_driver.sh --testtype Branch"
+                            sh "./test_driver.sh --testtype Branch --env env/jenkins.sh"
                         }
                     }
                 }

@@ -1,6 +1,6 @@
 .. ----------------------------------------------------------------
    SUNDIALS Copyright Start
-   Copyright (c) 2002-2023, Lawrence Livermore National Security
+   Copyright (c) 2002-2025, Lawrence Livermore National Security
    and Southern Methodist University.
    All rights reserved.
 
@@ -127,8 +127,6 @@ are in bold.
    parameters with respect to which the sensitivities are computed may also be
    provided to :c:func:`IDASetSensParams`.
 
-   check :c:func:`IDASetErrFile`
-
 #. **Set sensitivity integration tolerances (optional)**
 
    Call :c:func:`IDASensSStolerances` or :c:func:`IDASensSVtolerances` to set
@@ -221,9 +219,7 @@ Forward sensitivity initialization and deallocation functions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Activation of forward sensitivity computation is done by calling
-:c:func:`IDASensInit` or :c:func:`IDASensInit1`, depending on whether the
-sensitivity residual function returns all sensitivities at once or one by
-one, respectively. The form of the call to each of these routines is as follows:
+:c:func:`IDASensInit`. The form of the call is as follows:
 
 .. c:function:: int IDASensInit(void * ida_mem, int Ns, int ism, IDASensResFn fS, N_Vector * yS0, N_Vector * ypS0)
 
@@ -365,7 +361,7 @@ One of the following three functions must be called to specify the
 integration tolerances for sensitivities. Note that this call must be made after
 the call to :c:func:`IDASensInit`.
 
-.. c:function:: int IDASensSStolerances(void * ida_mem, realtype reltolS, realtype* abstolS)
+.. c:function:: int IDASensSStolerances(void * ida_mem, sunrealtype reltolS, sunrealtype* abstolS)
 
    The function :c:func:`IDASensSStolerances` specifies scalar relative and absolute
    tolerances.
@@ -382,7 +378,7 @@ the call to :c:func:`IDASensInit`.
      * ``IDA_ILL_INPUT`` -- One of the input tolerances was negative.
 
 
-.. c:function:: int IDASensSVtolerances(void * ida_mem, realtype reltolS, N_Vector* abstolS)
+.. c:function:: int IDASensSVtolerances(void * ida_mem, sunrealtype reltolS, N_Vector* abstolS)
 
    The function :c:func:`IDASensSVtolerances` specifies scalar relative tolerance
    and  vector absolute tolerances.
@@ -432,13 +428,12 @@ by calling the appropriate constructor routine. The user must then attach the
 ``SUNNonlinearSolver`` object to IDAS by calling
 :c:func:`IDASetNonlinearSolverSensSim` when using the ``IDA_SIMULTANEOUS``
 corrector option, or :c:func:`IDASetNonlinearSolver` and
-:c:func:`IDASetNonlinearSolverSensStg` or
-:c:func:`IDASetNonlinearSolverSensStg1` when using the ``IDA_STAGGERED``
-as documented below.
+:c:func:`IDASetNonlinearSolverSensStg` when using the ``IDA_STAGGERED``
+corrector option as documented below.
 
 When changing the nonlinear solver in IDAS, :c:func:`IDASetNonlinearSolver` must
 be called after :c:func:`IDAInit`; similarly
-:c:func:`IDASetNonlinearSolverSensSim`, :c:func:`IDASetNonlinearSolverStg`, must
+:c:func:`IDASetNonlinearSolverSensSim`, :c:func:`IDASetNonlinearSolverSensStg`, must
 be called after :c:func:`IDASensInit`. If any calls to :c:func:`IDASolve` have been
 made, then IDAS will need to be reinitialized by calling :c:func:`IDAReInit` to
 ensure that the nonlinear solver is initialized correctly before any subsequent
@@ -454,7 +449,7 @@ attaches the nonlinear solver to the main IDAS integrator.
 
 .. c:function:: int IDASetNonlinearSolverSensSim(void * ida_mem, SUNNonlinearSolver NLS)
 
-   The function :c:func:`IDASetNonLinearSolverSensSim` attaches a
+   The function :c:func:`IDASetNonlinearSolverSensSim` attaches a
    ``SUNNonlinearSolver``  object (``NLS``) to IDAS when using the
    ``IDA_SIMULTANEOUS`` approach to  correct the state and sensitivity variables
    at the same time.
@@ -472,7 +467,7 @@ attaches the nonlinear solver to the main IDAS integrator.
 
 .. c:function:: int IDASetNonlinearSolverSensStg(void * ida_mem, SUNNonlinearSolver NLS)
 
-   The function :c:func:`IDASetNonLinearSolverSensStg` attaches a
+   The function :c:func:`IDASetNonlinearSolverSensStg` attaches a
    ``SUNNonlinearSolver``  object (``NLS``) to IDAS when using the
    ``IDA_STAGGERED`` approach to  correct all the sensitivity variables after the
    correction of the state  variables.
@@ -541,7 +536,7 @@ then IDAS computes both a solution and sensitivities at time ``t``. However,
 Solution sensitivities can be obtained through one of the following functions:
 
 
-.. c:function:: int IDAGetSens(void * ida_mem, realtype * tret, N_Vector * yS)
+.. c:function:: int IDAGetSens(void * ida_mem, sunrealtype * tret, N_Vector * yS)
 
    The function :c:func:`IDAGetSens` returns the sensitivity solution vectors after
    a  successful return from :c:func:`IDASolve`.
@@ -568,7 +563,7 @@ function is called by :c:func:`IDAGetSens` with ``k`` :math:`= 0`, but may also 
 called directly by the user.
 
 
-.. c:function:: int IDAGetSensDky(void * ida_mem, realtype t, int k, N_Vector * dkyS)
+.. c:function:: int IDAGetSensDky(void * ida_mem, sunrealtype t, int k, N_Vector * dkyS)
 
    The function :c:func:`IDAGetSensDky` returns derivatives of the sensitivity
    solution  vectors after a successful return from :c:func:`IDASolve`.
@@ -593,7 +588,7 @@ parameter in turn through the functions :c:func:`IDAGetSens1` and
 :c:func:`IDAGetSensDky1`, defined as follows:
 
 
-.. c:function:: int IDAGetSens1(void * ida_mem, realtype * tret, int is, N_Vector yS)
+.. c:function:: int IDAGetSens1(void * ida_mem, sunrealtype * tret, int is, N_Vector yS)
 
    The function ``IDAGetSens1`` returns the ``is``-th sensitivity solution
    vector  after a successful return from :c:func:`IDASolve`.
@@ -617,7 +612,7 @@ parameter in turn through the functions :c:func:`IDAGetSens1` and
       will be  the same as that returned at the last :c:func:`IDASolve` call.
 
 
-.. c:function:: int IDAGetSensDky1(void * ida_mem, realtype t, int k, int is, N_Vector dkyS)
+.. c:function:: int IDAGetSensDky1(void * ida_mem, sunrealtype t, int k, int is, N_Vector dkyS)
 
    The function ``IDAGetSensDky1`` returns the ``k``-th derivative of the
    ``is``-th sensitivity solution vector after a successful return from
@@ -671,7 +666,7 @@ time and, if successful, takes effect immediately.
   =================================== ==================================== ============
 
 
-.. c:function:: int IDASetSensParams(void * ida_mem, realtype * p, realtype * pbar, int * plist)
+.. c:function:: int IDASetSensParams(void * ida_mem, sunrealtype * p, sunrealtype * pbar, int * plist)
 
    The function :c:func:`IDASetSensParams` specifies problem parameter information
    for sensitivity calculations.
@@ -729,7 +724,7 @@ time and, if successful, takes effect immediately.
       The array ``p`` *must* also be attached to the user data structure. For
       example, ``user_data->p = p;``.
 
-.. c:function:: int IDASetSensDQMethod(void * ida_mem, int DQtype, realtype DQrhomax)
+.. c:function:: int IDASetSensDQMethod(void * ida_mem, int DQtype, sunrealtype DQrhomax)
 
    The function :c:func:`IDASetSensDQMethod` specifies the difference quotient
    strategy in  the case in which the residual of the sensitivity
@@ -760,7 +755,7 @@ time and, if successful, takes effect immediately.
    ``DQrhomax``:math:`=0.0`.
 
 
-.. c:function:: int IDASetSensErrCon(void * ida_mem, booleantype errconS)
+.. c:function:: int IDASetSensErrCon(void * ida_mem, sunbooleantype errconS)
 
    The function :c:func:`IDASetSensErrCon` specifies the error control  strategy for
    sensitivity variables.
@@ -825,7 +820,7 @@ detail in the remainder of this section.
    Sensitivity-related statistics as a group                        :c:func:`IDAGetSensStats`
    No. of sens. nonlinear solver iterations                         :c:func:`IDAGetSensNumNonlinSolvIters`
    No. of sens. convergence failures                                :c:func:`IDAGetSensNumNonlinSolvConvFails`
-   Sens. nonlinear solver statistics as a group                     :c:func:`IDAGetSensNonlinSolveStats`
+   Sens. nonlinear solver statistics as a group                     :c:func:`IDAGetSensNonlinSolvStats`
    ================================================================ ================================================
 
 
@@ -846,7 +841,7 @@ detail in the remainder of this section.
 
 .. c:function:: int IDAGetNumResEvalsSens(void * ida_mem, long int * nfevalsS)
 
-   The function :c:func:`IDAGetNumResEvalsSEns` returns the number of calls to the
+   The function :c:func:`IDAGetNumResEvalsSens` returns the number of calls to the
    user's residual function due to the internal finite difference
    approximation  of the sensitivity residuals.
 
@@ -1069,7 +1064,7 @@ for all sensitivity parameters at once, through a function of type
 :c:type:`IDASensResFn` defined by:
 
 
-.. c:type:: int (*IDASensResFn)(int Ns, realtype t, N_Vector yy, N_Vector yp, N_Vector resval, N_Vector *yS, N_Vector *ypS, N_Vector *resvalS, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)
+.. c:type:: int (*IDASensResFn)(int Ns, sunrealtype t, N_Vector yy, N_Vector yp, N_Vector resval, N_Vector *yS, N_Vector *ypS, N_Vector *resvalS, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)
 
    This function computes the sensitivity residual for all sensitivity
    equations.  It must compute the vectors
@@ -1229,7 +1224,7 @@ in the notation of :eq:`IDAS_QUAD`. The form of the call to this function is as 
       .. warning::
 
          Before calling :c:func:`IDAQuadSensInit`, the user must enable the
-         sensitivites  by calling  :c:func:`IDASensInit`.  If an error occurred,
+         sensitivities  by calling  :c:func:`IDASensInit`.  If an error occurred,
          :c:func:`IDAQuadSensInit` also sends an error message to the  error handler
          function.
 
@@ -1322,7 +1317,7 @@ at time ``t``. However, :c:func:`IDASolve` will still return only the solutions 
 Sensitivity-dependent quadratures can be obtained using one of the following
 functions:
 
-.. c:function:: int IDAGetQuadSens(void * ida_mem, realtype * tret, N_Vector * yQS)
+.. c:function:: int IDAGetQuadSens(void * ida_mem, sunrealtype * tret, N_Vector * yQS)
 
    The function :c:func:`IDAGetQuadSens` returns the quadrature sensitivity  solution vectors after a successful return from :c:func:`IDASolve`.
 
@@ -1344,7 +1339,7 @@ the interpolating polynomials for the sensitivity-dependent quadrature variables
 at time ``t``. This function is called by :c:func:`IDAGetQuadSens` with
 ``k = 0``, but may also be called directly by the user.
 
-.. c:function:: int IDAGetQuadSensDky(void * ida_mem, realtype t, int k, N_Vector* dkyQS)
+.. c:function:: int IDAGetQuadSensDky(void * ida_mem, sunrealtype t, int k, N_Vector* dkyQS)
 
    The function :c:func:`IDAGetQuadSensDky` returns derivatives of the quadrature sensitivities  solution vectors after a successful return from :c:func:`IDASolve`.
 
@@ -1368,7 +1363,7 @@ Quadrature sensitivity solution vectors can also be extracted separately for
 each parameter in turn through the functions ``IDAGetQuadSens1`` and
 ``IDAGetQuadSensDky1``, defined as follows:
 
-.. c:function:: int IDAGetQuadSens1(void * ida_mem, realtype * tret, int is, N_Vector yQS)
+.. c:function:: int IDAGetQuadSens1(void * ida_mem, sunrealtype * tret, int is, N_Vector yQS)
 
    The function ``IDAGetQuadSens1`` returns the ``is``-th sensitivity  of quadratures after a successful return from :c:func:`IDASolve`.
 
@@ -1387,7 +1382,7 @@ each parameter in turn through the functions ``IDAGetQuadSens1`` and
      * ``IDA_BAD_DKY`` -- ``yQS`` is ``NULL``.
 
 
-.. c:function:: int IDAGetQuadSensDky1(void * ida_mem, realtype t, int k, int is, N_Vector dkyQS)
+.. c:function:: int IDAGetQuadSensDky1(void * ida_mem, sunrealtype t, int k, int is, N_Vector dkyQS)
 
    The function ``IDAGetQuadSensDky1`` returns the ``k``-th derivative of the  ``is``-th sensitivity solution vector after a successful  return from :c:func:`IDASolve`.
 
@@ -1417,7 +1412,7 @@ Optional inputs for sensitivity-dependent quadrature integration
 IDAS provides the following optional input functions to control the integration
 of sensitivity-dependent quadrature equations.
 
-.. c:function:: int IDASetQuadSensErrCon(void * ida_mem, booleantype errconQS)
+.. c:function:: int IDASetQuadSensErrCon(void * ida_mem, sunbooleantype errconQS)
 
    The function :c:func:`IDASetQuadSensErrCon` specifies whether or not the  quadrature variables are to be used in the local error control mechanism.  If they are, the user must specify the error tolerances for the quadrature  variables by calling :c:func:`IDAQuadSensSStolerances`,  :c:func:`IDAQuadSensSVtolerances`, or :c:func:`IDAQuadSensEEtolerances`.
 
@@ -1442,7 +1437,7 @@ If the quadrature variables are part of the step size control mechanism, one of
 the following functions must be called to specify the integration tolerances for
 quadrature variables.
 
-.. c:function:: int IDAQuadSensSStolerances(void * ida_mem, realtype reltolQS, realtype* abstolQS)
+.. c:function:: int IDAQuadSensSStolerances(void * ida_mem, sunrealtype reltolQS, sunrealtype* abstolQS)
 
    The function :c:func:`IDAQuadSensSStolerances` specifies scalar relative and absolute  tolerances.
 
@@ -1459,7 +1454,7 @@ quadrature variables.
      * ``IDA_ILL_INPUT`` -- One of the input tolerances was negative.
 
 
-.. c:function:: int IDAQuadSensSVtolerances(void * ida_mem, realtype reltolQS, N_Vector* abstolQS)
+.. c:function:: int IDAQuadSensSVtolerances(void * ida_mem, sunrealtype reltolQS, N_Vector* abstolQS)
 
    The function :c:func:`IDAQuadSensSVtolerances` specifies scalar relative and  vector absolute tolerances.
 
@@ -1590,7 +1585,7 @@ q}/{\partial y} s_i + {\partial q}/{\partial \dot{y}} \dot{s}_i + {\partial
 q}{\partial p_i}`.  This user function must be of type
 :c:type:`IDAQuadSensRhsFn` defined as follows:
 
-.. c:type:: int (*IDAQuadSensRhsFn)(int Ns, realtype t, N_Vector yy, N_Vector yp, N_Vector *yyS, N_Vector *ypS, N_Vector rrQ, N_Vector *rhsvalQS, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)
+.. c:type:: int (*IDAQuadSensRhsFn)(int Ns, sunrealtype t, N_Vector yy, N_Vector yp, N_Vector *yyS, N_Vector *ypS, N_Vector rrQ, N_Vector *rhsvalQS, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)
 
    This function computes the sensitivity quadrature equation right-hand side
    for a given value  of the independent variable :math:`t` and state vector

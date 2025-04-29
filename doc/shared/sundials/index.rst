@@ -1,6 +1,6 @@
 .. ----------------------------------------------------------------
    SUNDIALS Copyright Start
-   Copyright (c) 2002-2023, Lawrence Livermore National Security
+   Copyright (c) 2002-2025, Lawrence Livermore National Security
    and Southern Methodist University.
    All rights reserved.
 
@@ -12,9 +12,9 @@
 
 .. _SUNDIALS:
 
-==============
-Using SUNDIALS
-==============
+===============
+Getting Started
+===============
 
 As discussed in :numref:`Organization`, the six solver packages
 (CVODE(S), IDA(S), ARKODE, KINSOL) that make up SUNDIALS are built upon common
@@ -23,7 +23,11 @@ six packages all leverage some other common infrastructure, which we discuss
 in this section.
 
 .. toctree::
+
+   Install
+   Types
    SUNContext
+   Errors
    Logging
    Profiling
    version_information

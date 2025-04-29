@@ -2,7 +2,7 @@
 # Programmer(s): Cody J. Balos @ LLNL
 # ---------------------------------------------------------------
 # SUNDIALS Copyright Start
-# Copyright (c) 2002-2023, Lawrence Livermore National Security
+# Copyright (c) 2002-2025, Lawrence Livermore National Security
 # and Southern Methodist University.
 # All rights reserved.
 #
@@ -15,8 +15,8 @@
 # ---------------------------------------------------------------
 
 # ---------------------------------------------------------------
-# Setup MPI, OpenMP, and OpenMP offload first as other TPLs may
-# need targets or variables corresponding to these TPLs.
+# Setup MPI, OpenMP, and OpenMP offload first as other TPLs may need targets or
+# variables corresponding to these TPLs.
 # ---------------------------------------------------------------
 
 # ---------------------------------------------------------------
@@ -51,6 +51,15 @@ endif()
 # ---------------------------------------------------------------
 
 # ---------------------------------------------------------------
+# Find (and test) the Adiak libraries
+# ---------------------------------------------------------------
+
+if(ENABLE_ADIAK)
+  include(SundialsAdiak)
+  list(APPEND SUNDIALS_TPL_LIST "ADIAK")
+endif()
+
+# ---------------------------------------------------------------
 # Find (and test) the Caliper libraries
 # ---------------------------------------------------------------
 
@@ -67,7 +76,6 @@ if(ENABLE_GINKGO)
   include(SundialsGinkgo)
   list(APPEND SUNDIALS_TPL_LIST "GINKGO")
 endif()
-
 
 # ---------------------------------------------------------------
 # Find (and test) the hypre libraries

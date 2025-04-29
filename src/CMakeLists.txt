@@ -3,7 +3,7 @@
 #                Cody Balos @ LLNL
 # ---------------------------------------------------------------
 # SUNDIALS Copyright Start
-# Copyright (c) 2002-2023, Lawrence Livermore National Security
+# Copyright (c) 2002-2025, Lawrence Livermore National Security
 # and Southern Methodist University.
 # All rights reserved.
 #
@@ -22,6 +22,8 @@ add_subdirectory(sunmatrix)
 add_subdirectory(sunlinsol)
 add_subdirectory(sunnonlinsol)
 add_subdirectory(sunmemory)
+add_subdirectory(sunadaptcontroller)
+add_subdirectory(sunadjointcheckpointscheme)
 
 # ARKODE library
 if(BUILD_ARKODE)

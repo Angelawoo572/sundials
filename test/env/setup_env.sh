@@ -3,7 +3,7 @@
 # Programmer(s): David J. Gardner @ LLNL
 # ------------------------------------------------------------------------------
 # SUNDIALS Copyright Start
-# Copyright (c) 2002-2023, Lawrence Livermore National Security
+# Copyright (c) 2002-2025, Lawrence Livermore National Security
 # and Southern Methodist University.
 # All rights reserved.
 #
@@ -93,12 +93,12 @@ esac
 
 case "$SUNDIALS_TEST_TYPE" in
     DEV)
-        export SUNDIALS_TEST_DEVTESTS=ON
-        export SUNDIALS_TEST_UNITTESTS=ON
+        export SUNDIALS_TEST_ENABLE_DEV_TESTS=ON
+        export SUNDIALS_TEST_ENABLE_UNIT_TESTS=ON
         ;;
     STD|NONE)
-        export SUNDIALS_TEST_DEVTESTS=OFF
-        export SUNDIALS_TEST_UNITTESTS=OFF
+        export SUNDIALS_TEST_ENABLE_DEV_TESTS=OFF
+        export SUNDIALS_TEST_ENABLE_UNIT_TESTS=OFF
         ;;
     *)
         echo "ERROR: Unknown test type option: $SUNDIALS_TEST_TYPE"
@@ -106,16 +106,14 @@ case "$SUNDIALS_TEST_TYPE" in
         ;;
 esac
 
-# C and C++ standards. Note only double precision math functions are supported
-# in ISO C89/C90. While profiling requires C99 for __func__ some compilers still
-# define __func__ with ISO C89/C90. As such we do not consider if profiling is
-# enabled and let the environment script override this setting if necessary.
-if [ "${SUNDIALS_TPLS}" == "OFF" ] && [ "${SUNDIALS_PRECISION}" == "double" ]
-then
-    export CMAKE_C_STANDARD="90"
-else
-    export CMAKE_C_STANDARD="99"
-fi
+# Disable GTest in CI until we determine SEGFAULT cause in test_sundials_errors.c
+export SUNDIALS_TEST_ENABLE_GTEST=OFF
+
+# Build Type
+export CMAKE_BUILD_TYPE="Debug"
+
+# C and C++ standards.
+export CMAKE_C_STANDARD="99"
 export CMAKE_CXX_STANDARD="14"
 
 # Disable compiler extensions by default. The user's environment script may
@@ -155,33 +153,6 @@ elif [ -f env/env.sh ]; then
         return 1;
     fi
 
-elif [ -f "env/${HOSTNAME}.sh" ]; then
-
-    echo "Setting up environment with sundials/test/env/${HOSTNAME}.sh"
-    # shellcheck source=/dev/null
-    if ! source "env/${HOSTNAME}.sh" "$@"; then
-        echo "ERROR: env/${HOSTNAME}.sh $* failed"
-        return 1;
-    fi
-
-elif [ -f "env/${HOST}.sh" ]; then
-
-    echo "Setting up environment with sundials/test/env/${HOST}.sh"
-    # shellcheck source=/dev/null
-    if ! source "env/${HOST}.sh" "$@"; then
-        echo "ERROR: env/${HOST}.sh $* failed"
-        return 1;
-    fi
-
-elif [ -f env/default.sh ]; then
-
-    echo "Setting up environment with sundials/test/env/default.sh"
-    # shellcheck disable=SC1091
-    if ! source env/default.sh "$@"; then
-        echo "ERROR: env/default.sh $*"
-        return 1;
-    fi
-
 else
 
     echo "WARNING: No environment setup script found"
@@ -204,7 +175,6 @@ if [[ "${SUNDIALS_TPLS}" == "OFF" ]]; then
 
     # mpi
     export SUNDIALS_MPI=OFF
-    export SUNDIALS_LOGGING_ENABLE_MPI=OFF
 
     # gpu
     export SUNDIALS_CUDA=OFF

@@ -1,6 +1,6 @@
 # -----------------------------------------------------------------------------
 # SUNDIALS Copyright Start
-# Copyright (c) 2002-2023, Lawrence Livermore National Security
+# Copyright (c) 2002-2025, Lawrence Livermore National Security
 # and Southern Methodist University.
 # All rights reserved.
 #
@@ -11,16 +11,9 @@
 # -----------------------------------------------------------------------------
 
 import sys, os
-sys.path.append(os.path.dirname(os.path.abspath('../../../shared/versions.py')))
-from versions import *
-
-# -- Create new object types --------------------------------------------------
-
-from sphinx.application import Sphinx
-
-def setup(app: Sphinx):
-    app.add_object_type('cmakeoption', 'cmakeop', 'single: %s (CMake option)')
-    app.add_config_value('package_name', '', 'env', types=[str])
+sys.path.append(os.path.dirname(os.path.abspath('../../../shared/sundials_vars.py')))
+from sundials_vars import *
+sys.path.append(os.path.dirname(os.path.abspath('../../../shared')))
 
 # -- General configuration ----------------------------------------------------
 
@@ -33,14 +26,19 @@ needs_sphinx = '4.0'
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ['sphinx_rtd_theme', 'sphinx.ext.ifconfig', 'sphinx.ext.mathjax',
-              'sphinxfortran.fortran_domain', 'sphinxcontrib.bibtex', 'sphinx_copybutton']
+extensions = ['sphinx_rtd_theme', 'sphinx.ext.ifconfig',
+              'sphinx.ext.intersphinx', 'sphinx.ext.mathjax',
+              'sphinxfortran.fortran_domain', 'sphinxcontrib.bibtex',
+              'sphinx_copybutton', 'sphinx_sundials']
+
+intersphinx_mapping = {'sundials': (f'https://sundials.readthedocs.io/en/{doc_version}',
+                                    ('../../../superbuild/build/html/objects.inv', None))}
 
 # References
 bibtex_bibfiles = ['../../../shared/sundials.bib']
 
 # Add any paths that contain templates here, relative to this directory.
-templates_path = ['_templates']
+templates_path = ['../../../shared/_templates']
 
 # The suffix of source filenames.
 source_suffix = '.rst'
@@ -53,7 +51,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'User Documentation for ARKODE'
-copyright = u"""2012-{year}, Daniel R. Reynolds, David J. Gardner, Carol S. Woodward, Rujeko Chinomona, and Cody J. Balos""".format(year = year)
+copyright = u"""2012-{year}, Daniel R. Reynolds, David J. Gardner, Carol S. Woodward, Cody J. Balos, Rujeko Chinomona, and Mustafa Aggul""".format(year = year)
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -219,8 +217,9 @@ tex_author = r'''
     Daniel R. Reynolds$^1$,
     David J. Gardner$^2$,
     Carol S. Woodward$^2$,
+    Cody J. Balos$^2$
     Rujeko Chinomona$^3$, and
-    Cody J. Balos$^2$ \\
+    Mustafa Aggul$^1$ \\
     \\
     {\em $^1$Department of Mathematics, Southern Methodist University} \\
     {\em $^2$Center for Applied Scientific Computing, Lawrence Livermore National Laboratory} \\
@@ -277,7 +276,7 @@ latex_elements = {
 # (source start file, name, description, authors, manual section).
 man_pages = [
     ('index', 'ARKODE', u'ARKODE Documentation',
-     [u'Daniel R. Reynolds, David J. Gardner, Carol S. Woodward, Rujeko Chinomona, and Cody J. Balos'], 1)
+     [u'Daniel R. Reynolds, David J. Gardner, Carol S. Woodward, Cody J. Balos, Rujeko Chinomona, and Mustafa Aggul'], 1)
 ]
 
 # If true, show URL addresses after external links.
@@ -291,8 +290,8 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
   ('index', 'ARKODE', u'ARKODE Documentation',
-   u'Daniel R. Reynolds, David J. Gardner, Carol S. Woodward, Rujeko Chinomona, and Cody J. Balos', 'ARKODE',
-   'Time integration package for multi-rate systems of ordinary differntial equations.',
+   u'Daniel R. Reynolds, David J. Gardner, Carol S. Woodward, Cody J. Balos, Rujeko Chinomona, and Mustafa Aggul', 'ARKODE',
+   'Time integration package for multi-rate systems of ordinary differential equations.',
    'Miscellaneous'),
 ]
 

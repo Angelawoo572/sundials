@@ -1,6 +1,6 @@
 .. ----------------------------------------------------------------
    SUNDIALS Copyright Start
-   Copyright (c) 2002-2023, Lawrence Livermore National Security
+   Copyright (c) 2002-2025, Lawrence Livermore National Security
    and Southern Methodist University.
    All rights reserved.
 
@@ -40,97 +40,65 @@ preconditioner can only be used with ``NVECTOR_PARALLEL``. It is not recommended
 to use a threaded vector object with SuperLU_MT unless it is the
 ``NVECTOR_OPENMP`` module, and SuperLU_MT is also compiled with OpenMP.
 
-.. _IDAS.Usage.SIM.file_access:
+.. _IDAS.Usage.SIM.header_sim:
 
 Access to library and header files
 ----------------------------------
 
 At this point, it is assumed that the installation of IDAS, following the
 procedure described in :numref:`Installation`, has been completed successfully.
+In the proceeding text, the directories ``libdir`` and ``incdir`` are the
+installation library and include directories, respectively. For a default
+installation, these are ``instdir/lib`` and ``instdir/include``, respectively,
+where ``instdir`` is the directory where SUNDIALS was installed.
 
-Regardless of where the user’s application program resides, its associated
-compilation and load commands must make reference to the appropriate locations
-for the library and header files required by IDAS. The relevant library files are
-
-.. code-block::
-
-  <libdir>/libsundials_ida.<so|a>
-  <libdir>/libsundials_nvec*.<so|a>
-  <libdir>/libsundials_sunmat*.<so|a>
-  <libdir>/libsundials_sunlinsol*.<so|a>
-  <libdir>/libsundials_sunnonlinsol*.<so|a>
-
-where the file extension ``.so`` is typically for shared libraries and ``.a``
-for static libraries. The relevant header files are located in the
-subdirectories
+Regardless of where the user's application program resides, its
+associated compilation and load commands must make reference to the
+appropriate locations for the library and header files required by
+IDAS. IDAS symbols are found in ``libdir/libsundials_idas.lib``.
+Thus, in addition to linking to ``libdir/libsundials_core.lib``, IDAS
+users need to link to the IDAS library. Symbols for additional SUNDIALS
+modules, vectors and algebraic solvers, are found in
 
 .. code-block::
 
-  <incdir>/idas
-  <incdir>/sundials
-  <incdir>/nvector
-  <incdir>/sunmatrix
-  <incdir>/sunlinsol
-  <incdir>/sunnonlinsol
+  <libdir>/libsundials_nvec*.lib
+  <libdir>/libsundials_sunmat*.lib
+  <libdir>/libsundials_sunlinsol*.lib
+  <libdir>/libsundials_sunnonlinsol*.lib
+  <libdir>/libsundials_sunmem*.lib
 
-The directories ``libdir`` and ``incdir`` are the install library and include
-directories, respectively. For a default installation, these are
-``<instdir>/lib`` or ``<instdir>/lib64`` and ``<instdir>/include``,
-respectively, where ``instdir`` is the directory where SUNDIALS was installed
-(see :numref:`Installation`).
+The file extension ``.lib`` is typically ``.so`` for shared libraries
+and ``.a`` for static libraries.
 
-.. warning::
+The relevant header files for IDAS are located in the subdirectories
+``incdir/include/idas``. To use IDAS the application needs to include
+the header file for IDAS in addition to the SUNDIALS core header file:
 
-   Note that an application cannot link to both the IDAS and IDA libraries
-   because both contain user-callable functions with the same names (to ensure
-   that IDAS is backward compatible with IDA). Therefore, applications that
-   contain both DAE problems and DAEs with sensitivity analysis, should use
-   IDAS.
+.. code:: c
 
+  #include <sundials/sundials_core.h> // Provides core SUNDIALS types
+  #include <idas/idas.h>              // IDAS provides methods for DAEs with sensitivity analysis
 
-.. _IDAS.Usage.SIM.header_sim:
-
-Header files
-------------
-
-The calling program must include several header files so that various macros and
-data types can be used. The header file that is always required is:
-
-* ``idas/idas.h`` the main header file for IDAS, which defines the types and
-  various constants, and includes function prototypes. This includes the
-  header file for IDALS, ``idas/idas_ls.h``.
-
-Note that ``idas.h`` includes ``sundials_types.h``, which defines the types,
-``realtype``, ``sunindextype``, and ``booleantype`` and the constants
-``SUNFALSE`` and ``SUNTRUE``.
-
-The calling program must also include an ``N_Vector`` implementation
-header file, of the form ``nvector/nvector_*.h`` (see Chapter :numref:`NVectors`
-for more information). This file in turn includes the header file
-``sundials_nvector.h`` which defines the abstract vector data type.
+The calling program must also include an :c:type:`N_Vector` implementation header file, of the form
+``nvector/nvector_*.h``. See :numref:`NVectors` for the appropriate name.
 
 If using a non-default nonlinear solver object, or when interacting with a
-``SUNNonlinearSolver`` object directly, the calling program must also include a
-``SUNNonlinearSolver`` implementation header file, of the form
+:c:type:`SUNNonlinearSolver` object directly, the calling program must also include a
+:c:type:`SUNNonlinearSolver` implementation header file, of the form
 ``sunnonlinsol/sunnonlinsol_*.h`` where ``*`` is the name of the nonlinear
-solver (see Chapter :numref:`SUNNonlinSol` for more information). This file in
-turn includes the header file ``sundials_nonlinearsolver.h`` which defines the
-abstract nonlinear linear solver data type.
+solver (see Chapter :numref:`SUNNonlinSol` for more information).
 
 If using a nonlinear solver that requires the solution of a linear system of the
 form :eq:`IDAS_DAE_nls` (e.g., the default Newton iteration), the calling program
-must also include a ``SUNLinearSolver`` implementation header file, of the from
+must also include a :c:type:`SUNLinearSolver` implementation header file, of the from
 ``sunlinsol/sunlinsol_*.h`` where ``*`` is the name of the linear solver
-(see Chapter :numref:`SUNLinSol` for more information).  This file in
-turn includes the header file ``sundials_linearsolver.h`` which defines the
-abstract linear solver data type.
+(see Chapter :numref:`SUNLinSol` for more information).
 
 If the linear solver is matrix-based, the linear solver header will also include
 a header file of the from ``sunmatrix/sunmatrix_*.h`` where ``*`` is the name of
-the matrix implementation compatible with the linear solver. The matrix header
-file provides access to the relevant matrix functions/macros and in turn
-includes the header file ``sundials_matrix.h`` which defines the abstract matrix
-data type.
+the matrix implementation compatible with the linear solver. (see Chapter
+:numref:`SUNMatrix` for more information).
 
 Other headers may be needed, according to the choice of preconditioner, etc. For
 example, in the example ``idasFoodWeb_kry_p`` (see :cite:p:`ida_ex`),
@@ -350,7 +318,7 @@ IDAS initialization and deallocation functions
    **Return value:**
       * ``void*`` pointer the IDAS solver object.
 
-.. c:function:: int IDAInit(void* ida_mem, IDAResFn res, realtype t0, N_Vector y0, N_Vector yp0)
+.. c:function:: int IDAInit(void* ida_mem, IDAResFn res, sunrealtype t0, N_Vector y0, N_Vector yp0)
 
    The function :c:func:`IDAInit` provides required problem and solution
    specifications, allocates internal memory, and initializes IDAS.
@@ -396,7 +364,7 @@ One of the following three functions must be called to specify the integration
 tolerances (or directly specify the weights used in evaluating WRMS vector
 norms). Note that this call must be made after the call to :c:func:`IDAInit`.
 
-.. c:function:: int IDASStolerances(void* ida_mem, realtype reltol, realtype abstol)
+.. c:function:: int IDASStolerances(void* ida_mem, sunrealtype reltol, sunrealtype abstol)
 
    The function :c:func:`IDASStolerances` specifies scalar relative and absolute
    tolerances.
@@ -413,7 +381,7 @@ norms). Note that this call must be made after the call to :c:func:`IDAInit`.
         called.
       * ``IDA_ILL_INPUT`` -- One of the input tolerances was negative.
 
-.. c:function:: int IDASVtolerances(void* ida_mem, realtype reltol, N_Vector abstol)
+.. c:function:: int IDASVtolerances(void* ida_mem, sunrealtype reltol, N_Vector abstol)
 
    The function :c:func:`IDASVtolerances` specifies scalar relative tolerance and
    vector absolute tolerances.
@@ -479,7 +447,7 @@ For many users, the appropriate choices for tolerance values in ``reltol`` and
    different components have different noise levels, then ``abstol`` should be a
    vector. See the example ``idaRoberts_dns`` in the IDAS package, and the
    discussion of it in the IDAS Examples document :cite:p:`ida_ex`. In that
-   problem, the three components vary betwen 0 and 1, and have different noise
+   problem, the three components vary between 0 and 1, and have different noise
    levels; hence the ``abstol`` vector. It is impossible to give any general
    advice on ``abstol`` values, because the appropriate noise levels are
    completely problem-dependent. The user or modeler hopefully has some idea as
@@ -618,13 +586,9 @@ pertinent to their choice of linear solver.
       the documentation of the particular ``SUNMatrix`` in Chapter
       :numref:`SUNMatrix` for further information).
 
-   .. warning::
+   .. versionadded:: 3.0.0
 
-      The previous routines :c:func:`IDADlsSetLinearSolver` and
-      :c:func:`IDASpilsSetLinearSolver` are now wrappers for this routine, and may
-      still be used for backward-compatibility.  However, these will be
-      deprecated in future releases, so we recommend that users transition to
-      the new routine name soon.
+      Replaces the deprecated function ``IDADlsSetLinearSolver``.
 
 
 .. _IDAS.Usage.SIM.user_callable.nonlin_solv_init:
@@ -653,7 +617,7 @@ IDAS integrator. We note that at present, the ``SUNNonlinearSolver`` object
 
 .. c:function:: int IDASetNonlinearSolver(void* ida_mem, SUNNonlinearSolver NLS)
 
-   The function :c:func:`IDASetNonLinearSolver` attaches a ``SUNNonlinearSolver``  object (``NLS``) to IDAS.
+   The function :c:func:`IDASetNonlinearSolver` attaches a ``SUNNonlinearSolver``  object (``NLS``) to IDAS.
 
    **Arguments:**
       * ``ida_mem`` -- pointer to the IDAS solver object.
@@ -694,7 +658,7 @@ successful call to the linear system solver specification function. The call to
 :c:func:`IDACalcIC` should precede the call(s) to :c:func:`IDASolve` for the
 given problem.
 
-.. c:function:: int IDACalcIC(void* ida_mem, int icopt, realtype tout1)
+.. c:function:: int IDACalcIC(void* ida_mem, int icopt, sunrealtype tout1)
 
    The function :c:func:`IDACalcIC` corrects the initial values ``y0`` and ``yp0`` at
    time ``t0``.
@@ -801,7 +765,7 @@ the user has set a stop time (with :c:func:`IDASetStopTime`) or requested
 rootfinding (with :c:func:`IDARootInit`).
 
 
-.. c:function:: int IDASolve(void* ida_mem, realtype tout, realtype* tret, \
+.. c:function:: int IDASolve(void* ida_mem, sunrealtype tout, sunrealtype* tret, \
                 N_Vector yret, N_Vector ypret, int itask)
 
    The function :c:func:`IDASolve` integrates the DAE over an interval in t.
@@ -881,7 +845,7 @@ rootfinding (with :c:func:`IDARootInit`).
       If a stop time is enabled (through a call to :c:func:`IDASetStopTime`), then
       :c:func:`IDASolve` returns the solution at ``tstop``. Once the integrator
       returns at a stop time, any future testing for ``tstop`` is disabled (and
-      can be reenabled only though a new call to :c:func:`IDASetStopTime`).
+      can be re-enabled only though a new call to :c:func:`IDASetStopTime`).
 
       All failure return values are negative and therefore a test ``flag < 0`` will
       trap all :c:func:`IDASolve` failures.
@@ -930,11 +894,9 @@ an error message to the error handler function. All error return values are
 negative, so the test ``flag < 0`` will catch all errors.
 
 The optional input calls can, unless otherwise noted, be executed in any order.
-However, if the user’s program calls either :c:func:`IDASetErrFile` or
-:c:func:`IDASetErrHandlerFn`, then that call should appear first, in order to
-take effect for any later error message. Finally, a call to an ``IDASet***``
-function can, unless otherwise noted, be made at any time from the user’s
-calling program and, if successful, takes effect immediately.
+Finally, a call to an ``IDASet***`` function can, unless otherwise noted, be
+made at any time from the user’s calling program and, if successful, takes
+effect immediately.
 
 
 .. _IDAS.Usage.SIM.user_callable.optional_input.main:
@@ -948,10 +910,6 @@ Main solver optional input functions
 
    +--------------------------------------------------------------------+---------------------------------+----------------+
    | **Optional input**                                                 | **Function name**               | **Default**    |
-   +--------------------------------------------------------------------+---------------------------------+----------------+
-   | Pointer to an error file                                           | :c:func:`IDASetErrFile`         | ``stderr``     |
-   +--------------------------------------------------------------------+---------------------------------+----------------+
-   | Error handler function                                             | :c:func:`IDASetErrHandlerFn`    | internal fn.   |
    +--------------------------------------------------------------------+---------------------------------+----------------+
    | User data                                                          | :c:func:`IDASetUserData`        | NULL           |
    +--------------------------------------------------------------------+---------------------------------+----------------+
@@ -978,53 +936,6 @@ Main solver optional input functions
    | Inequality constraints on solution                                 | :c:func:`IDASetConstraints`     | NULL           |
    +--------------------------------------------------------------------+---------------------------------+----------------+
 
-
-.. c:function:: int IDASetErrFile(void * ida_mem, FILE * errfp)
-
-   The function :c:func:`IDASetErrFile` specifies the file pointer where all IDAS
-   messages should be directed when using the default IDAS error handler
-   function.
-
-   **Arguments:**
-      * ``ida_mem`` -- pointer to the IDAS solver object.
-      * ``errfp`` -- pointer to output file.
-
-   **Return value:**
-      * ``IDA_SUCCESS`` -- The optional value has been successfully set.
-      * ``IDA_MEM_NULL`` -- The ``ida_mem`` pointer is ``NULL``.
-
-   **Notes:**
-      The default value for ``errfp`` is ``stderr``.  Passing a value ``NULL``
-      disables all future error message output (except for the case in which the
-      IDAS memory pointer is ``NULL``).  This use of :c:func:`IDASetErrFile` is
-      strongly discouraged.
-
-   .. warning::
-
-      If :c:func:`IDASetErrFile` is to be called, it should be called before any
-      other optional input functions, in order to take effect for any later
-      error message.
-
-.. c:function:: int IDASetErrHandlerFn(void * ida_mem, IDAErrHandlerFn ehfun, void * eh_data)
-
-   The function :c:func:`IDASetErrHandlerFn` specifies the optional user-defined
-   function to be used in handling error messages.
-
-   **Arguments:**
-      * ``ida_mem`` -- pointer to the IDAS solver object.
-      * ``ehfun`` -- is the user's error handler function. See
-        :c:type:`IDAErrHandlerFn` for more details.
-      * ``eh_data`` -- pointer to user data passed to ``ehfun`` every time it is
-        called.
-
-   **Return value:**
-      * ``IDA_SUCCESS`` -- The function ``ehfun`` and data pointer ``eh_data`` have
-        been successfully set.
-      * ``IDA_MEM_NULL`` -- The ``ida_mem`` pointer is ``NULL``.
-
-   **Notes:**
-      Error messages indicating that the IDAS solver memory is ``NULL`` will always
-      be directed to ``stderr``.
 
 .. c:function:: int IDASetUserData(void * ida_mem, void * user_data)
 
@@ -1088,7 +999,7 @@ Main solver optional input functions
       Passing ``mxsteps`` = 0 results in IDAS using the default value (500).
       Passing ``mxsteps`` < 0 disables the test (not recommended).
 
-.. c:function:: int IDASetInitStep(void * ida_mem, realtype hin)
+.. c:function:: int IDASetInitStep(void * ida_mem, sunrealtype hin)
 
    The function :c:func:`IDASetInitStep` specifies the initial step size.
 
@@ -1106,7 +1017,7 @@ Main solver optional input functions
       :math:`\|h \dot{y} \|_{{\scriptsize WRMS}} = 1/2`, with an added restriction
       that :math:`|h| \leq .001|t_{\text{out}} - t_0|`.
 
-.. c:function:: int IDASetMinStep(void * ida_mem, realtype hmin)
+.. c:function:: int IDASetMinStep(void * ida_mem, sunrealtype hmin)
 
    The function :c:func:`IDASetMinStep` specifies the minimum absolute value of
    the step size.
@@ -1124,7 +1035,7 @@ Main solver optional input functions
 
    .. versionadded:: 5.2.0
 
-.. c:function:: int IDASetMaxStep(void * ida_mem, realtype hmax)
+.. c:function:: int IDASetMaxStep(void * ida_mem, sunrealtype hmax)
 
    The function :c:func:`IDASetMaxStep` specifies the maximum absolute value of the
    step size.
@@ -1142,7 +1053,7 @@ Main solver optional input functions
    **Notes:**
       Pass ``hmax = 0`` to obtain the default value :math:`\infty`.
 
-.. c:function:: int IDASetStopTime(void * ida_mem, realtype tstop)
+.. c:function:: int IDASetStopTime(void * ida_mem, sunrealtype tstop)
 
    The function :c:func:`IDASetStopTime` specifies the value of the independent
    variable :math:`t` past which the solution is not to proceed.
@@ -1161,7 +1072,7 @@ Main solver optional input functions
    **Notes:**
       The default, if this routine is not called, is that no stop time is imposed.
       Once the integrator returns at a stop time, any future testing for ``tstop``
-      is disabled (and can be reenabled only though a new call to
+      is disabled (and can be re-enabled only though a new call to
       :c:func:`IDASetStopTime`).
 
       A stop time not reached before a call to :c:func:`IDAReInit` will
@@ -1179,7 +1090,7 @@ Main solver optional input functions
       * ``IDA_MEM_NULL`` if the IDA memory is ``NULL``
 
    **Notes:**
-      The stop time can be reenabled though a new call to
+      The stop time can be re-enabled though a new call to
       :c:func:`IDASetStopTime`.
 
    .. versionadded:: 6.5.1
@@ -1201,7 +1112,7 @@ Main solver optional input functions
    **Notes:**
       The default value is 10.
 
-.. c:function:: int IDASetSuppressAlg(void * ida_mem, booleantype suppressalg)
+.. c:function:: int IDASetSuppressAlg(void * ida_mem, sunbooleantype suppressalg)
 
    The function :c:func:`IDASetSuppressAlg` indicates whether or not to suppress
    algebraic variables in the local error test.
@@ -1356,12 +1267,9 @@ in the program. The pointer ``user_data`` may be specified through
       ``jac``, this default function is used.  An error will occur if no ``jac`` is
       supplied when using other matrix types.
 
-   .. warning::
+   .. versionadded:: 3.0.0
 
-      The previous routine :c:func:`IDADlsSetJacFn` is now a wrapper for this routine,
-      and may still be used for backward-compatibility.  However, this will be
-      deprecated in future releases, so we recommend that users transition to
-      the new routine name soon.
+      Replaces the deprecated function ``IDADlsSetJacFn``.
 
 
 When using a matrix-based linear solver the matrix information will be updated
@@ -1373,7 +1281,7 @@ more details. The function :c:func:`IDASetLinearSolutionScaling` can be used to
 disable this scaling when necessary, e.g., when providing a custom linear solver
 that updates the matrix using the current :math:`\alpha` as part of the solve.
 
-.. c:function:: int IDASetDeltaCjLSetup(void* ida_mem, realtype dcj)
+.. c:function:: int IDASetDeltaCjLSetup(void* ida_mem, sunrealtype dcj)
 
    The function ``IDASetDeltaCjLSetup`` specifies the parameter that determines
    the bounds on a change in :math:`c_j` that require a linear solver setup
@@ -1394,7 +1302,7 @@ that updates the matrix using the current :math:`\alpha` as part of the solve.
 
    .. versionadded:: 5.2.0
 
-.. c:function:: int IDASetLinearSolutionScaling(void * ida_mem, booleantype onoff)
+.. c:function:: int IDASetLinearSolutionScaling(void * ida_mem, sunbooleantype onoff)
 
    The function :c:func:`IDASetLinearSolutionScaling` enables or disables scaling the
    linear system solution to account for a change in :math:`\alpha` in the
@@ -1466,19 +1374,16 @@ without using global data in the program.
       solver interface has been initialized through a call to
       :c:func:`IDASetLinearSolver`.
 
-   .. warning::
+   .. versionadded:: 3.0.0
 
-      The previous routine :c:func:`IDASpilsSetJacTimes` is now a wrapper for this
-      routine, and may still be used for backward-compatibility.  However, this
-      will be deprecated in future releases, so we recommend that users
-      transition to the new routine name soon.
+      Replaces the deprecated function ``IDASpilsSetJacTimes``.
 
 
 When using the default difference-quotient approximation to the Jacobian-vector
 product, the user may specify the factor to use in setting increments for the
 finite-difference approximation, via a call to :c:func:`IDASetIncrementFactor`.
 
-.. c:function:: int IDASetIncrementFactor(void * ida_mem, realtype dqincfac)
+.. c:function:: int IDASetIncrementFactor(void * ida_mem, sunrealtype dqincfac)
 
    The function :c:func:`IDASetIncrementFactor` specifies the increment factor to be
    used in the difference-quotient approximation to the product :math:`Jv`.
@@ -1509,12 +1414,9 @@ finite-difference approximation, via a call to :c:func:`IDASetIncrementFactor`.
       linear solver interface has been initialized through a call to
       :c:func:`IDASetLinearSolver`.
 
-   .. warning::
+   .. versionadded:: 3.0.0
 
-      The previous routine :c:func:`IDASpilsSetIncrementFactor` is now a wrapper
-      for this routine, and may still be used for backward-compatibility.
-      However, this will be deprecated in future releases, so we recommend that
-      users transition to the new routine name soon.
+      Replaces the deprecated function ``IDASpilsSetIncrementFactor``.
 
 
 Additionally, when using the internal difference quotient, the user may also
@@ -1594,12 +1496,9 @@ global data in the program.
       function must be called after the IDALS linear solver interface has been
       initialized through a call to :c:func:`IDASetLinearSolver`.
 
-   .. warning::
+   .. versionadded:: 3.0.0
 
-      The previous routine :c:func:`IDASpilsSetPreconditioner` is now a wrapper for
-      this routine, and may still be used for backward-compatibility.  However,
-      this will be deprecated in future releases, so we recommend that users
-      transition to the new routine name soon.
+      Replaces the deprecated function ``IDASpilsSetPreconditioner``.
 
 
 Also, as described in :numref:`IDAS.Mathematics.ivp_sol`, the IDALS interface
@@ -1613,7 +1512,7 @@ where :math:`\epsilon` is the nonlinear solver tolerance, and the default
 :math:`\epsilon_L = 0.05`; this value may be modified by the user through the
 :c:func:`IDASetEpsLin` function.
 
-.. c:function:: int IDASetEpsLin(void * ida_mem, realtype eplifac)
+.. c:function:: int IDASetEpsLin(void * ida_mem, sunrealtype eplifac)
 
    The function :c:func:`IDASetEpsLin` specifies the factor by which the Krylov linear
    solver's convergence test constant is reduced from the nonlinear iteration
@@ -1635,14 +1534,11 @@ where :math:`\epsilon` is the nonlinear solver tolerance, and the default
       :c:func:`IDASetLinearSolver`.  If ``eplifac`` :math:`= 0.0` is passed, the
       default value is used.
 
-   .. warning::
+   .. versionadded:: 3.0.0
 
-      The previous routine :c:func:`IDASpilsSetEpsLin` is now a wrapper for this
-      routine, and may still be used for backward-compatibility.  However, this
-      will be deprecated in future releases, so we recommend that users
-      transition to the new routine name soon.
+      Replaces the deprecated function ``IDASpilsSetEpsLin``.
 
-.. c:function:: int IDASetLSNormFactor(void * ida_mem, realtype nrmfac)
+.. c:function:: int IDASetLSNormFactor(void * ida_mem, sunrealtype nrmfac)
 
    The function :c:func:`IDASetLSNormFactor` specifies the factor to use when
    converting from the integrator tolerance (WRMS norm) to the linear solver
@@ -1733,7 +1629,7 @@ nonlinear solver.
       The default value is 10.
 
 
-.. c:function:: int IDASetNonlinConvCoef(void * ida_mem, realtype nlscoef)
+.. c:function:: int IDASetNonlinConvCoef(void * ida_mem, sunrealtype nlscoef)
 
    The function :c:func:`IDASetNonlinConvCoef` specifies the safety factor in the
    nonlinear convergence test; see :eq:`IDAS_DAE_nls_test`.
@@ -1808,7 +1704,7 @@ Initial condition calculation optional input functions
 The following functions can be called just prior to calling :c:func:`IDACalcIC`
 to set optional inputs controlling the initial condition calculation.
 
-.. c:function:: int IDASetNonlinConvCoefIC(void * ida_mem, realtype epiccon)
+.. c:function:: int IDASetNonlinConvCoefIC(void * ida_mem, sunrealtype epiccon)
 
    The function :c:func:`IDASetNonlinConvCoefIC` specifies the positive constant in
    the Newton iteration convergence test within the initial condition
@@ -1906,10 +1802,10 @@ to set optional inputs controlling the initial condition calculation.
 
       If :c:func:`IDASetMaxBacksIC` is called in a Forward Sensitivity Analysis, the
       the limit ``maxbacks`` applies in the calculation of both the initial state
-      values and the initial sensititivies.
+      values and the initial sensitivities.
 
 
-.. c:function:: int IDASetLineSearchOffIC(void * ida_mem, booleantype lsoff)
+.. c:function:: int IDASetLineSearchOffIC(void * ida_mem, sunbooleantype lsoff)
 
    The function :c:func:`IDASetLineSearchOffIC` specifies whether to turn on or off
    the linesearch algorithm.
@@ -1988,7 +1884,7 @@ step size adaptivity.
    make changes gradually and with testing to determine their effectiveness.
 
 
-.. c:function:: int IDASetEtaFixedStepBounds(void* ida_mem, realtype eta_min_fx, realtype eta_max_fx)
+.. c:function:: int IDASetEtaFixedStepBounds(void* ida_mem, sunrealtype eta_min_fx, sunrealtype eta_max_fx)
 
    The function ``IDASetEtaFixedStepBounds`` specifies the bounds
    :math:`\eta_{\mathrm{min\_fx}}` and :math:`\eta_{\mathrm{max\_fx}}`. If step size
@@ -2013,7 +1909,7 @@ step size adaptivity.
 
    .. versionadded:: 5.2.0
 
-.. c:function:: int IDASetEtaMax(void* ida_mem, realtype eta_max)
+.. c:function:: int IDASetEtaMax(void* ida_mem, sunrealtype eta_max)
 
    The function ``IDASetEtaMax`` specifies the maximum step size growth
    factor :math:`\eta_{\mathrm{max}}`.
@@ -2030,7 +1926,7 @@ step size adaptivity.
 
    .. versionadded:: 5.2.0
 
-.. c:function:: int IDASetEtaMin(void* ida_mem, realtype eta_min)
+.. c:function:: int IDASetEtaMin(void* ida_mem, sunrealtype eta_min)
 
    The function ``IDASetEtaMin`` specifies the minimum step size reduction
    factor :math:`\eta_{\mathrm{min}}`.
@@ -2050,7 +1946,7 @@ step size adaptivity.
 
    .. versionadded:: 5.2.0
 
-.. c:function:: int IDASetEtaLow(void* ida_mem, realtype eta_low)
+.. c:function:: int IDASetEtaLow(void* ida_mem, sunrealtype eta_low)
 
    The function ``IDASetEtaLow`` specifies the maximum step size reduction
    factor :math:`\eta_{\mathrm{low}}`.
@@ -2070,7 +1966,7 @@ step size adaptivity.
 
    .. versionadded:: 5.2.0
 
-.. c:function:: int IDASetEtaMinErrFail(void* ida_mem, realtype eta_min_ef)
+.. c:function:: int IDASetEtaMinErrFail(void* ida_mem, sunrealtype eta_min_ef)
 
    The function ``IDASetEtaMinErrFail`` specifies the minimum step size
    reduction factor :math:`\eta_{\mathrm{min\_ef}}` after an error test failure.
@@ -2090,7 +1986,7 @@ step size adaptivity.
 
    .. versionadded:: 5.2.0
 
-.. c:function:: int IDASetEtaConvFail(void* ida_mem, realtype eta_cf)
+.. c:function:: int IDASetEtaConvFail(void* ida_mem, sunrealtype eta_cf)
 
    The function ``IDASetEtaConvFail`` specifies the step size reduction factor
    :math:`\eta_{\mathrm{cf}}` after a nonlinear solver convergence failure.
@@ -2192,7 +2088,7 @@ output values. This function must be called after a successful return from
 derivatives of order up to the last internal order used for any value of
 :math:`t` in the last internal step taken by IDAS.
 
-.. c:function:: int IDAGetDky(void * ida_mem, realtype t, int k, N_Vector dky)
+.. c:function:: int IDAGetDky(void * ida_mem, sunrealtype t, int k, N_Vector dky)
 
    The function :c:func:`IDAGetDky` computes the interpolated values of the
    :math:`k^{th}` derivative of :math:`y` for any value of :math:`t` in the last
@@ -2378,7 +2274,7 @@ described next.
       In terms of the problem size :math:`N`, the maximum method order
       ``maxord``, and the number of root functions ``nrtfn`` (see
       :numref:`IDAS.Usage.SIM.user_callable.idarootinit`), the actual size of the real workspace, in
-      :c:type:`realtype` words, is given by the following:
+      :c:type:`sunrealtype` words, is given by the following:
 
       * base value:
         :math:`\mathtt{lenrw} = 55 + (m + 6) * N_r + 3 * \mathtt{nrtfn}`;
@@ -2412,6 +2308,10 @@ described next.
       Note that additional memory is allocated if quadratures and/or forward
       sensitivity integration is enabled. See :numref:`IDAS.Usage.Purequad.quad_init`
       and :numref:`IDAS.Usage.FSA.user_callable.sensi_init` for more details.
+
+   .. deprecated:: 6.3.0
+
+      Work space functions will be removed in version 8.0.0.
 
 
 .. c:function:: int IDAGetNumSteps(void * ida_mem, long int * nsteps)
@@ -2509,7 +2409,7 @@ described next.
       * ``IDA_SUCCESS`` -- The optional output value has been successfully set.
       * ``IDA_MEM_NULL`` -- The ``ida_mem`` pointer is ``NULL``.
 
-.. c:function:: int IDAGetLastStep(void * ida_mem, realtype * hlast)
+.. c:function:: int IDAGetLastStep(void * ida_mem, sunrealtype * hlast)
 
    The function :c:func:`IDAGetLastStep` returns the integration step size taken on
    the last internal step (if from :c:func:`IDASolve`), or the last value of the
@@ -2525,7 +2425,7 @@ described next.
       * ``IDA_SUCCESS`` -- The optional output value has been successfully set.
       * ``IDA_MEM_NULL`` -- The ``ida_mem`` pointer is ``NULL``.
 
-.. c:function:: int IDAGetCurrentStep(void * ida_mem, realtype * hcur)
+.. c:function:: int IDAGetCurrentStep(void * ida_mem, sunrealtype * hcur)
 
    The function :c:func:`IDAGetCurrentStep` returns the integration step size to be
    attempted on the next internal step.
@@ -2538,7 +2438,7 @@ described next.
       * ``IDA_SUCCESS`` -- The optional output value has been successfully set.
       * ``IDA_MEM_NULL`` -- The ``ida_mem`` pointer is ``NULL``.
 
-.. c:function:: int IDAGetActualInitStep(void * ida_mem, realtype * hinused)
+.. c:function:: int IDAGetActualInitStep(void * ida_mem, sunrealtype * hinused)
 
    The function :c:func:`IDAGetActualInitStep` returns the value of the integration
    step size used on the first step.
@@ -2558,7 +2458,7 @@ described next.
    changed by IDAS to ensure that the step size is within the prescribed bounds
    :math:`(h_{min} \le h_0 \le h_{max})`, or to meet the local error test.
 
-.. c:function:: int IDAGetCurrentTime(void * ida_mem, realtype * tcur)
+.. c:function:: int IDAGetCurrentTime(void * ida_mem, sunrealtype * tcur)
 
    The function :c:func:`IDAGetCurrentTime` returns the current internal time reached
    by the solver.
@@ -2571,7 +2471,7 @@ described next.
       * ``IDA_SUCCESS`` -- The optional output value has been successfully set.
       * ``IDA_MEM_NULL`` -- The ``ida_mem`` pointer is ``NULL``.
 
-.. c:function:: int IDAGetTolScaleFactor(void * ida_mem, realtype * tolsfac)
+.. c:function:: int IDAGetTolScaleFactor(void * ida_mem, sunrealtype * tolsfac)
 
    The function :c:func:`IDAGetTolScaleFactor` returns a suggested factor by which the
    user's tolerances should be scaled when too much accuracy has been requested
@@ -2622,7 +2522,7 @@ described next.
 
    .. note::
 
-      The ``ele`` vector, togther with the ``eweight`` vector from
+      The ``ele`` vector, together with the ``eweight`` vector from
       :c:func:`IDAGetErrWeights`, can be used to determine how the various
       components of the system contributed to the estimated local error test.
       Specifically, that error test uses the RMS norm of a vector whose
@@ -2633,8 +2533,8 @@ described next.
 
 .. c:function:: int IDAGetIntegratorStats(void *ida_mem, long int *nsteps, \
                 long int *nrevals, long int *nlinsetups, long int *netfails, \
-                int *klast, int *kcur, realtype *hinused, realtype *hlast, \
-                realtype *hcur, realtype *tcur)
+                int *klast, int *kcur, sunrealtype *hinused, sunrealtype *hlast, \
+                sunrealtype *hcur, sunrealtype *tcur)
 
     The function :c:func:`IDAGetIntegratorStats` returns the IDAS integrator stats in
     one function call.
@@ -2735,9 +2635,9 @@ described next.
 
    .. note::
 
-      The file ``scripts/sundials_csv.py`` provides python utility functions to
-      read and output the data from a SUNDIALS CSV output file using the key
-      and value pair format.
+      The Python module ``tools/suntools`` provides utilities to read and output
+      the data from a SUNDIALS CSV output file using the key and value pair
+      format.
 
    .. versionadded:: 5.2.0
 
@@ -2934,13 +2834,14 @@ The following optional outputs are available from the IDALS modules:
       ``SUNLinearSolver`` object attached to it.  The template Jacobian
       matrix allocated by the user outside of IDALS is not included in this report.
 
-   .. warning::
+   .. versionadded:: 3.0.0
 
-      The previous routines :c:func:`IDADlsGetWorkspace` and :c:func:`IDASpilsGetWorkspace`
-      are now wrappers for this routine, and may still be used for
-      backward-compatibility.  However, these will be deprecated in future
-      releases, so we recommend that users transition to the new routine name
-      soon.
+      Replaces the deprecated functions ``IDADlsGetWorkspace`` and
+      ``IDASpilsGetWorkspace``.
+
+   .. deprecated:: 6.3.0
+
+      Work space functions will be removed in version 8.0.0.
 
 .. c:function:: int IDAGetNumJacEvals(void * ida_mem, long int * njevals)
 
@@ -2956,12 +2857,9 @@ The following optional outputs are available from the IDALS modules:
       * ``IDALS_MEM_NULL`` -- The ``ida_mem`` pointer is ``NULL``.
       * ``IDALS_LMEM_NULL`` -- The IDALS linear solver has not been initialized.
 
-   .. warning::
+   .. versionadded:: 3.0.0
 
-      The previous routine :c:func:`IDADlsGetNumJacEvals` is now a wrapper for this
-      routine, and may still be used for backward-compatibility.  However, this
-      will be deprecated in future releases, so we recommend that users
-      transition to the new routine name soon.
+      Replaces the deprecated function ``IDADlsGetNumJacEvals``.
 
 .. c:function:: int IDAGetNumLinResEvals(void * ida_mem, long int * nrevalsLS)
 
@@ -2983,9 +2881,10 @@ The following optional outputs are available from the IDALS modules:
       The value ``nrevalsLS`` is incremented only if one of the default internal
       difference quotient functions is used.
 
-   .. warning::
+   .. versionadded:: 3.0.0
 
-      The previous routines :c:func:`IDADlsGetNumRhsEvals` and :c:func:`IDASpilsGetNumRhsEvals` are now deprecated.
+      Replaces the deprecated functions ``IDADlsGetNumRhsEvals`` and
+      ``IDASpilsGetNumRhsEvals``.
 
 
 .. c:function:: int IDAGetNumLinIters(void * ida_mem, long int * nliters)
@@ -3002,12 +2901,9 @@ The following optional outputs are available from the IDALS modules:
       * ``IDALS_MEM_NULL`` -- The ``ida_mem`` pointer is ``NULL``.
       * ``IDALS_LMEM_NULL`` -- The IDALS linear solver has not been initialized.
 
-   .. warning::
+   .. versionadded:: 3.0.0
 
-      The previous routine :c:func:`IDASpilsGetNumLinIters` is now a wrapper for this
-      routine, and may still be used for backward-compatibility.  However, this
-      will be deprecated in future releases, so we recommend that users
-      transition to the new routine name soon.
+      Replaces the deprecated function ``IDASpilsGetNumLinIters``.
 
 .. c:function:: int IDAGetNumLinConvFails(void * ida_mem, long int * nlcfails)
 
@@ -3023,12 +2919,9 @@ The following optional outputs are available from the IDALS modules:
       * ``IDALS_MEM_NULL`` -- The ``ida_mem`` pointer is ``NULL``.
       * ``IDALS_LMEM_NULL`` -- The IDALS linear solver has not been initialized.
 
-   .. warning::
+   .. versionadded:: 3.0.0
 
-      The previous routine :c:func:`IDASpilsGetNumConvFails` is now a wrapper for this
-      routine, and may still be used for backward-compatibility.  However, this
-      will be deprecated in future releases, so we recommend that users
-      transition to the new routine name soon.
+      Replaces the deprecated function ``IDASpilsGetNumConvFails``.
 
 .. c:function:: int IDAGetNumPrecEvals(void * ida_mem, long int * npevals)
 
@@ -3044,12 +2937,9 @@ The following optional outputs are available from the IDALS modules:
       * ``IDALS_MEM_NULL`` -- The ``ida_mem`` pointer is ``NULL``.
       * ``IDALS_LMEM_NULL`` -- The IDALS linear solver has not been initialized.
 
-   .. warning::
+   .. versionadded:: 3.0.0
 
-      The previous routine :c:func:`IDASpilsGetNumPrecEvals` is now a wrapper for this
-      routine, and may still be used for backward-compatibility.  However, this
-      will be deprecated in future releases, so we recommend that users
-      transition to the new routine name soon.
+      Replaces the deprecated function ``IDASpilsGetNumPrecEvals``.
 
 .. c:function:: int IDAGetNumPrecSolves(void * ida_mem, long int * npsolves)
 
@@ -3065,12 +2955,9 @@ The following optional outputs are available from the IDALS modules:
       * ``IDALS_MEM_NULL`` -- The ``ida_mem`` pointer is ``NULL``.
       * ``IDALS_LMEM_NULL`` -- The IDALS linear solver has not been initialized.
 
-   .. warning::
+   .. versionadded:: 3.0.0
 
-      The previous routine :c:func:`IDASpilsGetNumPrecSolves` is now a wrapper for
-      this routine, and may still be used for backward-compatibility.  However,
-      this will be deprecated in future releases, so we recommend that users
-      transition to the new routine name soon.
+      Replaces the deprecated function ``IDASpilsGetNumPrecSolves``.
 
 .. c:function:: int IDAGetNumJTSetupEvals(void * ida_mem, long int * njtsetup)
 
@@ -3086,12 +2973,9 @@ The following optional outputs are available from the IDALS modules:
       * ``IDALS_MEM_NULL`` -- The ``ida_mem`` pointer is ``NULL``.
       * ``IDALS_LMEM_NULL`` -- The IDALS linear solver has not been initialized.
 
-   .. warning::
+   .. versionadded:: 3.0.0
 
-      The previous routine :c:func:`IDASpilsGetNumJTSetupEvals` is now a wrapper for
-      this routine, and may still be used for backward-compatibility.  However,
-      this will be deprecated in future releases, so we recommend that users
-      transition to the new routine name soon.
+      Replaces the deprecated function ``IDASpilsGetNumJTSetupEvals``.
 
 .. c:function:: int IDAGetNumJtimesEvals(void * ida_mem, long int * njvevals)
 
@@ -3107,12 +2991,9 @@ The following optional outputs are available from the IDALS modules:
       * ``IDALS_MEM_NULL`` -- The ``ida_mem`` pointer is ``NULL``.
       * ``IDALS_LMEM_NULL`` -- The IDALS linear solver has not been initialized.
 
-   .. warning::
+   .. versionadded:: 3.0.0
 
-      The previous routine :c:func:`IDASpilsGetNumJtimesEvals` is now a wrapper for
-      this routine, and may still be used for backward-compatibility.  However,
-      this will be deprecated in future releases, so we recommend that users
-      transition to the new routine name soon.
+      Replaces the deprecated function ``IDASpilsGetNumJtimesEvals``.
 
 .. c:function:: int IDAGetLastLinFlag(void * ida_mem, long int * lsflag)
 
@@ -3137,26 +3018,23 @@ The following optional outputs are available from the IDALS modules:
       banded) Jacobian matrix.  If the IDALS setup function failed when using
       another ``SUNLinearSolver`` object, then ``lsflag`` will be
       ``SUNLS_PSET_FAIL_UNREC``, ``SUNLS_ASET_FAIL_UNREC``, or
-      ``SUNLS_PACKAGE_FAIL_UNREC``.  If the IDALS solve function failed
+      ``SUN_ERR_EXT_FAIL``.  If the IDALS solve function failed
       (:c:func:`IDASolve` returned ``IDA_LSOLVE_FAIL``), ``lsflag`` contains the
       error return flag from the ``SUNLinearSolver`` object, which will be one of:
-      ``SUNLS_MEM_NULL``, indicating that the ``SUNLinearSolver`` memory is
+      ``SUN_ERR_ARG_CORRUPTRRUPT``, indicating that the ``SUNLinearSolver`` memory is
       ``NULL``; ``SUNLS_ATIMES_FAIL_UNREC``, indicating an unrecoverable failure in
       the :math:`J*v` function; ``SUNLS_PSOLVE_FAIL_UNREC``, indicating that the
       preconditioner solve function ``psolve`` failed unrecoverably;
       ``SUNLS_GS_FAIL``, indicating a failure in the Gram-Schmidt procedure
       (generated only in SPGMR or SPFGMR); ``SUNLS_QRSOL_FAIL``, indicating that
       the matrix :math:`R` was found to be singular during the QR solve phase
-      (SPGMR and SPFGMR only); or ``SUNLS_PACKAGE_FAIL_UNREC``, indicating an
+      (SPGMR and SPFGMR only); or ``SUN_ERR_EXT_FAIL``, indicating an
       unrecoverable failure in an external iterative linear solver package.
 
-   .. warning::
+   .. versionadded:: 3.0.0
 
-      The previous routines :c:func:`IDADlsGetLastFlag` and :c:func:`IDASpilsGetLastFlag`
-      are now wrappers for this routine, and may still be used for
-      backward-compatibility.  However, these will be deprecated in future
-      releases, so we recommend that users transition to the new routine name
-      soon.
+      Replaces the deprecated functions ``IDADlsGetLastFlag`` and
+      ``IDASpilsGetLastFlag``.
 
 .. c:function:: char* IDAGetLinReturnFlagName(long int lsflag)
 
@@ -3171,13 +3049,10 @@ The following optional outputs are available from the IDALS modules:
         :math:`1 \leq \mathtt{lsflag} \leq N` (LU factorization failed), this
         function returns "NONE".
 
-   .. warning::
+   .. versionadded:: 3.0.0
 
-      The previous routines :c:func:`IDADlsGetReturnFlagName` and
-      :c:func:`IDASpilsGetReturnFlagName` are now wrappers for this routine, and may
-      still be used for backward-compatibility.  However, these will be
-      deprecated in future releases, so we recommend that users transition to
-      the new routine name soon.
+      Replaces the deprecated functions ``IDADlsGetReturnFlagName`` and
+      ``IDASpilsGetReturnFlagName``.
 
 
 .. _IDAS.Usage.SIM.user_callable.reinit:
@@ -3217,7 +3092,7 @@ To stop when the location of the discontinuity is known, simply make that
 location a value of :math:`t_{\text{out}}`. To stop when the location of the
 discontinuity is determined by the solution, use the rootfinding feature. In
 either case, it is critical that the residual function *not* incorporate the
-discontinuity, but rather have a smooth extention over the discontinuity, so
+discontinuity, but rather have a smooth extension over the discontinuity, so
 that the step across it (and subsequent rootfinding, if used) can be done
 efficiently. Then use a switch within the residual function (communicated
 through ``user_data``) that can be flipped between the stopping of the
@@ -3225,7 +3100,7 @@ integration and the restart, so that the restarted problem uses the new values
 (which have jumped).  Similar comments apply if there is to be a jump in the
 dependent variable vector.
 
-.. c:function:: int IDAReInit(void * ida_mem, realtype t0, N_Vector y0, N_Vector yp0)
+.. c:function:: int IDAReInit(void * ida_mem, sunrealtype t0, N_Vector y0, N_Vector yp0)
 
    The function :c:func:`IDAReInit` provides required problem specifications and
    reinitializes IDAS.
@@ -3272,7 +3147,7 @@ DAE residual function
 
 The user must provide a function of type :c:type:`IDAResFn` defined as follows:
 
-.. c:type:: int (*IDAResFn)(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr, void *user_data)
+.. c:type:: int (*IDAResFn)(sunrealtype tt, N_Vector yy, N_Vector yp, N_Vector rr, void *user_data)
 
    This function computes the problem residual for given values of the
    independent variable :math:`t`, state vector :math:`y`, and derivative
@@ -3318,37 +3193,6 @@ The user must provide a function of type :c:type:`IDAResFn` defined as follows:
       can be flagged, and IDAS will then try to correct it.
 
 
-.. _IDAS.Usage.SIM.user_supplied.ehFn:
-
-Error message handler function
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-As an alternative to the default behavior of directing error and warning
-messages to the file pointed to by ``errfp`` (see :c:func:`IDASetErrFile`), the
-user may provide a function of type :c:type:`IDAErrHandlerFn` to process any
-such messages.  The function type :c:type:`IDAErrHandlerFn` is defined as
-follows:
-
-.. c:type:: void (*IDAErrHandlerFn)(int error_code, const char *module, const char *function, char *msg, void *user_data)
-
-   This function processes error and warning messages from IDAS and its
-   sub-modules.
-
-   **Arguments:**
-      * ``error_code`` -- is the error code.
-      * ``module`` -- is the name of the IDAS module reporting the error.
-      * ``function`` -- is the name of the function in which the error occurred.
-      * ``eH_data`` -- is a pointer to user data, the same as the ``eh_data``
-        parameter passed to :c:func:`IDASetErrHandlerFn`.
-
-   **Return value:**
-      This function has no return value.
-
-   **Notes:**
-      ``error_code`` is negative for errors and positive (``IDA_WARNING``) for
-      warnings. If a function that returns a pointer to memory encounters an error,
-      it sets ``error_code`` to 0.
-
 
 .. _IDAS.Usage.SIM.user_supplied.ewtsetFn:
 
@@ -3368,7 +3212,7 @@ Error weight function
 
    **Return value:**
       * ``0`` -- if it the error weights were successfully set.
-      * ``-1`` -- if any error occured.
+      * ``-1`` -- if any error occurred.
 
    **Notes:**
       Allocation of memory for ``ewt`` is handled within IDAS.
@@ -3376,7 +3220,7 @@ Error weight function
    .. warning::
 
       The error weight vector must have all components positive. It is the
-      user's responsiblity to perform this test and return -1 if it is not
+      user's responsibility to perform this test and return -1 if it is not
       satisfied.
 
 
@@ -3389,7 +3233,7 @@ If a rootfinding problem is to be solved during the integration of the DAE
 system, the user must supply a function of type :c:type:`IDARootFn`, defined
 as follows:
 
-.. c:type:: int (*IDARootFn)(realtype t, N_Vector y, N_Vector yp, realtype *gout, void *user_data)
+.. c:type:: int (*IDARootFn)(sunrealtype t, N_Vector y, N_Vector yp, sunrealtype *gout, void *user_data)
 
    This function computes a vector-valued function :math:`g(t,y,\dot{y})` such
    that the roots of the ``nrtfn`` components :math:`g_i(t,y,\dot{y})` are to be
@@ -3407,7 +3251,7 @@ as follows:
         parameter passed to :c:func:`IDASetUserData`.
 
    **Return value:**
-      ``0`` if successful or non-zero if an error occured (in which case the
+      ``0`` if successful or non-zero if an error occurred (in which case the
       integration is halted and :c:func:`IDASolve` returns ``IDA_RTFUNC_FAIL``).
 
    **Notes:**
@@ -3423,7 +3267,7 @@ If a matrix-based linear solver module is used (i.e. a non-``NULL``
 ``SUNMatrix`` object was supplied to :c:func:`IDASetLinearSolver`), the
 user may provide a function of type :c:type:`IDALsJacFn` defined as follows:
 
-.. c:type:: int (*IDALsJacFn)(realtype t, realtype c_j, N_Vector y, N_Vector yp, N_Vector r, SUNMatrix Jac, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)
+.. c:type:: int (*IDALsJacFn)(sunrealtype t, sunrealtype c_j, N_Vector y, N_Vector yp, N_Vector r, SUNMatrix Jac, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3)
 
    This function computes the Jacobian matrix :math:`J` of the DAE system (or an
    approximation to it), defined by :eq:`IDAS_DAE_Jacobian`.
@@ -3451,7 +3295,7 @@ user may provide a function of type :c:type:`IDALsJacFn` defined as follows:
       value if a recoverable error occurred, or a negative value if a
       nonrecoverable error occurred.
 
-      In the case of a recoverable eror return, the integrator will attempt to
+      In the case of a recoverable error return, the integrator will attempt to
       recover by reducing the stepsize, and hence changing :math:`\alpha` in
       :eq:`IDAS_DAE_Jacobian`.
 
@@ -3481,7 +3325,7 @@ user may provide a function of type :c:type:`IDALsJacFn` defined as follows:
       obtain these, the user will need to add a pointer to ``ida_mem`` to
       ``user_data`` and then use the ``IDAGet*`` functions described in
       :numref:`IDAS.Usage.SIM.user_callable.optional_output.main`. The unit roundoff can be
-      accessed as ``UNIT_ROUNDOFF`` defined in ``sundials_types.h``.
+      accessed as ``SUN_UNIT_ROUNDOFF`` defined in ``sundials_types.h``.
 
       **dense:**
 
@@ -3525,7 +3369,7 @@ user may provide a function of type :c:type:`IDALsJacFn` defined as follows:
       elements within the band are those with ``-mupper`` :math:`\le` ``m-n``
       :math:`\le` ``mlower``. Alternatively, ``SM_COLUMN_B(J, j)`` returns a
       pointer to the diagonal element of the ``j``-th column of ``Jac``, and if we
-      assign this address to ``realtype *col_j``, then the ``i``-th element of the
+      assign this address to ``sunrealtype *col_j``, then the ``i``-th element of the
       ``j``-th column is given by ``SM_COLUMN_ELEMENT_B(col_j, i, j)``, counting
       from :math:`0`. Thus, for :math:`(m,n)` within the band, :math:`J_{m,n}` can
       be loaded by setting ``col_n = SM_COLUMN_B(J, n-1);`` and
@@ -3553,12 +3397,9 @@ user may provide a function of type :c:type:`IDALsJacFn` defined as follows:
       ``SUNMATRIX_SPARSE`` type and accessor macros are documented in
       :numref:`SUNMatrix.Sparse`.
 
-   .. warning::
+   .. versionadded:: 3.0.0
 
-      The previous function type :c:func:`IDADlsJacFn` is identical to :c:func:`IDALsJacFn`,
-      and may still be used for backward-compatibility. However, this will be
-      deprecated in future releases, so we recommend that users transition to
-      the new function type name soon.
+      Replaces the deprecated type ``IDADlsJacFn``.
 
 
 .. _IDAS.Usage.SIM.user_supplied.jtimesFn:
@@ -3572,7 +3413,7 @@ provide a function of type :c:type:`IDALsJacTimesVecFn` in the following form, t
 compute matrix-vector products :math:`Jv`. If such a function is not supplied,
 the default is a difference quotient approximation to these products.
 
-.. c:type:: int (*IDALsJacTimesVecFn)(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr, N_Vector v, N_Vector Jv, realtype cj, void *user_data, N_Vector tmp1, N_Vector tmp2)
+.. c:type:: int (*IDALsJacTimesVecFn)(sunrealtype tt, N_Vector yy, N_Vector yp, N_Vector rr, N_Vector v, N_Vector Jv, sunrealtype cj, void *user_data, N_Vector tmp1, N_Vector tmp2)
 
    This function computes the product :math:`Jv` of the DAE system Jacobian
    :math:`J` (or an approximation to it) and a given vector ``v``, where
@@ -3611,15 +3452,11 @@ the default is a difference quotient approximation to these products.
       user will need to add a pointer to ``ida_mem`` to ``user_data`` and then use
       the ``IDAGet*`` functions described in
       :numref:`IDAS.Usage.SIM.user_callable.optional_output.main`. The unit roundoff can be
-      accessed as ``UNIT_ROUNDOFF`` defined in ``sundials_types.h``.
+      accessed as ``SUN_UNIT_ROUNDOFF`` defined in ``sundials_types.h``.
 
-   .. warning::
+   .. versionadded:: 3.0.0
 
-      The previous function type :c:func:`IDASpilsJacTimesVecFn` is identical to
-      :c:func:`IDALsJacTimesVecFn`, and may still be used for
-      backward-compatibility. However, this will be deprecated in future
-      releases, so we recommend that users transition to the new function type
-      name soon.
+      Replaces the deprecated type ``IDASpilsJacTimesVecFn``.
 
 
 .. _IDAS.Usage.SIM.user_supplied.jtsetupFn:
@@ -3632,7 +3469,7 @@ Jacobian-related data be preprocessed or evaluated, then this needs to be done
 in a user-supplied function of type :c:type:`IDALsJacTimesSetupFn`, defined as
 follows:
 
-.. c:type:: int (*IDALsJacTimesSetupFn)(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr, ealtype cj, void *user_data);
+.. c:type:: int (*IDALsJacTimesSetupFn)(sunrealtype tt, N_Vector yy, N_Vector yp, N_Vector rr, sunrealtype cj, void *user_data);
 
    This function setups any data needed by :math:`Jv` product function (see
    :c:type:`IDALsJacTimesVecFn`).
@@ -3667,16 +3504,11 @@ follows:
       user will need to add a pointer to ``ida_mem`` to ``user_data`` and then use
       the ``IDAGet*`` functions described in
       :numref:`IDAS.Usage.SIM.user_callable.optional_output.main`. The unit roundoff can be
-      accessed as ``UNIT_ROUNDOFF`` defined in ``sundials_types.h``.
+      accessed as ``SUN_UNIT_ROUNDOFF`` defined in ``sundials_types.h``.
 
-   .. warning::
+   .. versionadded:: 3.0.0
 
-      The previous function type :c:func:`IDASpilsJacTimesSetupFn` is identical to
-      :c:func:`IDALsJacTimesSetupFn`, and may still be used for
-      backward-compatibility. However, this will be deprecated in future
-      releases, so we recommend that users transition to the new function type
-      name soon.
-
+      Replaces the deprecated type ``IDASpilsJacTimesSetupFn``
 
 
 .. _IDAS.Usage.SIM.user_supplied.psolveFn:
@@ -3692,7 +3524,7 @@ approximates (at least crudely) the Jacobian matrix :math:`J =
 function must be of type :c:type:`IDALsPrecSolveFn`, defined as follows:
 
 
-.. c:type:: int (*IDALsPrecSolveFn)(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr, N_Vector rvec, N_Vector zvec, realtype cj, realtype delta, void *user_data)
+.. c:type:: int (*IDALsPrecSolveFn)(sunrealtype tt, N_Vector yy, N_Vector yp, N_Vector rr, N_Vector rvec, N_Vector zvec, sunrealtype cj, sunrealtype delta, void *user_data)
 
    This function solves the preconditioning system :math:`Pz = r`.
 
@@ -3733,7 +3565,7 @@ If the user’s preconditioner requires that any Jacobian-related data be
 evaluated or preprocessed, then this needs to be done in a user-supplied
 function of type :c:type:`IDALsPrecSetupFn`, defined as follows:
 
-.. c:type:: int (*IDALsPrecSetupFn)(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr, realtype cj, void *user_data)
+.. c:type:: int (*IDALsPrecSetupFn)(sunrealtype tt, N_Vector yy, N_Vector yp, N_Vector rr, sunrealtype cj, void *user_data)
 
    This function solves the preconditioning system :math:`Pz = r`.
 
@@ -3775,7 +3607,7 @@ function of type :c:type:`IDALsPrecSetupFn`, defined as follows:
       user will need to add a pointer to ``ida_mem`` to ``user_data`` and then use
       the ``IDAGet*`` functions described in
       :numref:`IDAS.Usage.SIM.user_callable.optional_output.main`. The unit roundoff can be
-      accessed as ``UNIT_ROUNDOFF`` defined in ``sundials_types.h``.
+      accessed as ``SUN_UNIT_ROUNDOFF`` defined in ``sundials_types.h``.
 
 
 .. _IDAS.Usage.Purequad:
@@ -3834,7 +3666,7 @@ steps are in bold.
 #. **Set optional inputs for quadrature integration**
 
    Call :c:func:`IDASetQuadErrCon` to indicate whether or not quadrature
-   variables shoule be used in the step size control mechanism, and to specify
+   variables should be used in the step size control mechanism, and to specify
    the integration tolerances for quadrature variables. See
    :numref:`IDAS.Usage.Purequad.quad_optional_input` for details.
 
@@ -3970,7 +3802,7 @@ then IDAS computes both a solution and quadratures at time ``t``. However,
 :c:func:`IDASolve` will still return only the solution :math:`y` in ``y``.
 Solution quadratures can be obtained using the following function:
 
-.. c:function:: int IDAGetQuad(void * ida_mem, realtype tret, N_Vector yQ)
+.. c:function:: int IDAGetQuad(void * ida_mem, sunrealtype* tret, N_Vector yQ)
 
    The function :c:func:`IDAGetQuad` returns the quadrature solution vector after a  successful return from :c:func:`IDASolve`.
 
@@ -3992,7 +3824,7 @@ function is called by :c:func:`IDAGetQuad` with ``k = 0`` and with the current
 time at which :c:func:`IDASolve` has returned, but may also be called directly
 by the user.
 
-.. c:function:: int IDAGetQuadDky(void * ida_mem, realtype t, int k, N_Vector dkyQ)
+.. c:function:: int IDAGetQuadDky(void * ida_mem, sunrealtype t, int k, N_Vector dkyQ)
 
    The function :c:func:`IDAGetQuadDky` returns derivatives of the quadrature solution
    vector after a successful return from ``IDA``.
@@ -4024,7 +3856,7 @@ Optional inputs for quadrature integration
 IDAS provides the following optional input functions to control the integration
 of quadrature equations.
 
-.. c:function:: int IDASetQuadErrCon(void * ida_mem, booleantype errconQ)
+.. c:function:: int IDASetQuadErrCon(void * ida_mem, sunbooleantype errconQ)
 
    The function :c:func:`IDASetQuadErrCon` specifies whether or not the
    quadrature variables are to be used in the step size control mechanism
@@ -4051,7 +3883,7 @@ If the quadrature variables are part of the step size control mechanism, one of
 the following functions must be called to specify the integration tolerances for
 quadrature variables.
 
-.. c:function:: int IDAQuadSStolerances(void * ida_mem, realtype reltolQ, realtype abstolQ)
+.. c:function:: int IDAQuadSStolerances(void * ida_mem, sunrealtype reltolQ, sunrealtype abstolQ)
 
    The function :c:func:`IDAQuadSStolerances` specifies scalar relative and absolute  tolerances.
 
@@ -4067,7 +3899,7 @@ quadrature variables.
      * ``IDA_ILL_INPUT`` -- One of the input tolerances was negative.
 
 
-.. c:function:: int IDAQuadSVtolerances(void * ida_mem, realtype reltolQ, N_Vector abstolQ)
+.. c:function:: int IDAQuadSVtolerances(void * ida_mem, sunrealtype reltolQ, N_Vector abstolQ)
 
    The function :c:func:`IDAQuadSVtolerances` specifies scalar relative and  vector absolute tolerances.
 
@@ -4165,7 +3997,7 @@ defines the right-hand side of the quadrature equations (in other words, the
 integrand function of the integral that must be evaluated). This function must
 be of type :c:func:`IDAQuadRhsFn` defined as follows:
 
-.. c:type:: int (*IDAQuadRhsFn)(realtype tres, N_Vector yy, N_Vector yp, N_Vector rrQ, void *user_data)
+.. c:type:: int (*IDAQuadRhsFn)(sunrealtype tres, N_Vector yy, N_Vector yp, N_Vector rrQ, void *user_data)
 
    This function computes the quadrature equation right-hand side for a given
    value  of the independent variable :math:`t` and state vectors :math:`y` and
@@ -4311,7 +4143,7 @@ space (presumably within ``user_data``) for components of ``yy`` and ``yp`` that
 are communicated by ``Gcomm`` from the other processors, and that are then used
 by ``Gres``, which should not do any communication.
 
-.. c:type:: int (*IDABBDLocalFn)(sunindextype Nlocal, realtype tt, N_Vector yy, N_Vector yp, N_Vector gval, void *user_data)
+.. c:type:: int (*IDABBDLocalFn)(sunindextype Nlocal, sunrealtype tt, N_Vector yy, N_Vector yp, N_Vector gval, void *user_data)
 
    This ``Gres`` function computes :math:`G(t,y,\dot{y})`. It loads the vector
    ``gval`` as a function of ``tt``, ``yy``, and ``yp``.
@@ -4338,7 +4170,7 @@ by ``Gres``, which should not do any communication.
 
    The case where :math:`G` is mathematically identical to :math:`F` is allowed.
 
-.. c:type:: int (*IDABBDCommFn)(sunindextype Nlocal, realtype tt, N_Vector yy, N_Vector yp, void *user_data)
+.. c:type:: int (*IDABBDCommFn)(sunindextype Nlocal, sunrealtype tt, N_Vector yy, N_Vector yp, void *user_data)
 
    This ``Gcomm`` function performs all inter-processor communications necessary
    for the execution of the ``Gres`` function above, using the input vectors
@@ -4438,7 +4270,7 @@ out and new or modified steps are in bold.
 The user-callable functions that initialize or re-initialize the IDABBDPRE
 preconditioner module are described next.
 
-.. c:function:: int IDABBDPrecInit(void *ida_mem, sunindextype Nlocal, sunindextype mudq, sunindextype mldq, sunindextype mukeep, sunindextype mlkeep, realtype dq_rel_yy, IDABBDLocalFn Gres, IDABBDCommFn Gcomm);
+.. c:function:: int IDABBDPrecInit(void *ida_mem, sunindextype Nlocal, sunindextype mudq, sunindextype mldq, sunindextype mukeep, sunindextype mlkeep, sunrealtype dq_rel_yy, IDABBDLocalFn Gres, IDABBDCommFn Gcomm);
 
    The function :c:func:`IDABBDPrecInit` initializes and allocates (internal) memory
    for the IDABBDPRE preconditioner.
@@ -4503,7 +4335,7 @@ there is a change in any of the linear solver inputs, an additional call to the
 the corresponding ``IDASet***`` functions, must also be made (in the proper
 order).
 
-.. c:function:: int IDABBDPrecReInit(void * ida_mem, sunindextype mudq, sunindextype mldq, realtype dq_rel_yy)
+.. c:function:: int IDABBDPrecReInit(void * ida_mem, sunindextype mudq, sunindextype mldq, sunrealtype dq_rel_yy)
 
    The function :c:func:`IDABBDPrecReInit` reinitializes the IDABBDPRE preconditioner.
 
@@ -4555,6 +4387,10 @@ IDABBDPRE module:
       banded ``SUNLinearSolver`` object, temporary vectors).  These values
       are local to each process.  The workspaces referred to here exist in addition
       to those given by the corresponding function :c:func:`IDAGetLinWorkSpace`.
+
+   .. deprecated:: 6.3.0
+
+      Work space functions will be removed in version 8.0.0.
 
 .. c:function:: int IDABBDPrecGetNumGfnEvals(void * ida_mem, long int * ngevalsBBDP)
 
