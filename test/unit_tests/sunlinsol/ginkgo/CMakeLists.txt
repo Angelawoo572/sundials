@@ -26,6 +26,7 @@ set(examples
     "test_sunlinsol_ginkgo.cpp\;bicgstab csr 100 0 100 0\;"
     # "test_sunlinsol_ginkgo.cpp\;bicgstab dense 100 0 100 0\;"
     "test_sunlinsol_ginkgo_block.cpp\;bicgstab 50 10 2 500 0\;"
+    "test_sunlinsol_ginkgo_block.cpp\;cg 50 10 2 500 0\;"
 )
 
 # The BiCGStab solver has a known bug with the OpenMP backend
