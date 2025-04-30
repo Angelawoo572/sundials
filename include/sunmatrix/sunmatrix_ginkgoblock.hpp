@@ -25,10 +25,8 @@
 namespace sundials {
 namespace ginkgo {
 
-using gkoblock_indextype = int;
-
 using GkoBatchDenseMat = gko::batch::matrix::Dense<sunrealtype>;
-using GkoBatchCsrMat = gko::batch::matrix::Csr<sunrealtype, gkoblock_indextype>;
+using GkoBatchCsrMat = gko::batch::matrix::Csr<sunrealtype, sunindextype>;
 using GkoBatchVecType = gko::batch::MultiVector<sunrealtype>;
 
 // Forward declare BlockMatrix class
