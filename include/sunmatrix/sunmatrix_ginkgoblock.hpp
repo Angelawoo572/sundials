@@ -1,6 +1,8 @@
 /* -----------------------------------------------------------------
+ * Programmer: Cody J. Balos @ LLNL
+ * -----------------------------------------------------------------
  * SUNDIALS Copyright Start
- * Copyright (c) 2002-2022, Lawrence Livermore National Security
+ * Copyright (c) 2002-2025, Lawrence Livermore National Security
  * and Southern Methodist University.
  * All rights reserved.
  *
@@ -27,6 +29,7 @@ namespace ginkgo {
 
 using GkoBatchDenseMat = gko::batch::matrix::Dense<sunrealtype>;
 using GkoBatchCsrMat = gko::batch::matrix::Csr<sunrealtype, sunindextype>;
+using GkoBatchEllMat = gko::batch::matrix::Ell<sunrealtype, sunindextype>;
 using GkoBatchVecType = gko::batch::MultiVector<sunrealtype>;
 
 // Forward declare BlockMatrix class
@@ -153,15 +156,6 @@ public:
 
   const gko::batch_dim<2>& GkoSize() const { return GkoMtx()->get_size(); }
 
-  // const gko::dim<2>& blockSize(gko::size_type block = 0) const { return
-  // GkoSize().at(block); } sunindextype blockDim(gko::size_type block = 0,
-  // sunindextype dim = 0) const { return GkoSize().at(block)[dim]; }
-  // sunindextype blockNNZ(gko::size_type block = 0) const
-  // {
-  // return GkoMtx()->get_num_stored_elements() /
-  // GkoMtx()->get_num_batch_entries();
-  // }
-
   sunindextype NumBlocks() const { return GkoSize().get_num_batch_items(); }
 
   using sundials::impl::BaseMatrix::sunctx;
@@ -216,6 +210,20 @@ inline BlockMatrix<GkoBatchCsrMat>::BlockMatrix(
   SUNContext sunctx)
   : gkomtx_(
       GkoBatchCsrMat::create(gko_exec,
+                             gko::batch_dim<2>(num_blocks, gko::dim<2>(M, N)),
+                             num_nonzeros)),
+    sundials::impl::BaseMatrix(sunctx)
+{
+  initSUNMatrix();
+}
+
+template<>
+inline BlockMatrix<GkoBatchEllMat>::BlockMatrix(
+  gko::size_type num_blocks, sunindextype M, sunindextype N,
+  sunindextype num_nonzeros, std::shared_ptr<const gko::Executor> gko_exec,
+  SUNContext sunctx)
+  : gkomtx_(
+      GkoBatchEllMat::create(gko_exec,
                              gko::batch_dim<2>(num_blocks, gko::dim<2>(M, N)),
                              num_nonzeros)),
     sundials::impl::BaseMatrix(sunctx)
@@ -297,6 +305,13 @@ void ScaleAdd(const sunrealtype c, BlockMatrix<GkoBatchCsrMat>& A,
 {
   // NOTE: This is not implemented by Ginkgo for BatchCsr yet
   throw("scale_add not implemented for gko::batch::matrix::Csr");
+}
+
+void ScaleAdd(const sunrealtype c, BlockMatrix<GkoBatchEllMat>& A,
+  BlockMatrix<GkoBatchEllMat>& B)
+{
+// NOTE: This is not implemented by Ginkgo for BatchEll yet
+throw("scale_add not implemented for gko::batch::matrix::Ell");
 }
 
 template<class GkoBatchMatType>

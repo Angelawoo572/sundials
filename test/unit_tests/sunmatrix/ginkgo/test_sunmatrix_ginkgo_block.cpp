@@ -2,7 +2,7 @@
  * Programmer(s): Cody J. Balos @ LLNL
  * -----------------------------------------------------------------------------
  * SUNDIALS Copyright Start
- * Copyright (c) 2002-2022, Lawrence Livermore National Security
+ * Copyright (c) 2002-2025, Lawrence Livermore National Security
  * and Southern Methodist University.
  * All rights reserved.
  *
@@ -158,7 +158,7 @@ int main(int argc, char* argv[])
   else if (using_dense_matrix_type) { std::cout << "dense\n"; }
 
   /* Create vectors and matrices */
-  std::default_random_engine generator;
+  std::default_random_engine engine;
   std::uniform_real_distribution<sunrealtype> distribution{0.0, sunrealtype{1.0}};
 
   N_Vector x{
@@ -175,16 +175,15 @@ int main(int argc, char* argv[])
   auto xdata{N_VGetArrayPointer(x)};
   for (sunindextype i = 0; i < num_blocks * matcols; i++)
   {
-    xdata[i] = distribution(generator);
+    xdata[i] = distribution(engine);
   }
   REF_OR_OMP_OR_HIP_OR_CUDA(, , N_VCopyToDevice_Hip(x), N_VCopyToDevice_Cuda(x));
 
   auto matrix_dim{gko::dim<2>(matrows, matcols)};
   auto batch_mat_size{gko::batch_dim<2>(num_blocks, matrix_dim)};
   auto batch_vec_size{gko::batch_dim<2>(num_blocks, gko::dim<2>(matrows, 1))};
-  auto gko_matdata{gko::matrix_data<sunrealtype, sunindextype>(matrix_dim,
-                                                               distribution,
-                                                               generator)};
+  auto gko_matdata{
+    gko::matrix_data<sunrealtype, sunindextype>(matrix_dim, distribution, engine)};
 
   /* Wrap ginkgo matrices for SUNDIALS.
      sundials::ginkgo::Matrix is overloaded to a SUNMatrix. */
