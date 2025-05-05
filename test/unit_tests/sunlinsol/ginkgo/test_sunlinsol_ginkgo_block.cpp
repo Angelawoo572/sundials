@@ -291,8 +291,8 @@ int main(int argc, char* argv[])
   /* Create scaling vectors */
   N_Vector s1{N_VClone(x)};
   N_Vector s2{N_VClone(x)};
-  N_VConst(sunrealtype{1.0}, s1);
-  N_VConst(sunrealtype{1.0}, s2);
+  N_VConst(sunrealtype{2.0}, s1);
+  N_VConst(sunrealtype{3.0}, s2);
 
   /* Create right-hand side vector for linear solve */
   fails += SUNMatMatvecSetup(A->Convert());
@@ -374,10 +374,16 @@ int main(int argc, char* argv[])
   fails += Test_SUNLinSolGetType(LS->Convert(),
                                  SUNLINEARSOLVER_MATRIX_ITERATIVE, 0);
   fails += Test_SUNLinSolInitialize(LS->Convert(), 0);
+  fails += Test_SUNLinSolSetup(LS->Convert(), A->Convert(), 0);
+  fails += Test_SUNLinSolSolve(LS->Convert(), A->Convert(), x, b,
+                               solve_tolerance, SUNTRUE, 0);
+
+  /* Try with scaling */
   fails += Test_SUNLinSolSetScalingVectors(LS->Convert(), s1, s2, 0);
   fails += Test_SUNLinSolSetup(LS->Convert(), A->Convert(), 0);
   fails += Test_SUNLinSolSolve(LS->Convert(), A->Convert(), x, b,
                                solve_tolerance, SUNTRUE, 0);
+
 
   /* Print result */
   if (fails)

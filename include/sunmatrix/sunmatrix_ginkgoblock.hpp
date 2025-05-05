@@ -28,9 +28,9 @@ namespace sundials {
 namespace ginkgo {
 
 using GkoBatchDenseMat = gko::batch::matrix::Dense<sunrealtype>;
-using GkoBatchCsrMat = gko::batch::matrix::Csr<sunrealtype, sunindextype>;
-using GkoBatchEllMat = gko::batch::matrix::Ell<sunrealtype, sunindextype>;
-using GkoBatchVecType = gko::batch::MultiVector<sunrealtype>;
+using GkoBatchCsrMat   = gko::batch::matrix::Csr<sunrealtype, sunindextype>;
+using GkoBatchEllMat   = gko::batch::matrix::Ell<sunrealtype, sunindextype>;
+using GkoBatchVecType  = gko::batch::MultiVector<sunrealtype>;
 
 // Forward declare BlockMatrix class
 template<class GkoBatchMatType>
@@ -124,7 +124,8 @@ public:
 
   // Copy constructor clones the gko::matrix and SUNMatrix
   BlockMatrix(const BlockMatrix& that_matrix)
-    : gkomtx_(gko::clone(that_matrix.gkomtx_)), sundials::impl::BaseMatrix(that_matrix)
+    : gkomtx_(gko::clone(that_matrix.gkomtx_)),
+      sundials::impl::BaseMatrix(that_matrix)
   {}
 
   // Move assignment
@@ -180,10 +181,10 @@ private:
     this->object_->ops->clone = SUNMatClone_GinkgoBlock<GkoBatchMatType>;
     this->object_->ops->copy  = SUNMatCopy_GinkgoBlock<GkoBatchMatType>;
     // Ginkgo does not provide what we need for ScaleAdd except with BatchDense
-    this->object_->ops->scaleadd  = SUNMatScaleAdd_GinkgoBlock<GkoBatchMatType>;
+    this->object_->ops->scaleadd = SUNMatScaleAdd_GinkgoBlock<GkoBatchMatType>;
     this->object_->ops->scaleaddi = SUNMatScaleAddI_GinkgoBlock<GkoBatchMatType>;
-    this->object_->ops->matvec    = SUNMatMatvec_GinkgoBlock<GkoBatchMatType>;
-    this->object_->ops->destroy   = SUNMatDestroy_GinkgoBlock<GkoBatchMatType>;
+    this->object_->ops->matvec  = SUNMatMatvec_GinkgoBlock<GkoBatchMatType>;
+    this->object_->ops->destroy = SUNMatDestroy_GinkgoBlock<GkoBatchMatType>;
   }
 };
 
@@ -308,10 +309,10 @@ void ScaleAdd(const sunrealtype c, BlockMatrix<GkoBatchCsrMat>& A,
 }
 
 void ScaleAdd(const sunrealtype c, BlockMatrix<GkoBatchEllMat>& A,
-  BlockMatrix<GkoBatchEllMat>& B)
+              BlockMatrix<GkoBatchEllMat>& B)
 {
-// NOTE: This is not implemented by Ginkgo for BatchEll yet
-throw("scale_add not implemented for gko::batch::matrix::Ell");
+  // NOTE: This is not implemented by Ginkgo for BatchEll yet
+  throw("scale_add not implemented for gko::batch::matrix::Ell");
 }
 
 template<class GkoBatchMatType>

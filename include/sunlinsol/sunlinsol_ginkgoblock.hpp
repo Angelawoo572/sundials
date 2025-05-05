@@ -1,11 +1,7 @@
 #include <cmath>
-#include <memory>
 #include <sundials/sundials_core.hpp>
 #include <sunlinsol/sunlinsol_ginkgo.hpp>
 #include <sunmatrix/sunmatrix_ginkgoblock.hpp>
-#include <utility>
-
-#include "sundials/sundials_types.h"
 
 #ifndef _SUNLINSOL_GINKGOBLOCK_HPP
 #define _SUNLINSOL_GINKGOBLOCK_HPP
@@ -84,6 +80,17 @@ inline gko::array<sunrealtype> WrapBatchScalingArray(
                                                                xvec_len, x_arr));
 }
 
+inline std::unique_ptr<GkoBatchVecType> WrapAsMultiVector(
+  gko::array<sunrealtype>& arr, sunindextype num_blocks)
+{
+  return GkoBatchVecType::create(arr.get_executor(),
+                                 gko::batch_dim<2>(num_blocks,
+                                                   gko::dim<2>(arr.get_size() /
+                                                                 num_blocks,
+                                                               1)),
+                                 arr);
+}
+
 template<class GkoBatchSolverType, class GkoBatchMatType>
 class BlockLinearSolver : public sundials::impl::BaseLinearSolver,
                           public ConvertibleTo<SUNLinearSolver>
@@ -110,7 +117,7 @@ public:
       previous_max_res_norm_(sunrealtype{0.0}),
       ones_(nullptr),
       s2inv_(nullptr),
-      scaling_mode_(2),
+      scaling_(false),
       sundials::impl::BaseLinearSolver(sunctx)
   {
     initSUNLinSol(sunctx);
@@ -173,22 +180,6 @@ public:
 
   std::shared_ptr<const gko::Executor> gkoExec() const { return gko_exec_; }
 
-  void setEnableScaling(int mode)
-  {
-    if (!mode)
-    {
-      object_->ops->setscalingvectors = nullptr;
-      col_scale_vec_                  = {};
-      row_scale_vec_                  = {};
-    }
-    else
-    {
-      object_->ops->setscalingvectors = SUNLinSolSetScalingVectors_GinkgoBlock<
-        BlockLinearSolver<GkoBatchSolverType, GkoBatchMatType>>;
-    }
-    scaling_mode_ = mode;
-  }
-
   SUNLinearSolver Convert() override { return object_.get(); }
 
   SUNLinearSolver Convert() const override { return object_.get(); }
@@ -205,20 +196,31 @@ public:
 
   void setScalingVectors(N_Vector s1, N_Vector s2)
   {
-    if (!ones_.Convert())
+    if (s1 && s2)
     {
-      ones_ = sundials::experimental::NVectorView(N_VClone(s2));
-      N_VConst(sunrealtype{1.0}, ones_);
+      col_scale_vec_ =
+        std::move(WrapBatchScalingArray(gkoExec(), num_blocks_, s1));
+
+      if (!ones_.Convert())
+      {
+        ones_ = sundials::experimental::NVectorView(N_VClone(s2));
+        N_VConst(sunrealtype{1.0}, ones_);
+      }
+
+      if (!s2inv_.Convert())
+      {
+        s2inv_ = sundials::experimental::NVectorView(N_VClone(s2));
+      }
+
+      N_VDiv(ones_, s2,
+             s2inv_); // Need to provide s2inv to match the SUNLinearSolver API
+
+      row_scale_vec_ =
+        std::move(WrapBatchScalingArray(gkoExec(), num_blocks_, s2inv_));
+
+      scaling_ = true;
     }
-    if (!s2inv_.Convert())
-    {
-      s2inv_ = sundials::experimental::NVectorView(N_VClone(s2));
-    }
-    N_VDiv(ones_, s2, s2inv_); // Need to provide s2inv to match the
-                               // SUNLinearSolver API
-    col_scale_vec_ = std::move(WrapBatchScalingArray(gkoExec(), num_blocks_, s1));
-    row_scale_vec_ =
-      std::move(WrapBatchScalingArray(gkoExec(), num_blocks_, s2inv_));
+    else { scaling_ = false; }
   }
 
   int setup(BlockMatrix<GkoBatchMatType>* A)
@@ -227,23 +229,16 @@ public:
 
     matrix_ = A;
 
-    if (scaling_mode_ == 0 || scaling_mode_ == 1)
+    if (!scaling_)
     {
-      SUNLogger_QueueMsg(sunLogger(), SUN_LOGLEVEL_INFO,
-                         "sundials::ginkgo::BlockLinearSolver::setup",
-                         "scaling", "using setup scaling");
-      SUNDIALS_MARK_BEGIN(sunProfiler(), "build solver factory");
       solver_factory_ = GkoBatchSolverType::build()             //
                           .with_max_iterations(max_iters_)      //
                           .with_tolerance(SUN_UNIT_ROUNDOFF)    //
                           .with_tolerance_type(tolerance_type_) //
                           .with_preconditioner(precon_factory_) //
                           .on(gkoExec());
-      SUNDIALS_MARK_END(sunProfiler(), "build solver factory");
 
-      SUNDIALS_MARK_BEGIN(sunProfiler(), "generate solver");
       solver_ = solver_factory_->generate(matrix_->GkoMtx());
-      SUNDIALS_MARK_END(sunProfiler(), "generate solver");
     }
 
     return SUN_SUCCESS;
@@ -251,77 +246,52 @@ public:
 
   int solve(N_Vector b, N_Vector x, sunrealtype tol)
   {
-#if SUNDIALS_LOGGING_LEVEL >= SUNDIALS_LOGGING_INFO
-    SUNLogger_QueueMsg(sunLogger(), SUN_LOGLEVEL_INFO,
-                       "sundials::ginkgo::BlockLinearSolver::solve", "start",
-                       "num_blocks = %d, tol = %.16g", num_blocks_, tol);
-#endif
+    SUNLogInfo(sunLogger(), "linear-solver", "solver = ginkgo (batched)");
 
-    if (scaling_mode_ == 2)
+    if (scaling_)
     {
-      SUNLogger_QueueMsg(sunLogger(), SUN_LOGLEVEL_INFO,
-                         "sundials::ginkgo::BlockLinearSolver::solve",
-                         "scaling", "using solve scaling");
-      SUNDIALS_MARK_BEGIN(sunProfiler(), "build solver factory");
       solver_factory_ = GkoBatchSolverType::build()             //
                           .with_max_iterations(max_iters_)      //
-                          .with_tolerance(SUN_UNIT_ROUNDOFF)    //
+                          .with_tolerance(tol)                  //
                           .with_tolerance_type(tolerance_type_) //
                           .with_preconditioner(precon_factory_) //
                           .on(gkoExec());
-      SUNDIALS_MARK_END(sunProfiler(), "build solver factory");
 
-      SUNDIALS_MARK_BEGIN(sunProfiler(), "generate solver");
+      // \tilde{A} = S_1 A S_2^{-1}
+      matrix_->GkoMtx()->scale(row_scale_vec_, col_scale_vec_);
+
       solver_ = solver_factory_->generate(matrix_->GkoMtx());
-      SUNDIALS_MARK_END(sunProfiler(), "generate solver");
     }
+    else { solver_->reset_tolerance(tol); }
 
-    SUNDIALS_MARK_BEGIN(sunProfiler(), "set tolerance");
-    solver_->reset_tolerance(tol);
-    SUNDIALS_MARK_END(sunProfiler(), "set tolerance");
-
-    SUNDIALS_MARK_BEGIN(sunProfiler(), "add logger");
     if (!logger_)
     {
       logger_ =
         gko::share(gko::batch::log::BatchConvergence<sunrealtype>::create());
     }
     solver_->add_logger(logger_);
-    SUNDIALS_MARK_END(sunProfiler(), "add logger");
 
     gko::batch::BatchLinOp* result{nullptr};
-    if (x != b)
-    {
-      SUNDIALS_MARK_BEGIN(sunProfiler(), "Wrap vector(s) for solve");
-      std::unique_ptr<GkoBatchVecType> x_vec{
-        WrapBatchVector(gkoExec(), num_blocks_, x)};
-      std::unique_ptr<GkoBatchVecType> b_vec{
-        WrapBatchVector(gkoExec(), num_blocks_, b)};
-      SUNDIALS_MARK_END(sunProfiler(), "Wrap vector(s) for solve");
+    std::unique_ptr<GkoBatchVecType> x_vec{
+      WrapBatchVector(gkoExec(), num_blocks_, x)};
+    std::unique_ptr<GkoBatchVecType> b_vec{
+      WrapBatchVector(gkoExec(), num_blocks_, b)};
 
-      // x = A'^{-1} diag(left) b
-      SUNDIALS_MARK_BEGIN(sunProfiler(), "solver apply");
-      // printf("b:\n"); N_VPrint(b);
-      result = solver_->apply(b_vec.get(), x_vec.get());
-      // printf("x:\n"); N_VPrint(x);
-      SUNDIALS_MARK_END(sunProfiler(), "solver apply");
-    }
-    else
+    if (scaling_)
     {
-      SUNDIALS_MARK_BEGIN(sunProfiler(), "Wrap vector(s) for solve");
-      std::unique_ptr<GkoBatchVecType> x_vec{
-        WrapBatchVector(gkoExec(), num_blocks_, x)};
-      SUNDIALS_MARK_END(sunProfiler(), "Wrap vector(s) for solve");
-
-      // x = A^'{-1} diag(right) x
-      SUNDIALS_MARK_BEGIN(sunProfiler(), "solver apply");
-      // printf("b:\n"); N_VPrint(b);
-      result = solver_->apply(x_vec.get(), x_vec.get());
-      // printf("x:\n"); N_VPrint(x);
-      SUNDIALS_MARK_END(sunProfiler(), "solver apply");
+      // \tilde{b} = S_1 b
+      b_vec->scale(WrapAsMultiVector(col_scale_vec_, num_blocks_));
     }
 
-    SUNDIALS_MARK_BEGIN(sunProfiler(), "check residual norm");
+    // \tilde{x} = \tilde{A}^{-1} \tilde{b}
+    result = solver_->apply(b_vec.get(), x_vec.get());
+
+    if (scaling_)
+    {
+      // x = S_2^{-1} \tilde{x}
+      x_vec->scale(WrapAsMultiVector(row_scale_vec_, num_blocks_));
+    }
+
     // Check if any batch entry did not reach the tolerance.
     bool at_least_one_did_not_converge{false};
     bool max_res_norm_did_not_reduce{false};
@@ -342,9 +312,7 @@ public:
     {
       max_res_norm_did_not_reduce = true;
     }
-    SUNDIALS_MARK_END(sunProfiler(), "check residual norm");
 
-    SUNDIALS_MARK_BEGIN(sunProfiler(), "check num iters");
     // Compute the average number of iterations across all batch entries
     // as well as the maximum and minimum iteration counts.
     auto iter_count{logger_->get_num_iterations().get_const_data()};
@@ -375,7 +343,6 @@ public:
                                      2);
     }
     stddev_iter_count_ = std::sqrt(stddev_iter_count_ / num_blocks_);
-    SUNDIALS_MARK_END(sunProfiler(), "check num iters");
 
     int retval{0};
     if (at_least_one_did_not_converge && max_res_norm_did_not_reduce)
@@ -385,17 +352,14 @@ public:
     else if (at_least_one_did_not_converge) { retval = SUNLS_RES_REDUCED; }
     else { retval = SUN_SUCCESS; }
 
-#if SUNDIALS_LOGGING_LEVEL >= SUNDIALS_LOGGING_INFO
-    SUNLogger_QueueMsg(sunLogger(), SUN_LOGLEVEL_INFO,
-                       "sundials::ginkgo::BlockLinearSolver::solve", "end-solve",
-                       "avg. iter count = %.16g, stddev. iter count = %.16g, "
-                       "max iter count = %d, "
-                       "min iter count = %d, max res. norm = %.16g, min res. "
-                       "norm = %.16g, tol = %.16g,"
-                       " return code = %d",
-                       avg_iter_count_, stddev_iter_count_, max_iter_count,
-                       min_iter_count, max_res_norm, min_res_norm, tol, retval);
-#endif
+    SUNLogInfo(sunLogger(), "linear-solver",
+               "avg. iter count = %.16g, stddev. iter count = %.16g, "
+               "max iter count = %d, "
+               "min iter count = %d, max res. norm = %.16g, min res. "
+               "norm = %.16g, tol = %.16g,"
+               " return code = %d",
+               avg_iter_count_, stddev_iter_count_, max_iter_count,
+               min_iter_count, max_res_norm, min_res_norm, tol, retval);
 
     return retval;
   }
@@ -417,7 +381,7 @@ private:
   sunrealtype stddev_iter_count_;
   sunrealtype previous_max_res_norm_;
   sundials::experimental::NVectorView ones_, s2inv_;
-  int scaling_mode_;
+  bool scaling_;
 
   void initSUNLinSol(SUNContext sunctx)
   {
