@@ -63,9 +63,7 @@ constexpr auto N_VNew = N_VNew_Serial;
 using namespace sundials::ginkgo;
 
 const std::unordered_map<std::string, int> methods{{"bicgstab", 0}, {"cg", 1}};
-const std::unordered_map<std::string, int> matrix_types{{"csr", 0},
-                                                        {"dense", 1},
-                                                        {"ell", 2}};
+const std::unordered_map<std::string, int> matrix_types{{"csr", 0}, {"dense", 1}};
 
 constexpr sunrealtype solve_tolerance =
   1000 * std::numeric_limits<sunrealtype>::epsilon();
@@ -267,32 +265,6 @@ int main(int argc, char* argv[])
                                                            gko_batch_matrix),
                                                          sunctx);
   }
-  else if (matrix_type == "ell")
-  {
-    using GkoMatrixType = gko::matrix::Ell<sunrealtype, sunindextype>;
-    using GkoBatchMatrixType = gko::batch::matrix::Ell<sunrealtype, sunindextype>;
-
-    gko_matdata.remove_zeros();
-
-    auto gko_matrix{GkoMatrixType::create(gko_exec, matrix_dim)};
-    gko_matrix->read(gko_matdata);
-
-    auto num_nnz     = gko_matrix->get_num_stored_elements();
-    auto common_size = gko_matrix->get_size();
-    auto gko_batch_matrix{
-      GkoBatchMatrixType::create(gko_exec,
-                                 gko::batch_dim<2>(num_blocks, common_size),
-                                 num_nnz)};
-    for (int b = 0; b < num_blocks; ++b)
-    {
-      gko_batch_matrix->create_view_for_item(b)->read(gko_matdata);
-    }
-
-    A = std::make_unique<
-      sundials::ginkgo::BlockMatrix<GkoBatchMatrixType>>(std::move(
-                                                           gko_batch_matrix),
-                                                         sunctx);
-  }
   else if (matrix_type == "dense")
   {
     using GkoMatrixType      = gko::matrix::Dense<sunrealtype>;
@@ -358,16 +330,6 @@ int main(int argc, char* argv[])
                                  gko::batch::stop::tolerance_type::absolute,
                                  precond_factory, num_blocks, sunctx);
     }
-    if (matrix_type == "ell")
-    {
-      using GkoBatchMatrixType = gko::batch::matrix::Ell<sunrealtype>;
-      using SUNLinearSolverViewType =
-        BlockLinearSolver<GkoSolverType, GkoBatchMatrixType>;
-      LS = std::make_unique<
-        SUNLinearSolverViewType>(gko_exec,
-                                 gko::batch::stop::tolerance_type::absolute,
-                                 precond_factory, num_blocks, sunctx);
-    }
     else if (matrix_type == "dense")
     {
       using GkoBatchMatrixType = gko::batch::matrix::Dense<sunrealtype>;
@@ -385,16 +347,6 @@ int main(int argc, char* argv[])
     if (matrix_type == "csr")
     {
       using GkoBatchMatrixType = gko::batch::matrix::Csr<sunrealtype>;
-      using SUNLinearSolverViewType =
-        BlockLinearSolver<GkoSolverType, GkoBatchMatrixType>;
-      LS = std::make_unique<
-        SUNLinearSolverViewType>(gko_exec,
-                                 gko::batch::stop::tolerance_type::absolute,
-                                 precond_factory, num_blocks, sunctx);
-    }
-    else if (matrix_type == "ell")
-    {
-      using GkoBatchMatrixType = gko::batch::matrix::Ell<sunrealtype>;
       using SUNLinearSolverViewType =
         BlockLinearSolver<GkoSolverType, GkoBatchMatrixType>;
       LS = std::make_unique<
