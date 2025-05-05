@@ -25,7 +25,7 @@
 #include <sundials/sundials_math.h>
 
 #include "cvode_proj_impl.h"
-#include "sundials_logger_impl.h"
+#include <sundials/priv/sundials_logger_impl.h>
 #include "sundials_macros.h"
 
 #ifdef __cplusplus /* wrapper to enable C++ usage */

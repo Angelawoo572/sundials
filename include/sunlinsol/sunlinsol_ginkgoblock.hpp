@@ -1,7 +1,11 @@
 #include <cmath>
+
 #include <sundials/sundials_core.hpp>
+#include <sundials/priv/sundials_logger_impl.h>
+
 #include <sunlinsol/sunlinsol_ginkgo.hpp>
 #include <sunmatrix/sunmatrix_ginkgoblock.hpp>
+
 
 #ifndef _SUNLINSOL_GINKGOBLOCK_HPP
 #define _SUNLINSOL_GINKGOBLOCK_HPP

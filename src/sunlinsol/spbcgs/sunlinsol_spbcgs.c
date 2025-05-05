@@ -25,7 +25,7 @@
 #include <sunlinsol/sunlinsol_spbcgs.h>
 
 #include "sundials/sundials_errors.h"
-#include "sundials_logger_impl.h"
+#include <sundials/priv/sundials_logger_impl.h>
 #include "sundials_macros.h"
 
 #define ZERO SUN_RCONST(0.0)
