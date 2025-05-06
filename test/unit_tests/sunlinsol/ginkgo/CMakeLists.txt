@@ -16,17 +16,21 @@
 # examples excluded from 'make test' in releases
 set(examples
     "test_sunlinsol_ginkgo.cpp\;bicg csr 100 0 100 0\;"
-    # "test_sunlinsol_ginkgo.cpp\;bicg dense 100 0 100 0\;"
+    "test_sunlinsol_ginkgo.cpp\;bicg dense 100 0 100 0\;"
     "test_sunlinsol_ginkgo.cpp\;cgs csr 100 0 100 0\;"
-    # "test_sunlinsol_ginkgo.cpp\;cgs dense 100 0 100 0\;"
+    "test_sunlinsol_ginkgo.cpp\;cgs dense 100 0 100 0\;"
     "test_sunlinsol_ginkgo.cpp\;gmres csr 100 0 100 0\;"
-    # "test_sunlinsol_ginkgo.cpp\;gmres dense 100 0 100 0\;"
+    "test_sunlinsol_ginkgo.cpp\;gmres dense 100 0 100 0\;"
     "test_sunlinsol_ginkgo.cpp\;idr csr 100 0 100 0\;"
-    # "test_sunlinsol_ginkgo.cpp\;idr dense 100 0 100 0\;"
+    "test_sunlinsol_ginkgo.cpp\;idr dense 100 0 100 0\;"
     "test_sunlinsol_ginkgo.cpp\;bicgstab csr 100 0 100 0\;"
-    # "test_sunlinsol_ginkgo.cpp\;bicgstab dense 100 0 100 0\;"
+    "test_sunlinsol_ginkgo.cpp\;bicgstab dense 100 0 100 0\;"
     "test_sunlinsol_ginkgo_block.cpp\;bicgstab csr 50 10 2 500 0\;"
-    "test_sunlinsol_ginkgo_block.cpp\;cg csr 50 10 2 500 0\;"
+    "test_sunlinsol_ginkgo_block.cpp\;bicgstab dense 50 10 2 500 0\;"
+    # TODO(CJB): CG is unable to solve the random system we generate.
+    # we will have to add a symmetric system to test for CG.
+    # "test_sunlinsol_ginkgo_block.cpp\;cg csr 50 10 2 500 0\;"
+    # "test_sunlinsol_ginkgo_block.cpp\;cg dense 50 10 2 500 0\;"
 )
 
 # The BiCGStab solver has a known bug with the OpenMP backend
