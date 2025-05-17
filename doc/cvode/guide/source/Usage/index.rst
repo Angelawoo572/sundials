@@ -2398,7 +2398,7 @@ described next.
 
       * For the BDF method: :math:`\texttt{lenrw} = 96 + 10N` and :math:`\texttt{leniw} = 50`
 
-   .. deprecated:: X.Y.Z
+   .. deprecated:: 7.3.0
 
       Work space functions will be removed in version 8.0.0.
 
@@ -2757,6 +2757,10 @@ described next.
    **Return value:**
      * A string containing the name of the corresponding constant
 
+   .. warning::
+
+      The user is responsible for freeing the returned string.
+
 
 
 .. _CVODE.Usage.CC.optional_output.optout_root:
@@ -2926,7 +2930,7 @@ solver, a suffix (for Linear Solver) has been added (e.g. ``lenrwLS``).
       Replaces the deprecated functions ``CVDlsGetWorkspace`` and
       ``CVSpilsGetWorkspace``.
 
-   .. deprecated:: X.Y.Z
+   .. deprecated:: 7.3.0
 
       Work space functions will be removed in version 8.0.0.
 
@@ -3114,7 +3118,7 @@ solver, a suffix (for Linear Solver) has been added (e.g. ``lenrwLS``).
       ``CVSpilsGetLastFlag``.
 
 
-.. c:function:: int CVodeGetLinReturnFlagName(long int lsflag)
+.. c:function:: char* CVodeGetLinReturnFlagName(long int lsflag)
 
    The function ``CVodeGetLinReturnFlagName`` returns the name of the CVLS constant corresponding to ``lsflag``.
 
@@ -3123,6 +3127,10 @@ solver, a suffix (for Linear Solver) has been added (e.g. ``lenrwLS``).
 
    **Return value:**
      * The return value is a string containing the name of the corresponding constant. If :math:`1 \leq \text{lsflag} \leq N` (LU factorization failed), this routine returns "NONE".
+
+   .. warning::
+
+      The user is responsible for freeing the returned string.
 
    .. versionadded:: 4.0.0
 
@@ -3160,7 +3168,7 @@ solver, a suffix (for Linear Solver) has been added here (e.g. ``lenrwLS``).
    **Notes:**
       In terms of the problem size :math:`N`, the actual size of the real workspace  is roughly :math:`3 N` ``sunrealtype`` words.
 
-   .. deprecated:: X.Y.Z
+   .. deprecated:: 7.3.0
 
       Work space functions will be removed in version 8.0.0.
 
@@ -3207,6 +3215,10 @@ solver, a suffix (for Linear Solver) has been added here (e.g. ``lenrwLS``).
 
    **Return value:**
      * A string containing the name of the corresponding constant.
+
+   .. warning::
+
+      The user is responsible for freeing the returned string.
 
 
 .. _CVODE.Usage.CC.reinit:
@@ -3338,7 +3350,7 @@ error.
                          history was supplied, see the output error message for
                          additional details.
 
-   .. versionadded:: x.y.z
+   .. versionadded:: 7.3.0
 
    .. note::
 
@@ -4042,7 +4054,7 @@ the CVBANDPRE module:
 
       The workspaces referred to here exist in addition to those given by the  corresponding function ``CVodeGetLinWorkSpace``.
 
-   .. deprecated:: X.Y.Z
+   .. deprecated:: 7.3.0
 
       Work space functions will be removed in version 8.0.0.
 
@@ -4327,7 +4339,7 @@ the CVBBDPRE preconditioner module are described next.
    **Notes:**
       If one of the half-bandwidths ``mudq`` or ``mldq`` to be used in the
       difference quotient calculation of the approximate Jacobian is negative or
-      exceeds the value ``local_N - 1 ``, it is replaced by ``0`` or
+      exceeds the value ``local_N - 1``, it is replaced by ``0`` or
       ``local_N - 1`` accordingly.
 
       The half-bandwidths ``mudq`` and ``mldq`` need not be the true
@@ -4397,7 +4409,7 @@ the CVBBDPRE module:
    **Notes:**
       The workspace requirements reported by this routine correspond only  to memory allocated within the CVBBDPRE module (the banded  matrix approximation, banded ``SUNLinearSolver`` object, temporary vectors).  These values are local to each process.  The workspaces referred to here exist in addition to those given by the  corresponding function ``CVodeGetLinWorkSpace``.
 
-   .. deprecated:: X.Y.Z
+   .. deprecated:: 7.3.0
 
       Work space functions will be removed in version 8.0.0.
 
