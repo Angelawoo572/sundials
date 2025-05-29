@@ -188,17 +188,17 @@ UserData::~UserData()
 int FillSendBuffers(N_Vector y, UserData* udata)
 {
   /* Shortcuts */
-  const sunrealtype c = udata->c;
-  const int nxl       = udata->grid->nxl;
+  const sunrealtype c = udata->c; // 对流速度 +x,+y,+z
+  const int nxl       = udata->grid->nxl; // 局部网格大小
   const int nyl       = udata->grid->nyl;
   const int nzl       = udata->grid->nzl;
-  const int dof       = udata->grid->dof;
+  const int dof       = udata->grid->dof; //自由度 u/v/w
 
   /* Create 4D view of the vector */
   Vec4D Yview(N_VGetDeviceArrayPointer(N_VGetLocalVector_MPIPlusX(y)), nxl, nyl,
               nzl, dof);
 
-  if (c > 0.0)
+  if (c > 0.0) //close to 后方边距数据
   {
     /* Flow moving in the positive directions uses backward difference. */
 
@@ -211,20 +211,20 @@ int FillSendBuffers(N_Vector y, UserData* udata)
     Kokkos::parallel_for(
       "FillEastBuffer", Range3D({0, 0, 0}, {nyl, nzl, dof}),
       KOKKOS_LAMBDA(int j, int k, int l) {
-        Esend(0, j, k, l) = Yview(nxl - 1, j, k, l);
+        Esend(0, j, k, l) = Yview(nxl - 1, j, k, l); // x的最后一层
       });
     Kokkos::parallel_for(
       "FillNorthBuffer", Range3D({0, 0, 0}, {nxl, nzl, dof}),
       KOKKOS_LAMBDA(int i, int k, int l) {
-        Nsend(i, 0, k, l) = Yview(i, nyl - 1, k, l);
+        Nsend(i, 0, k, l) = Yview(i, nyl - 1, k, l); // y的最后一层
       });
     Kokkos::parallel_for(
       "FillFrontBuffer", Range3D({0, 0, 0}, {nxl, nyl, dof}),
       KOKKOS_LAMBDA(int i, int j, int l) {
-        Fsend(i, j, 0, l) = Yview(i, j, nzl - 1, l);
+        Fsend(i, j, 0, l) = Yview(i, j, nzl - 1, l); // z的最后一层
       });
   }
-  else if (c < 0.0)
+  else if (c < 0.0) // close to前方边距数据
   {
     /* Flow moving in the negative directions uses forward difference. */
 
@@ -379,7 +379,7 @@ static int ParseArgs(int argc, char* argv[], UserData* udata, UserOptions* uopt)
 
 /* Fills the mask vector for the component so that
    u = y .* umask, v = y .* vmask, w = y .* wmask */
-int ComponentMask(N_Vector mask, const int component, const UserData* udata)
+int ComponentMask(N_Vector mask, const int component, const UserData* udata) //提取u/v/w中的一个
 {
   SUNDIALS_CXX_MARK_FUNCTION(udata->prof);
 
@@ -553,11 +553,11 @@ static void Gaussian3D(sunrealtype& x, sunrealtype& y, sunrealtype& z,
                        sunrealtype xmax)
 {
   /* Gaussian distribution defaults */
-  const sunrealtype alpha   = 0.1;
+  const sunrealtype alpha   = 0.1; // control gaussian function max value
   const sunrealtype mu[]    = {xmax / SUN_RCONST(2.0), xmax / SUN_RCONST(2.0),
-                               xmax / SUN_RCONST(2.0)};
+                               xmax / SUN_RCONST(2.0)}; // mu is gaussian cube中心, (xmax/2, xmax/2, xmax/2)
   const sunrealtype sigma[] = {xmax / SUN_RCONST(4.0), xmax / SUN_RCONST(4.0),
-                               xmax / SUN_RCONST(4.0)}; // Sigma = diag(sigma)
+                               xmax / SUN_RCONST(4.0)}; // Sigma = diag(sigma),Σ = diag(sigma^2)，std = xmax/4, gaussian function 扩散宽度
 
   /* denominator = 2*sqrt(|Sigma|*(2pi)^3) */
   const sunrealtype denom =
@@ -568,7 +568,7 @@ static void Gaussian3D(sunrealtype& x, sunrealtype& y, sunrealtype& z,
 }
 
 /* Initial condition function */
-int SetIC(N_Vector yvec, UserData* udata)
+int SetIC(N_Vector yvec, UserData* udata) //在t=0 设置好所有空间上的 u/v/w 值，后续就可以开始积分了
 {
   SUNDIALS_CXX_MARK_FUNCTION(udata->prof);
 
