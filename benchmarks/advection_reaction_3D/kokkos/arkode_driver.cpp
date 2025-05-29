@@ -67,7 +67,7 @@ int EvolveProblemDIRK(N_Vector y, UserData* udata, UserOptions* uopt)
   if (check_retval((void*)arkode_mem, "ARKStepCreate", 0, udata->myid))
   {
     return 1;
-  }
+  } // check if create successful
 
   /* Select the method order */
   retval = ARKodeSetOrder(arkode_mem, uopt->order);
