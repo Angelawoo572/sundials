@@ -34,7 +34,7 @@
 __device__ void add_forcing(const sunrealtype t, const sunrealtype x,
                             const sunrealtype y, const sunrealtype kx,
                             const sunrealtype ky, const sunindextype c,
-                            sunrealtype* udot)
+                            sunrealtype* udot) // 根据(x,y,t)计算f(x,y,t),加到udot[c]
 {
   sunrealtype sin_sqr_x = sin(PI * x) * sin(PI * x);
   sunrealtype sin_sqr_y = sin(PI * y) * sin(PI * y);
@@ -69,7 +69,7 @@ __global__ void diffusion_interior_kernel(
   if (interior)
   {
     // 1D array index for center, west, east, south, and north nodes
-    int c = i + j * nx_loc;
+    int c = i + j * nx_loc; // 计算出当前点在线性数组中的位置
     int w = c - 1;
     int e = c + 1;
     int s = c - nx_loc;
@@ -99,7 +99,7 @@ __global__ void diffusion_boundary_kernel(
   const sunindextype ny_loc, const sunrealtype dx, const sunrealtype dy,
   const sunrealtype kx, const sunrealtype ky, const bool forcing,
   const sunrealtype* wbuf, const sunrealtype* ebuf, const sunrealtype* sbuf,
-  const sunrealtype* nbuf)
+  const sunrealtype* nbuf) //每种情况，根据是否有邻接 buffer 判断用哪个值
 {
   // Thread ID
   int i = blockIdx.x * blockDim.x + threadIdx.x;
