@@ -37,17 +37,17 @@ __global__ void solution_kernel(const sunrealtype t, sunrealtype* u,
                                 const sunindextype nx, const sunindextype ny,
                                 const sunindextype nx_loc,
                                 const sunindextype ny_loc, const sunrealtype dx,
-                                const sunrealtype dy)
+                                const sunrealtype dy) // 解 u(x, y, t)
 {
   // Thread location in the local grid
   int i = blockIdx.x * blockDim.x + threadIdx.x;
   int j = blockIdx.y * blockDim.y + threadIdx.y;
 
   // west, south, east, and north physical boundaries
-  if (i < nx_loc && j < ny_loc)
+  if (i < nx_loc && j < ny_loc) // 限制线程在合法范围内运行，防止越界
   {
     if ((is == 0 && i == 0) || (ie == nx - 1 && i == nx_loc - 1) ||
-        (js == 0 && j == 0) || (je == ny - 1 && j == ny_loc - 1))
+        (js == 0 && j == 0) || (je == ny - 1 && j == ny_loc - 1)) // 判断是否在边界上，是就设置为零
     {
       u[i + j * nx_loc] = ZERO;
     }
